@@ -10,7 +10,13 @@ object CalendarEventsHelper {
         val title: String,
         val location: String?,
         val beginTime: Long,
-        val endTime: Long
+        val endTime: Long,
+        /**
+         * An all-day event is stored from midnight UTC to midnight UTC, whatever the phone's
+         * zone, so its times are dates rather than moments: shown as local times they read as
+         * the evening before, west of Greenwich.
+         */
+        val allDay: Boolean = false
     )
 
     fun hasCalendarPermission(context: Context): Boolean {
@@ -70,7 +76,8 @@ object CalendarEventsHelper {
             CalendarContract.Instances.TITLE,
             CalendarContract.Instances.EVENT_LOCATION,
             CalendarContract.Instances.BEGIN,
-            CalendarContract.Instances.END
+            CalendarContract.Instances.END,
+            CalendarContract.Instances.ALL_DAY
         )
         val (selection, selectionArgs) = if (calendarId == ALL_CALENDARS_ID) {
             null to null
@@ -91,6 +98,7 @@ object CalendarEventsHelper {
                 val locIdx = cursor.getColumnIndex(CalendarContract.Instances.EVENT_LOCATION)
                 val beginIdx = cursor.getColumnIndex(CalendarContract.Instances.BEGIN)
                 val endIdx = cursor.getColumnIndex(CalendarContract.Instances.END)
+                val allDayIdx = cursor.getColumnIndex(CalendarContract.Instances.ALL_DAY)
                 if (eventIdIdx < 0 || titleIdx < 0 || beginIdx < 0 || endIdx < 0) return emptyList()
                 val list = mutableListOf<CalendarEvent>()
                 while (cursor.moveToNext()) {
@@ -99,7 +107,8 @@ object CalendarEventsHelper {
                     val location = if (locIdx >= 0) cursor.getString(locIdx)?.takeIf { it.isNotBlank() } else null
                     val begin = cursor.getLong(beginIdx)
                     val end = cursor.getLong(endIdx)
-                    list.add(CalendarEvent(eventId = eventId, title = title, location = location, beginTime = begin, endTime = end))
+                    val allDay = allDayIdx >= 0 && cursor.getInt(allDayIdx) == 1
+                    list.add(CalendarEvent(eventId = eventId, title = title, location = location, beginTime = begin, endTime = end, allDay = allDay))
                 }
                 list
             } ?: emptyList()
