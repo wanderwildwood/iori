@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Events from the system UI only, which is the lock screen: they tell the lock-screen music
+     controls when to look again (services/LockscreenMusic.kt). Window content is readable only
+     so the controls can stand aside when the PIN pad is up. Gesture actions need no events. -->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-    android:accessibilityEventTypes="typeViewClicked"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged|typeViewFocused"
     android:accessibilityFeedbackType="feedbackGeneric"
-    android:accessibilityFlags="flagDefault"
-    android:canRetrieveWindowContent="false"
+    android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows"
+    android:canRetrieveWindowContent="true"
+    android:packageNames="com.android.systemui"
     android:description="@string/accessibility_service_description"
     android:notificationTimeout="100" />

@@ -10,13 +10,24 @@ import java.lang.ref.WeakReference
 
 class ActionService : AccessibilityService() {
 
+    private var lockscreenMusic: LockscreenMusic? = null
+
     override fun onServiceConnected() {
         instance = WeakReference(this)
+        lockscreenMusic = LockscreenMusic(this).also { it.start() }
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
         instance = WeakReference(null)
+        lockscreenMusic?.stop()
+        lockscreenMusic = null
         return super.onUnbind(intent)
+    }
+
+    override fun onDestroy() {
+        lockscreenMusic?.stop()
+        lockscreenMusic = null
+        super.onDestroy()
     }
 
     @RequiresApi(Build.VERSION_CODES.P)
@@ -42,7 +53,12 @@ class ActionService : AccessibilityService() {
         return performGlobalAction(GLOBAL_ACTION_POWER_DIALOG)
     }
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) {}
+    // Only the system UI's events arrive (see accessibility_service_config): the lock screen
+    // showing, changing and going. Each is a cue to look again at whether the music controls
+    // belong on it.
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        lockscreenMusic?.evaluate()
+    }
     override fun onInterrupt() {}
 
     companion object {

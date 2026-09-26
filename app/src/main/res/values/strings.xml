@@ -600,7 +600,9 @@
 
     <!-- Accessibility -->
     <string name="accessibility_service_name">inkOS Actions Service</string>
-    <string name="accessibility_service_description">inkOS uses this accessibility service solely to perform system actions you assign to gestures: lock screen, open recent apps, open quick settings, and open the power dialog. This service does not read, collect, store, or share any screen content, personal data, or user information. No data leaves your device.</string>
+    <string name="accessibility_service_description">inkOS uses this accessibility service for two things: to perform the system actions you assign to gestures (lock screen, open recent apps, open quick settings, open the power dialog), and to show music controls on the lock screen for players other than Mudita\'s own. For the second it watches only the system lock screen, to know when it is showing and whether the PIN pad is up. It does not read other apps, and it does not collect, store or share anything. No data leaves your device.</string>
+    <!-- Lock-screen music controls, when the player gives no title -->
+    <string name="lockscreen_music_nothing">Nothing playing</string>
     <string name="can_not_delete_system_apps">Can\'t Delete System Apps</string>
     <string name="drawer_list_empty_hint">No apps found</string>
     <string name="long_press_for_settings">Long press anywhere for settings</string>
