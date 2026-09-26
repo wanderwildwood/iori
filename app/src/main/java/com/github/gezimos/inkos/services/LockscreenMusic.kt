@@ -78,8 +78,9 @@ import kotlinx.coroutines.launch
  * Music controls on the lock screen, for any player.
  *
  * The Kompakt's own lock screen has a music widget, but it is wired to Mudita's player by
- * name and never shows anything else. This draws one in the same place, the same size, for
- * whatever else is playing. It is an accessibility overlay: a window type the system draws
+ * name and never shows anything else. This draws a strip for whatever else is playing, above
+ * the padlock, in the place Music Box and Audio Reading draw their own - and stands aside when
+ * the playing app has its own strip turned on, so there is only ever one. It is an accessibility overlay: a window type the system draws
  * above the lock screen, which only an accessibility service may add. The player is found
  * through the notification listener inkOS already runs for the home screen's music widget.
  *
@@ -153,6 +154,7 @@ class LockscreenMusic(private val service: AccessibilityService) :
             power.isInteractive &&
             info != null &&
             info.packageName != MUDITA_PLAYER &&
+            !playerDrawsItsOwn(info.packageName) &&
             !inCall() &&
             !pinShowing()
         if (show) add() else remove()
@@ -188,10 +190,10 @@ class LockscreenMusic(private val service: AccessibilityService) :
             type = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY
             format = PixelFormat.TRANSLUCENT
             flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-            width = (WIDTH_DP * density).toInt()
+            width = service.resources.displayMetrics.widthPixels - (2 * SIDE_MARGIN_DP * density).toInt()
             height = WindowManager.LayoutParams.WRAP_CONTENT
-            gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
-            y = (TOP_DP * density).toInt()
+            gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+            y = (BOTTOM_MARGIN_DP * density).toInt()
         }
         try {
             service.getSystemService(WindowManager::class.java).addView(view, params)
@@ -223,6 +225,17 @@ class LockscreenMusic(private val service: AccessibilityService) :
         false
     }
 
+    /**
+     * Music Box and Audio Reading draw their own strip, in this same place, when their own
+     * lock-screen service is on; drawing this one as well would stack two.
+     */
+    private fun playerDrawsItsOwn(packageName: String): Boolean {
+        val enabled = android.provider.Settings.Secure.getString(
+            service.contentResolver, android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+        ) ?: return false
+        return enabled.split(':').any { it.startsWith("$packageName/") }
+    }
+
     /** A ringing or live call draws its own screen over the lock screen. */
     private fun inCall(): Boolean = try {
         when (service.getSystemService(AudioManager::class.java).mode) {
@@ -237,10 +250,10 @@ class LockscreenMusic(private val service: AccessibilityService) :
 
     private companion object {
         const val MUDITA_PLAYER = "com.mudita.audio.player"
-        // Where the stock widget sits: 332dp wide, its top 220dp down. Two dp wider, so a
-        // column of the stock one never shows at the edge when both are drawn.
-        const val WIDTH_DP = 334f
-        const val TOP_DP = 220f
+        // The strip every player draws in the same place - Music Box and Audio Reading carry
+        // the same numbers - above the padlock and "Swipe Up", clear of Mudita's own widget.
+        const val SIDE_MARGIN_DP = 32f
+        const val BOTTOM_MARGIN_DP = 96f
         const val RECHECK_MS = 120L
     }
 }
@@ -256,9 +269,6 @@ private fun LockscreenMusicWidget(
     onNext: () -> Unit,
     onStop: () -> Unit,
 ) {
-    val corner = 14.dp
-    val stroke = 2.5.dp
-    val shape = RoundedCornerShape(corner)
     val metadata = info.controller?.metadata
     val art = remember(metadata) {
         try {
@@ -278,79 +288,46 @@ private fun LockscreenMusicWidget(
         field(info.artist, android.media.MediaMetadata.METADATA_KEY_ARTIST),
     ).joinToString(" - ")
 
-    Column(
+    val shape = RoundedCornerShape(8.dp)
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(90.dp)
-            .clip(shape)
-            .background(surface)
-            .border(stroke, ink, shape),
+            .background(surface, shape)
+            .border(2.dp, ink, shape)
+            .padding(horizontal = 8.dp, vertical = 5.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1.4f)
-                .padding(horizontal = 12.dp)
-                .clickable { onOpenApp() },
+            modifier = Modifier.size(36.dp).clip(shape).clickable { onOpenApp() },
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = label.ifEmpty { stringResource(R.string.lockscreen_music_nothing) },
-                fontSize = 18.sp,
-                color = ink,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        Box(Modifier.fillMaxWidth().height(stroke).background(ink))
-        Row(
-            modifier = Modifier.fillMaxWidth().weight(2f),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .aspectRatio(1f)
-                    .clip(RoundedCornerShape(bottomStart = corner))
-                    .background(if (art != null) ink else surface)
-                    .clickable { onOpenApp() }
-                    .padding(bottom = 3.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (art != null) {
-                    Image(
-                        bitmap = art.asImageBitmap(),
-                        contentDescription = stringResource(R.string.open_music_app),
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                } else {
+            if (art != null) {
+                Image(
+                    bitmap = art.asImageBitmap(),
+                    contentDescription = label.ifEmpty { stringResource(R.string.open_music_app) },
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.size(36.dp).clip(shape),
+                )
+            } else {
+                Box(Modifier.size(36.dp).border(2.dp, ink, shape), contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Rounded.MusicNote,
-                        contentDescription = stringResource(R.string.open_music_app),
+                        contentDescription = label.ifEmpty { stringResource(R.string.open_music_app) },
                         tint = ink,
-                        modifier = Modifier.size(28.dp),
+                        modifier = Modifier.size(24.dp),
                     )
                 }
             }
-            Box(Modifier.fillMaxHeight().width(stroke).background(ink))
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-                    .padding(horizontal = 8.dp)
-                    .padding(bottom = 3.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Control(Icons.Rounded.SkipPrevious, R.string.previous_track, ink, 32, onPrevious)
-                Control(
-                    if (info.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                    R.string.play_or_pause, ink, 42, onPlayPause,
-                )
-                Control(Icons.Rounded.SkipNext, R.string.next_track, ink, 32, onNext)
-                Control(Icons.Rounded.Stop, R.string.stop_playback, ink, 32, onStop)
-            }
+        }
+        Control(Icons.Rounded.SkipPrevious, R.string.previous_track, ink, 32, onPrevious)
+        Control(
+            if (info.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+            R.string.play_or_pause, ink, 42, onPlayPause,
+        )
+        Control(Icons.Rounded.SkipNext, R.string.next_track, ink, 32, onNext)
+        Box(modifier = Modifier.padding(end = 8.dp)) {
+            Control(Icons.Rounded.Stop, R.string.stop_playback, ink, 32, onStop)
         }
     }
 }
