@@ -196,6 +196,8 @@
     <string name="events_all_calendars">All calendars</string>
     <string name="events_no_calendar">No calendar selected</string>
     <string name="events_no_events">No upcoming events</string>
+    <string name="events_today">Today</string>
+    <string name="events_all_day">all day</string>
     <string name="events_filter">Filter</string>
     <string name="events_filter_24h">24 hours</string>
     <string name="events_filter_1week">1 week</string>

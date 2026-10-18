@@ -84,7 +84,7 @@ class NotificationService : NotificationListenerService() {
         } else {
             val prefs = com.github.gezimos.inkos.data.Prefs(applicationContext)
             val notificationInfo = notificationManager.buildNotificationInfoForRemaining(
-                sbn.packageName, prefs, activeNotifications
+                sbn.packageName, prefs, activeNotifications, currentRanking
             )
             notificationManager.updateBadgeNotification(sbn.packageName, notificationInfo)
         }
@@ -220,7 +220,7 @@ class NotificationService : NotificationListenerService() {
         val prefs = com.github.gezimos.inkos.data.Prefs(applicationContext)
 
         val notificationInfo =
-            notificationManager.buildNotificationInfo(sbn, prefs, activeNotifications)
+            notificationManager.buildNotificationInfo(sbn, prefs, activeNotifications, currentRanking)
         notificationManager.updateBadgeNotification(sbn.packageName, notificationInfo)
     }
 

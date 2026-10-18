@@ -353,16 +353,48 @@ class NotificationManager private constructor(private val context: Context) {
         return Pair(notifTitle, notifText)
     }
 
+    /**
+     * Whether a notification is allowed to mark the launcher icon.
+     *
+     * The badge was a raw count of everything a package had posted, which meant a
+     * long-running foreground service — a sync relay, a server, a VPN — read as unread
+     * mail for as long as it ran, and no app could opt out. Android already carries the
+     * answer on the notification channel: apps set setShowBadge(false) on the channels
+     * that only ever say "still running". Honour that instead of counting blindly.
+     *
+     * Media keeps working: playback notifications are ongoing, but their channels badge
+     * normally, so this filters on the channel's own declaration rather than on the
+     * ongoing/foreground-service flags, which would take media down with it.
+     *
+     * Defaults to true whenever the ranking can't be read, so an unrecognised
+     * notification still badges rather than being silently swallowed.
+     */
+    private fun canShowBadge(
+        sbn: android.service.notification.StatusBarNotification,
+        rankingMap: android.service.notification.NotificationListenerService.RankingMap?
+    ): Boolean {
+        val ranking = android.service.notification.NotificationListenerService.Ranking()
+        if (rankingMap?.getRanking(sbn.key, ranking) != true) return true
+        return ranking.canShowBadge()
+    }
+
     fun buildNotificationInfo(
         sbn: android.service.notification.StatusBarNotification,
         prefs: com.github.gezimos.inkos.data.Prefs,
-        activeNotifications: Array<android.service.notification.StatusBarNotification>
-    ): NotificationInfo {
-        // Get all notifications for this package
-        val samePackage = activeNotifications.filter { it.packageName == sbn.packageName }
-        
+        activeNotifications: Array<android.service.notification.StatusBarNotification>,
+        rankingMap: android.service.notification.NotificationListenerService.RankingMap? = null
+    ): NotificationInfo? {
+        // Get all notifications for this package that are entitled to badge
+        val samePackage = activeNotifications.filter {
+            it.packageName == sbn.packageName && canShowBadge(it, rankingMap)
+        }
+
+        // Nothing badge-worthy left: report no badge rather than falling back to sbn and
+        // counting it as one anyway, which is what kept a lone service notification lit.
+        if (samePackage.isEmpty()) return null
+
         val nonSummaryNotifications = samePackage.filter { !isNotificationSummary(it) }
-        
+
         val notificationToShow = when {
             nonSummaryNotifications.isNotEmpty() -> nonSummaryNotifications.maxByOrNull { it.postTime }
             samePackage.isNotEmpty() -> samePackage.maxByOrNull { it.postTime }
@@ -375,7 +407,7 @@ class NotificationManager private constructor(private val context: Context) {
         )
 
         return NotificationInfo(
-            count = samePackage.size.coerceAtLeast(1),
+            count = samePackage.size,
             title = notifTitle,
             text = notifText,
             category = notificationToShow.notification.category,
@@ -391,10 +423,15 @@ class NotificationManager private constructor(private val context: Context) {
     fun buildNotificationInfoForRemaining(
         packageName: String,
         prefs: com.github.gezimos.inkos.data.Prefs,
-        activeNotifications: Array<android.service.notification.StatusBarNotification>
+        activeNotifications: Array<android.service.notification.StatusBarNotification>,
+        rankingMap: android.service.notification.NotificationListenerService.RankingMap? = null
     ): NotificationInfo? {
-        // Find active notifications for this package only
-        val samePackage = activeNotifications.filter { it.packageName == packageName }
+        // Find active notifications for this package that are entitled to badge. Without
+        // the same filter the badge would clear on removal and then come straight back
+        // the next time the service notification was re-posted.
+        val samePackage = activeNotifications.filter {
+            it.packageName == packageName && canShowBadge(it, rankingMap)
+        }
 
         if (samePackage.isEmpty()) {
             return null
@@ -414,7 +451,7 @@ class NotificationManager private constructor(private val context: Context) {
         )
 
         return NotificationInfo(
-            count = samePackage.size.coerceAtLeast(1),
+            count = samePackage.size,
             title = notifTitle,
             text = notifText,
             category = notificationToShow.notification.category,

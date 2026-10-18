@@ -2667,7 +2667,7 @@ private fun EventsBlock(
                 else -> {
                     val event = state.eventsList.getOrNull(state.eventsIndex.coerceIn(0, state.eventsList.size - 1))
                         ?: state.eventsList.first()
-                    val dateStr = formatEventDate(event.beginTime)
+                    val dateStr = formatEventDate(event, stringResource(R.string.events_today), stringResource(R.string.events_all_day))
                     val locationStr = event.location?.takeIf { it.isNotBlank() }
                     val titleLine = buildString {
                         append(dateStr)
@@ -2709,17 +2709,26 @@ private fun EventsBlock(
     }
 }
 
-private fun formatEventDate(beginTime: Long): String {
-    val cal = java.util.Calendar.getInstance()
-    cal.timeInMillis = beginTime
-    val today = java.util.Calendar.getInstance()
-    val isToday = cal.get(java.util.Calendar.YEAR) == today.get(java.util.Calendar.YEAR) &&
-            cal.get(java.util.Calendar.DAY_OF_YEAR) == today.get(java.util.Calendar.DAY_OF_YEAR)
-    return if (isToday) {
-        java.text.SimpleDateFormat("HH:mm", Locale.getDefault()).format(java.util.Date(beginTime))
-            .let { "Today $it" }
+private fun formatEventDate(
+    event: com.github.gezimos.inkos.helper.CalendarEventsHelper.CalendarEvent,
+    todayWord: String,
+    allDayWord: String,
+): String {
+    val today = java.time.LocalDate.now()
+    if (event.allDay) {
+        // Its dates are UTC dates; an event running into today from before reads as today's.
+        val start = java.time.Instant.ofEpochMilli(event.beginTime).atZone(java.time.ZoneOffset.UTC).toLocalDate()
+        val lastDay = java.time.Instant.ofEpochMilli(event.endTime).atZone(java.time.ZoneOffset.UTC).toLocalDate().minusDays(1)
+        val shown = if (!start.isAfter(today) && !lastDay.isBefore(today)) today else start
+        val day = if (shown == today) todayWord
+        else shown.format(java.time.format.DateTimeFormatter.ofPattern("MMM d", Locale.getDefault()))
+        return "$day, $allDayWord"
+    }
+    val begin = java.time.Instant.ofEpochMilli(event.beginTime).atZone(java.time.ZoneId.systemDefault())
+    return if (begin.toLocalDate() == today) {
+        "$todayWord " + begin.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault()))
     } else {
-        java.text.SimpleDateFormat("MMM d, HH:mm", Locale.getDefault()).format(java.util.Date(beginTime))
+        begin.format(java.time.format.DateTimeFormatter.ofPattern("MMM d, HH:mm", Locale.getDefault()))
     }
 }
 
