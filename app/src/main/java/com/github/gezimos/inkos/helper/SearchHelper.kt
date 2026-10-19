@@ -582,6 +582,7 @@ object ContactsHelper {
     }
 
     fun launchContactQuickActions(context: Context, contactId: String, lookupKey: String) {
+        if (com.wanderwildwood.iori.IoriContacts.openInEnishi(context, contactId, lookupKey)) return // iori: open in Contacts (enishi)
         val contactUri = ContactsContract.Contacts.getLookupUri(contactId.toLongOrNull() ?: 0, lookupKey)
 
         val intents = mutableListOf<Intent>()

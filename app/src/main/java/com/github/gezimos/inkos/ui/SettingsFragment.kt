@@ -652,6 +652,7 @@ class SettingsFragment : Fragment() {
                 titleFontSize = titleFontSize,
                 onClick = { navigateTo(SettingsRoute.Support) },
             )
+            com.wanderwildwood.iori.IoriAbout.SettingsRow(titleFontSize) // iori: About inkOS:wndr
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
