@@ -55,6 +55,7 @@ object Iori {
      * alone, so a recreate never stacks two.
      */
     fun guardCrashes(context: Context) {
+        IoriLinesRepository.warm(context)
         try {
             val current = Thread.getDefaultUncaughtExceptionHandler()
             if (current is Guard) return

@@ -277,8 +277,7 @@ object IconUtility {
     }
 
     fun isSyntheticPackage(packageName: String): Boolean {
-        return packageName.startsWith("com.inkos.") || packageName.startsWith("app.inkos") ||
-            packageName.startsWith(com.github.gezimos.inkos.BuildConfig.APPLICATION_ID) // iori: own internal entries are synthetic too
+        return packageName.startsWith("com.inkos.") || packageName.startsWith(com.github.gezimos.inkos.BuildConfig.APPLICATION_ID) || (com.github.gezimos.inkos.BuildConfig.APPLICATION_ID.startsWith("app.inkos") && packageName.startsWith("app.inkos")) // iori: own internal entries are synthetic, the real inkOS is not
     }
 
     fun isInkOSInternalShortcut(shortcutId: String): Boolean {

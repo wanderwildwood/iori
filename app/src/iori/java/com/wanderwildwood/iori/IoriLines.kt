@@ -45,9 +45,11 @@ import com.github.gezimos.inkos.ui.compose.HomeUiRenderState
 /**
  * Up to three lines from Glance under the home apps, in the quote's font, size and alignment.
  *
- * Nothing scrolls and nothing animates; with no lines it draws nothing at all. A press opens
- * the app a line came from. A long press, or any press while home is being edited, opens the
- * lines dialog, which says what each source is doing.
+ * Nothing scrolls and nothing animates; with no lines it draws nothing at all, except while
+ * home is being edited, when one "Home lines" row stands in for them so the dialog can always be
+ * reached. A press opens the app a line came from. A long press, or any press while home is
+ * being edited, opens the lines dialog, which says what each source is doing. The dialog is
+ * also in Settings, beside About inkOS:wndr.
  *
  * After a crash in iori's own code it draws one row saying lines were turned off, and a long
  * press there turns them back on.
@@ -146,6 +148,25 @@ fun IoriLines(state: HomeUiRenderState, showEditMode: Boolean) {
                 )
             }
         }
+    } else if (showEditMode) {
+        // No lines to press: Glance missing, too old, refusing, or every source off. The
+        // dialog says which, and is where a source switched off here is switched back on.
+        Spacer(Modifier.height(12.dp.scaled(rememberScreenScale())))
+        Text(
+            text = stringResource(R.string.iori_lines_title),
+            style = style,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = { openDialog() },
+                    onLongClick = { openDialog() },
+                )
+                .padding(vertical = 2.dp),
+        )
     }
 
     if (dialog) {

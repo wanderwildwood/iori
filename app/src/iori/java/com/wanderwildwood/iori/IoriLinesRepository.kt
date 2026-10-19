@@ -25,11 +25,14 @@ import kotlinx.coroutines.withTimeoutOrNull
  * The home screen's lines, read from Glance (hitome), which hands over what the lock screen
  * would show from the apps that take part, and why each source shows or does not.
  *
- * Everything here runs on its own scope on the IO dispatcher, and every read is wrapped: a
- * timeout with a [CancellationSignal], a catch, `cursor.use`, and a check on each column. What
- * reaches composition is only finished Strings in a [StateFlow], which by its nature passes a
- * value on only when it differs from the last one, so an unchanged answer redraws nothing on
- * the panel.
+ * Everything here runs on its own scope on the IO dispatcher, and every read is wrapped: an
+ * unstable provider client, so Glance dying mid-read costs only that read and never the
+ * launcher; a [CancellationSignal] cancelled after [QUERY_TIMEOUT_MS], which Glance watches and
+ * which ends its own wait early; a catch; `cursor.use`; and a check on each column. A Glance
+ * that is slow to start is bounded only by that same signal, and only once it is running. What
+ * reaches composition is only short finished Strings in a [StateFlow], which by its nature
+ * passes a value on only when it differs from the last one, so an unchanged answer redraws
+ * nothing on the panel.
  */
 object IoriLinesRepository {
 
@@ -45,14 +48,24 @@ object IoriLinesRepository {
     private const val QUERY_TIMEOUT_MS = 1_500L
     private const val DEBOUNCE_MS = 1_000L
 
+    /** However often sources say they changed, home reads again at least this often. */
+    private const val DEBOUNCE_MAX_WAIT_MS = 5_000L
+
+    /** The longest lead and text that reach composition; the row ellipsises well before. */
+    private const val MAX_LEAD = 24
+    private const val MAX_TEXT = 160
+
     /** One line, ready to draw. */
     data class Line(val pkg: String, val lead: String, val text: String, val bold: Boolean)
 
     /** Why a source shows on home, or why it does not. */
     enum class Status { ON, OFF_HERE, NOT_INSTALLED, NEEDS_UPDATE, OFF_APP, OFF_GLANCE, NO_ANSWER }
 
-    /** Glance itself: answering, absent, too old for [PANEL], or not answering. */
-    enum class GlanceState { UNKNOWN, OK, NOT_INSTALLED, NEEDS_UPDATE, NO_ANSWER }
+    /**
+     * Glance itself: answering, absent, too old for [PANEL], refusing this build (it answers
+     * only builds signed with the key it knows), or not answering.
+     */
+    enum class GlanceState { UNKNOWN, OK, NOT_INSTALLED, NEEDS_UPDATE, REFUSED, NO_ANSWER }
 
     data class Source(val pkg: String, val label: String, val status: Status)
 
@@ -64,6 +77,8 @@ object IoriLinesRepository {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val requests = Channel<Context>(Channel.CONFLATED)
     private var debounce: Job? = null
+    /** When the oldest change not yet read arrived, in uptime milliseconds; 0 when none. */
+    private var pendingSince = 0L
     private val observed = HashSet<String>()
     @Volatile private var started = false
 
@@ -79,13 +94,23 @@ object IoriLinesRepository {
         requests.trySend(context.applicationContext)
     }
 
-    /** Ask again once things have been quiet for [DEBOUNCE_MS]; for change notifications. */
+    /**
+     * Ask again once things have been quiet for [DEBOUNCE_MS]; for change notifications. A
+     * source that keeps saying it changed cannot put the read off for longer than
+     * [DEBOUNCE_MAX_WAIT_MS]: once the oldest change waiting is that old, the read already
+     * waiting is left to run.
+     */
     fun refreshSoon(context: Context) {
         val app = context.applicationContext
         synchronized(this) {
-            debounce?.cancel()
+            val now = android.os.SystemClock.uptimeMillis()
+            if (pendingSince == 0L) pendingSince = now
+            val pending = debounce
+            if (pending != null && pending.isActive && now - pendingSince >= DEBOUNCE_MAX_WAIT_MS) return
+            pending?.cancel()
             debounce = scope.launch {
                 delay(DEBOUNCE_MS)
+                synchronized(this@IoriLinesRepository) { pendingSince = 0L }
                 refresh(app)
             }
         }
@@ -115,10 +140,16 @@ object IoriLinesRepository {
             publish(Snapshot(glance = glance), emptyList())
             return
         }
-        val rows = queryPanel(context)
-        if (rows == null) {
-            publish(Snapshot(glance = GlanceState.NO_ANSWER), emptyList())
-            return
+        val rows = when (val answer = queryPanel(context)) {
+            is PanelAnswer.Rows -> answer.rows
+            PanelAnswer.Refused -> {
+                publish(Snapshot(glance = GlanceState.REFUSED), emptyList())
+                return
+            }
+            PanelAnswer.NoAnswer -> {
+                publish(Snapshot(glance = GlanceState.NO_ANSWER), emptyList())
+                return
+            }
         }
         val prefs = Iori.prefs(context)
         val byPkg = LinkedHashMap<String, MutableList<Row>>()
@@ -162,21 +193,49 @@ object IoriLinesRepository {
 
     private class Row(val pkg: String, val lead: String, val text: String, val bold: Boolean, val status: String)
 
-    /** The panel's rows, or null when Glance refused, failed or took too long. */
-    private fun queryPanel(context: Context): List<Row>? {
+    /** What the panel said: its rows, a refusal of this build, or nothing in time. */
+    private sealed interface PanelAnswer {
+        class Rows(val rows: List<Row>) : PanelAnswer
+        /** Glance answered with no cursor at all: it does not hand lines to this build. */
+        data object Refused : PanelAnswer
+        /** Glance failed, died, took too long, or answered in a shape not understood. */
+        data object NoAnswer : PanelAnswer
+    }
+
+    private fun queryPanel(context: Context): PanelAnswer {
         val signal = CancellationSignal()
         val timer = scope.launch {
             delay(QUERY_TIMEOUT_MS)
             signal.cancel()
         }
-        return try {
-            context.contentResolver.query(PANEL, null, null, null, null, signal)?.use { rowsOf(it) }
-        } catch (_: OperationCanceledException) {
-            null
+        // Unstable: a stable reference would have the system end the launcher with Glance, should
+        // Glance be killed or updated while the cursor is open.
+        val client = try {
+            context.contentResolver.acquireUnstableContentProviderClient(PANEL.authority!!)
         } catch (_: Exception) {
             null
+        }
+        if (client == null) {
+            timer.cancel()
+            return PanelAnswer.NoAnswer
+        }
+        return try {
+            val cursor = client.query(PANEL, null, null, null, null, signal)
+            if (cursor == null) {
+                PanelAnswer.Refused
+            } else {
+                cursor.use { c -> rowsOf(c)?.let { PanelAnswer.Rows(it) } ?: PanelAnswer.NoAnswer }
+            }
+        } catch (_: OperationCanceledException) {
+            PanelAnswer.NoAnswer
+        } catch (_: Exception) {
+            PanelAnswer.NoAnswer
         } finally {
             timer.cancel()
+            try {
+                client.close()
+            } catch (_: Exception) {
+            }
         }
     }
 
@@ -192,8 +251,8 @@ object IoriLinesRepository {
             val p = c.getString(pkg) ?: continue
             out += Row(
                 pkg = p,
-                lead = if (lead >= 0) c.getString(lead).orEmpty().oneLine() else "",
-                text = c.getString(text).orEmpty().oneLine(),
+                lead = if (lead >= 0) c.getString(lead).orEmpty().oneLine().take(MAX_LEAD) else "",
+                text = c.getString(text).orEmpty().oneLine().take(MAX_TEXT),
                 bold = bold >= 0 && !c.isNull(bold) && c.getInt(bold) != 0,
                 status = c.getString(status).orEmpty(),
             )
@@ -202,6 +261,20 @@ object IoriLinesRepository {
     }
 
     private fun String.oneLine() = replace('\n', ' ').replace('\r', ' ').trim()
+
+    /**
+     * Starts loading iori's preferences file on the IO dispatcher, so that home's first look at
+     * it (whether lines were turned off after a crash) finds it already read.
+     */
+    fun warm(context: Context) {
+        val app = context.applicationContext
+        scope.launch {
+            try {
+                Iori.prefs(app).contains(Iori.KEY_TRIPPED)
+            } catch (_: Exception) {
+            }
+        }
+    }
 
     private fun statusOf(value: String): Status = when (value) {
         "on" -> Status.ON
@@ -219,7 +292,8 @@ object IoriLinesRepository {
     }
 
     /**
-     * Each source's own provider says when its lines change; so does the panel. Every
+     * Each source's own provider says when its lines change; so does the panel, when its order,
+     * a switch in Glance, or today's events change there. Every
      * registration is tried on its own, since a source may vanish between the read and here.
      */
     private fun observe(context: Context, pkg: String) {

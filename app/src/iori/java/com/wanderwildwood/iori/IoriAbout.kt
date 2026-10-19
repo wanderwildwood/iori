@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.ViewHeadline
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,8 +41,9 @@ import com.wanderwildwood.iori.ui.EInkDialog
 import com.wanderwildwood.iori.ui.monochrome
 
 /**
- * The About for inkOS:wndr: one row on the Settings home page, under inkOS's own About, which
- * keeps gezimos's credits and support links where he put them.
+ * The About for inkOS:wndr: a row on the Settings home page, under inkOS's own About, which
+ * keeps gezimos's credits and support links where he put them. Beside it, a row for the home
+ * lines dialog, so the lines' status can be seen and changed even when home has no lines.
  */
 object IoriAbout {
 
@@ -50,6 +52,30 @@ object IoriAbout {
 
     @Composable
     fun SettingsRow(titleFontSize: TextUnit) {
+        val context = LocalContext.current
+        var lines by remember { mutableStateOf(false) }
+        var tripped by remember { mutableStateOf(false) }
+        SettingsHomeItem(
+            title = stringResource(R.string.iori_lines_title),
+            imageVector = Icons.Rounded.ViewHeadline,
+            description = stringResource(R.string.iori_lines_row_desc),
+            titleFontSize = titleFontSize,
+            onClick = {
+                tripped = Iori.tripped(context)
+                lines = true
+            },
+        )
+        if (lines) {
+            LinesDialog(
+                tripped = tripped,
+                onTurnBackOn = {
+                    Iori.clearTripped(context)
+                    tripped = false
+                    IoriLinesRepository.refresh(context)
+                },
+                onDismiss = { lines = false },
+            )
+        }
         var open by remember { mutableStateOf(false) }
         SettingsHomeItem(
             title = stringResource(R.string.iori_about_row),

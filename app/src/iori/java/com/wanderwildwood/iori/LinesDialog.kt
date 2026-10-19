@@ -66,6 +66,7 @@ fun LinesDialog(tripped: Boolean, onTurnBackOn: () -> Unit, onDismiss: () -> Uni
             when (snapshot.glance) {
                 GlanceState.NOT_INSTALLED -> Line(stringResource(R.string.iori_glance_not_installed))
                 GlanceState.NEEDS_UPDATE -> Line(stringResource(R.string.iori_glance_needs, IoriLinesRepository.GLANCE_NEEDED))
+                GlanceState.REFUSED -> Line(stringResource(R.string.iori_glance_refused))
                 GlanceState.NO_ANSWER -> Line(stringResource(R.string.iori_glance_no_answer))
                 GlanceState.UNKNOWN -> Line(stringResource(R.string.iori_glance_unknown))
                 GlanceState.OK -> {

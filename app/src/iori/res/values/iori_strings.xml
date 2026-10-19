@@ -6,21 +6,34 @@
     <string name="accessibility_permission_message">inkOS:wndr needs accessibility service access to perform this gesture action (lock screen, recent apps, quick settings, or power dialog).\n\nThis service only performs the system action you assigned. It does not read screen content, collect personal data, or transmit any information. All processing stays on your device.\n\nYou will be taken to accessibility settings to enable inkOS:wndr actions.</string>
     <string name="quote_widget_label">Quote (inkOS:wndr)</string>
     <string name="notification_widget_label">Notification LS (inkOS:wndr)</string>
+    <string name="shortcut_settings_short">inkOS:wndr Settings</string>
+    <string name="inkos_settings">inkOS:wndr Settings</string>
+    <string name="perm_notification_body">inkOS:wndr needs notification access to show your notifications here. You will be taken to Android settings to grant this permission.</string>
+    <string name="toast_private_space_default_home_screen">inkOS:wndr needs to be the default home screen to access private space.</string>
+    <!-- Crash reports go to inkOS:wndr, not to inkOS's maintainer. -->
+    <string name="acra_email" translatable="false">email@wanderthe.dev</string>
+
+    <!-- Lock-screen music (iori only) -->
+    <string name="accessibility_service_description">inkOS:wndr uses this accessibility service for two things: to perform the system actions you assign to gestures (lock screen, open recent apps, open quick settings, open the power dialog), and to show music controls on the lock screen for players other than Mudita\'s own. For the second it watches only the system lock screen, to know when it is showing and whether the PIN pad is up. It does not read other apps, and it does not collect, store or share anything. No data leaves your device.</string>
+    <!-- Lock-screen music controls, when the player gives no title -->
+    <string name="lockscreen_music_nothing">Nothing playing</string>
 
     <!-- Home lines -->
     <string name="iori_lines_title">Home lines</string>
+    <string name="iori_lines_row_desc">Lines from Glance, and each source\'s status</string>
     <string name="iori_lines_tripped">Home lines turned off after a crash</string>
     <string name="iori_lines_tripped_dialog">Turned off after a crash. Press here to turn them back on.</string>
     <string name="iori_lines_none">Glance has no sources to hand over.</string>
     <string name="iori_glance_not_installed">Glance not installed</string>
     <string name="iori_glance_needs">Glance needs %1$s</string>
     <string name="iori_glance_no_answer">Glance did not answer</string>
+    <string name="iori_glance_refused">Glance does not know this build</string>
     <string name="iori_glance_unknown">Not asked yet</string>
     <string name="iori_status_on">on</string>
     <string name="iori_status_off_here">off here</string>
     <string name="iori_status_not_installed">not installed</string>
     <string name="iori_status_needs_update">needs an update</string>
-    <string name="iori_status_off_app">off in %1$s</string>
+    <string name="iori_status_off_app">nothing now, or off in %1$s</string>
     <string name="iori_status_off_glance">off in Glance</string>
     <string name="iori_status_no_answer">did not answer</string>
     <string name="iori_close">Close</string>
