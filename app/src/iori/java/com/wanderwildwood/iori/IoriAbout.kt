@@ -4,9 +4,13 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.ViewHeadline
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,16 +31,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
+import androidx.compose.ui.unit.sp
 import com.github.gezimos.inkos.BuildConfig
 import com.github.gezimos.inkos.R
+import com.github.gezimos.inkos.style.SettingsTheme
+import com.github.gezimos.inkos.style.Theme
 import com.github.gezimos.inkos.ui.compose.SettingsComposable.SettingsHomeItem
 import com.wanderwildwood.iori.ui.EInkDialog
 import com.wanderwildwood.iori.ui.monochrome
@@ -49,6 +63,46 @@ object IoriAbout {
 
     const val SOURCE = "https://github.com/wanderwildwood/iori"
     private const val DONATE = "https://square.link/u/AGu8oT10"
+
+    /** gezimos's own Buy Me a Coffee, which upstream's header button opened. */
+    private const val COFFEE = "https://buymeacoffee.com/gezimos"
+
+    /**
+     * In the Settings header, where upstream has its Buy Me a Coffee button: a cup that still
+     * opens gezimos's page, and a llama that opens this app's. Upstream's pill, border and focus
+     * look, with a glyph the height of the words it replaces.
+     */
+    @Composable
+    fun HeaderButtons(shape: Shape, fontSize: TextUnit) {
+        val size = if (fontSize.isSpecified) fontSize else SettingsTheme.typography.title.fontSize
+        val glyph = with(LocalDensity.current) { (if (size.isSpecified) size * 1.25f else 20.sp).toDp() }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            HeaderButton(R.drawable.iori_support_coffee, stringResource(R.string.iori_support_coffee), COFFEE, shape, glyph)
+            HeaderButton(R.drawable.iori_support_llama, stringResource(R.string.iori_support_llama), DONATE, shape, glyph)
+        }
+    }
+
+    @Composable
+    private fun HeaderButton(@DrawableRes icon: Int, description: String, url: String, shape: Shape, glyph: Dp) {
+        val context = LocalContext.current
+        val interactionSource = remember { MutableInteractionSource() }
+        val focused = interactionSource.collectIsFocusedAsState().value
+        val text = Theme.colors.text
+        val background = Theme.colors.background
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = description,
+            tint = if (focused) background else text,
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .clip(shape)
+                .background(if (focused) text else Color.Transparent)
+                .border(width = 2.dp, color = text, shape = shape)
+                .clickable(interactionSource = interactionSource, indication = null, role = Role.Button) { open(context, url) }
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+                .size(glyph),
+        )
+    }
 
     @Composable
     fun SettingsRow(titleFontSize: TextUnit) {

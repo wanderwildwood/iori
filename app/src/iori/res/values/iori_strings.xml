@@ -64,5 +64,7 @@
     <string name="iori_about_licence">GNU General Public License v3.0 only</string>
     <string name="iori_about_bundled">Lock-screen music from Katapult by gezimos, GPL-3.0.</string>
     <string name="iori_about_feed_llamas">feed the llamas</string>
+    <string name="iori_support_coffee">Buy the author of inkOS a coffee</string>
+    <string name="iori_support_llama">Feed the llamas</string>
     <string name="iori_about_no_browser">There is no browser on this phone to open that with.</string>
 </resources>

@@ -31,6 +31,11 @@ only. Source: https://github.com/wanderwildwood/iori
   installed, and inkOS's own chooser otherwise.
 - **Lock-screen music** for any player, and an Events widget that shows all-day events on
   their own date.
+- **Two buttons in the Settings header** where inkOS has Buy Me a Coffee: a coffee cup that still
+  opens gezimos's Buy Me a Coffee ("Buy the author of inkOS a coffee"), and a llama ("Feed the
+  llamas") for inkOS:wndr's own. Line drawings at 2.0 on a 24 grid (`iori_support_coffee.xml`,
+  `iori_support_llama.xml`), sized to the words they replace. gezimos's Support page under About
+  is unchanged.
 - **Backups.** A backup exported from inkOS restores into inkOS:wndr with its internal slots
   (app drawer, notifications and the rest) and hidden entries still working.
 
@@ -48,7 +53,7 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!IORI.md'` must list exactly these, 19 in all.
+'!app/src/iori/**' --glob '!IORI.md'` must list exactly these, 20 in all.
 
 | File:line | Purpose |
 |---|---|
@@ -62,8 +67,9 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/helper/IconUtility.kt:280` | `isSyntheticPackage` accepts iori's package, and `app.inkos` only when this build is inkOS, so the real inkOS beside it is an ordinary app |
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:467` | `Iori.guardCrashes(this)`, right after onCreate puts CrashHandler back |
 | `app/src/main/java/com/github/gezimos/inkos/helper/SearchHelper.kt:585` | a contact opens in enishi first, inkOS's chooser if that fails |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:655` | iori's Settings rows under inkOS's own About: "Home lines" (the lines dialog) and "About inkOS:wndr" |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:870` | Advanced → Restart's description, written in code, through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:389` | the Settings header's Buy Me a Coffee button becomes `IoriAbout.HeaderButtons`: a cup that opens gezimos's Buy Me a Coffee, and a llama that opens this app's donation page (upstream's 27 lines of the button are gone from here) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:628` | iori's Settings rows under inkOS's own About: "Home lines" (the lines dialog) and "About inkOS:wndr" |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:843` | Advanced → Restart's description, written in code, through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:351` | the first-run pages' body text, written in code, through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/helper/utils/BrightnessHelper.kt:17` | the brightness-gesture toast, written in code, through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/notifications/NotificationsUI.kt:400` | the notification-access message reads `perm_notification_body` (upstream's same words), which iori overrides |
