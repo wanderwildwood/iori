@@ -10,6 +10,19 @@
     <string name="inkos_settings">inkOS:wndr Settings</string>
     <string name="perm_notification_body">inkOS:wndr needs notification access to show your notifications here. You will be taken to Android settings to grant this permission.</string>
     <string name="toast_private_space_default_home_screen">inkOS:wndr needs to be the default home screen to access private space.</string>
+    <!-- Upstream's words where they mean this app; credits to inkOS and gezimos are left as they are. -->
+    <string name="settings_exit_inkos_title">Exit inkOS:wndr</string>
+    <string name="gesture_tab_inkos">inkOS:wndr</string>
+    <string name="no_inkos_shortcuts">No inkOS:wndr shortcuts</string>
+    <string name="text_biometric_login">Biometric login inkOS:wndr Settings</string>
+    <string name="wallpaper_inkos">inkOS:wndr</string>
+    <string name="about_inkos_wallpaper">About inkOS:wndr Wallpaper</string>
+    <string name="what_is_inkos_wallpaper">What is inkOS:wndr Wallpaper?</string>
+    <string name="inkos_wallpaper_explanation">inkOS:wndr wallpaper is a \"faux\" wallpaper, it\'s an image that appears over the actual android wallpaper layer.\n\nIt\'s function it\'s meant to circumvent Android cropping and zooming in your wallpaper which might break the the 1:1 pixel scaling which can cause defect to your image especially if you\'re using an e-ink device.\n\nMake sure to use correct aspect ratio, or have the exact resolution as your display.\n\nSetting an Android wallpaper will automatically clear the inkOS:wndr wallpaper.</string>
+    <string name="privacy_no_data_body">inkOS:wndr does not track you. We cannot collect, store, or share your data because inkOS:wndr does not have the capability to access or transmit your personal information.</string>
+    <string name="privacy_no_server_body">inkOS:wndr does not connect to any servers. All functionality operates entirely on your device. There is no network communication and no external connections.</string>
+    <string name="privacy_local_body">inkOS:wndr only previews and displays data that already exists on your phone. All app information, notifications, and settings are processed locally. Nothing leaves your device.</string>
+    <string name="privacy_open_source_body">inkOS:wndr is open source. You can review the source code on GitHub to verify these claims.</string>
     <!-- Crash reports go to inkOS:wndr, not to inkOS's maintainer. -->
     <string name="acra_email" translatable="false">email@wanderthe.dev</string>
 

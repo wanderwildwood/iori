@@ -14,7 +14,7 @@ object BrightnessHelper {
             context.startActivity(intent)
             Toast.makeText(
                 context,
-                "Please enable 'Modify system settings' for inkOS to use brightness gesture. This is a feature for Mudita Kompakt.",
+                com.wanderwildwood.iori.IoriNames.named("Please enable 'Modify system settings' for inkOS to use brightness gesture. This is a feature for Mudita Kompakt."), // iori: this app's name
                 Toast.LENGTH_LONG
             ).show()
             return

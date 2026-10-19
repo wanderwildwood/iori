@@ -867,7 +867,7 @@ class SettingsFragment : Fragment() {
             )
             SettingsHomeItem(
                 title = stringResource(R.string.advanced_settings_restart_title),
-                description = "Restart inkOS without rebooting the device",
+                description = com.wanderwildwood.iori.IoriNames.named("Restart inkOS without rebooting the device"), // iori: this app's name
                 titleFontSize = titleFontSize,
                 onClick = { AppReloader.restartApp(requireContext()) }
             )

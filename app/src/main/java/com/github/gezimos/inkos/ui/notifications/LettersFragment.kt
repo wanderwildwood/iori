@@ -302,7 +302,7 @@ class LettersFragment : Fragment() {
                 hasShownNotifDialog = true
                 showPermissionExplanationDialog(
                     title = getString(R.string.perm_notification_title),
-                    message = "inkOS needs notification access to show your notifications here. You will be taken to Android settings to grant this permission.",
+                    message = getString(R.string.perm_notification_body), // iori: the same words as the string, which iori overrides
                     onContinue = {
                         try {
                             ctx.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))

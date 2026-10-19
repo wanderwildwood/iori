@@ -348,7 +348,7 @@ object OnboardingScreen {
                                 5 -> "Choose a color preset for your launcher, or skip to keep your current theme and start from scratch."
                                 6 -> "Select your home shortcuts and order them using Edit Favorites. You can still longpress on single apps in home to replace them individually like before."
                                 else -> ""
-                            },
+                            }.let(com.wanderwildwood.iori.IoriNames::named), // iori: this app's name in the onboarding text
                             style = SettingsTheme.typography.body,
                             fontSize = bodyFontSize,
                             lineHeight = (bodyFontSize.value * 1.6f).sp,

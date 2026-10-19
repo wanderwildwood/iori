@@ -48,7 +48,7 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!IORI.md'` must list exactly these, 11 in all.
+'!app/src/iori/**' --glob '!IORI.md'` must list exactly these, 19 in all.
 
 | File:line | Purpose |
 |---|---|
@@ -63,6 +63,14 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:467` | `Iori.guardCrashes(this)`, right after onCreate puts CrashHandler back |
 | `app/src/main/java/com/github/gezimos/inkos/helper/SearchHelper.kt:585` | a contact opens in enishi first, inkOS's chooser if that fails |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:655` | iori's Settings rows under inkOS's own About: "Home lines" (the lines dialog) and "About inkOS:wndr" |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:870` | Advanced → Restart's description, written in code, through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:351` | the first-run pages' body text, written in code, through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/helper/utils/BrightnessHelper.kt:17` | the brightness-gesture toast, written in code, through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/notifications/NotificationsUI.kt:400` | the notification-access message reads `perm_notification_body` (upstream's same words), which iori overrides |
+| `app/src/main/java/com/github/gezimos/inkos/ui/notifications/LettersFragment.kt:305` | the same, in Letters |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt:1080` | the gesture sheet's "inkOS" tab title through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt:1618` | the shortcut sheet's "inkOS" tab title through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt:2292` | "What is inkOS Wallpaper?" reads `what_is_inkos_wallpaper` (upstream's same words), which iori overrides |
 
 Not hooks, but carried on top of v0.6:
 
@@ -78,10 +86,17 @@ main's): `accessibility_service_name`, `accessibility_service_description` (iori
 which also covers lock-screen music), `accessibility_permission_message`,
 `quote_widget_label`, `notification_widget_label`, `shortcut_settings_short` and
 `inkos_settings` (the icon's long-press shortcut and the quick menu), `perm_notification_body`,
-`toast_private_space_default_home_screen`, and `acra_email` (crash reports from inkOS:wndr go to
+`toast_private_space_default_home_screen`, the first-run and Settings words that mean this app
+(`settings_exit_inkos_title`, `gesture_tab_inkos`, `no_inkos_shortcuts`, `text_biometric_login`,
+`wallpaper_inkos`, `about_inkos_wallpaper`, `what_is_inkos_wallpaper`,
+`inkos_wallpaper_explanation`, `privacy_no_data_body`, `privacy_no_server_body`,
+`privacy_local_body`, `privacy_open_source_body`), and `acra_email` (crash reports from inkOS:wndr go to
 email@wanderthe.dev, never to gezimos). `lockscreen_music_nothing` is iori's own and lives there
 too, so main's `strings.xml` differs from upstream only by the `upstream-fixes` `events_*`
-strings. If upstream rewords one of these, carry the new wording over by hand. Only the English
+strings. If upstream rewords one of these, carry the new wording over by hand. Upstream's words that are
+written in code, not in strings.xml, go through `IoriNames.named`, which turns "inkOS" as a word on
+its own into "inkOS:wndr" and leaves links alone; it is used only where the words mean this app,
+never on a credit to inkOS or gezimos. Only the English
 default is overridden; another locale's upstream translation still says inkOS.
 
 The real inkOS (`app.inkos`) installed beside iori stays out of iori's Recents and usage lists,

@@ -1077,7 +1077,7 @@ fun GestureActionPickerSheet(
         2 -> "Android"
         else -> title
     }
-    SheetTitle(gestureTabTitle)
+    SheetTitle(com.wanderwildwood.iori.IoriNames.named(gestureTabTitle)) // iori: this app's name on its own actions' tab
     Column(modifier = Modifier.fillMaxWidth()) {
         SheetTabRow(
             selectedIndex = selectedTabIndex.intValue,
@@ -1615,7 +1615,7 @@ fun TabbedShortcutsSheet(
         3 -> context.getString(R.string.shortcut_tab_pinned)
         else -> title
     }
-    SheetTitle(tabTitle)
+    SheetTitle(com.wanderwildwood.iori.IoriNames.named(tabTitle)) // iori: this app's name on its own shortcuts' tab
     Column(modifier = Modifier.fillMaxWidth()) {
         SheetTabRow(
             selectedIndex = selectedTabIndex.intValue,
@@ -2289,7 +2289,7 @@ fun SetWallpaperSheet(
 
 @Composable
 fun InkosWallpaperInfoSheet(onDismiss: () -> Unit) {
-    SheetTitle("What is inkOS Wallpaper?")
+    SheetTitle(stringResource(R.string.what_is_inkos_wallpaper)) // iori: the same words as the string, which iori overrides
     Box(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.inkos_wallpaper_explanation),
