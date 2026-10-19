@@ -2,12 +2,15 @@ package com.wanderwildwood.iori
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,19 +20,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.github.gezimos.inkos.BuildConfig
 import com.github.gezimos.inkos.R
 import com.wanderwildwood.iori.IoriLinesRepository.GlanceState
 import com.wanderwildwood.iori.IoriLinesRepository.Status
 import com.wanderwildwood.iori.ui.EInkDialog
+import com.wanderwildwood.iori.ui.PagedColumn
 import com.wanderwildwood.iori.ui.monochrome
 
 /**
@@ -46,6 +53,46 @@ fun LinesDialog(tripped: Boolean, onTurnBackOn: () -> Unit, onDismiss: () -> Uni
     // Asked afresh on opening, even while lines are turned off after a crash: reading the
     // sources' status is the guarded part, and the dialog is where the reader looks for why.
     LaunchedEffect(Unit) { IoriLinesRepository.refresh(context) }
+    val prefs = remember { Iori.prefs(context) }
+
+    // Each row on its own, so a long list or a large text size pages by whole rows.
+    val rows = ArrayList<Pair<String, @Composable () -> Unit>>()
+    if (tripped) {
+        rows.row("tripped") {
+            Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onTurnBackOn).padding(top = 6.dp, bottom = 12.dp)) {
+                Text(stringResource(R.string.iori_lines_tripped_dialog), style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
+    when (snapshot.glance) {
+        GlanceState.NOT_INSTALLED -> rows.row("glance") { Line(stringResource(R.string.iori_glance_not_installed)) }
+        GlanceState.NEEDS_UPDATE -> rows.row("glance") {
+            Line(stringResource(R.string.iori_glance_needs, IoriLinesRepository.GLANCE_NEEDED))
+        }
+        GlanceState.REFUSED -> rows.row("glance") { Line(stringResource(R.string.iori_glance_refused)) }
+        GlanceState.NO_ANSWER -> rows.row("glance") { Line(stringResource(R.string.iori_glance_no_answer)) }
+        GlanceState.UNKNOWN -> rows.row("glance") { Line(stringResource(R.string.iori_glance_unknown)) }
+        GlanceState.OK -> {
+            if (snapshot.sources.isEmpty()) rows.row("none") { Line(stringResource(R.string.iori_lines_none)) }
+            snapshot.sources.forEach { source ->
+                rows.row("source:${source.pkg}") { SourceRow(source, presses) { presses++ } }
+            }
+        }
+    }
+    if (BuildConfig.DEBUG) {
+        rows.row("crash-own") {
+            DebugPress(stringResource(R.string.iori_debug_crash_own), Modifier.padding(top = 8.dp)) {
+                prefs.edit().putString(Iori.KEY_HOME_FAULT, HomeFault.OWN).commit()
+                onDismiss()
+            }
+        }
+        rows.row("crash-upstream") {
+            DebugPress(stringResource(R.string.iori_debug_crash_upstream)) {
+                prefs.edit().putString(Iori.KEY_HOME_FAULT, HomeFault.UPSTREAM).commit()
+                onDismiss()
+            }
+        }
+    }
 
     MaterialTheme(colorScheme = monochrome) {
         EInkDialog(onDismiss = onDismiss) {
@@ -55,96 +102,8 @@ fun LinesDialog(tripped: Boolean, onTurnBackOn: () -> Unit, onDismiss: () -> Uni
                 fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(10.dp))
-
-            if (tripped) {
-                Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onTurnBackOn).padding(vertical = 6.dp)) {
-                    Text(stringResource(R.string.iori_lines_tripped_dialog), style = MaterialTheme.typography.bodyMedium)
-                }
-                Spacer(Modifier.height(6.dp))
-            }
-
-            when (snapshot.glance) {
-                GlanceState.NOT_INSTALLED -> Line(stringResource(R.string.iori_glance_not_installed))
-                GlanceState.NEEDS_UPDATE -> Line(stringResource(R.string.iori_glance_needs, IoriLinesRepository.GLANCE_NEEDED))
-                GlanceState.REFUSED -> Line(stringResource(R.string.iori_glance_refused))
-                GlanceState.NO_ANSWER -> Line(stringResource(R.string.iori_glance_no_answer))
-                GlanceState.UNKNOWN -> Line(stringResource(R.string.iori_glance_unknown))
-                GlanceState.OK -> {
-                    if (snapshot.sources.isEmpty()) Line(stringResource(R.string.iori_lines_none))
-                    snapshot.sources.forEach { source ->
-                        val prefs = remember { Iori.prefs(context) }
-                        val onHere = remember(presses, source.pkg) { prefs.getBoolean(Iori.lineKey(source.pkg), true) }
-                        val status = when {
-                            !onHere -> Status.OFF_HERE
-                            source.status == Status.OFF_HERE -> Status.ON
-                            else -> source.status
-                        }
-                        val fault = remember(presses, source.pkg) {
-                            if (BuildConfig.DEBUG) prefs.getString(Iori.faultKey(source.pkg), null) else null
-                        }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    prefs.edit().putBoolean(Iori.lineKey(source.pkg), !onHere).apply()
-                                    presses++
-                                    IoriLinesRepository.refresh(context)
-                                }
-                                .padding(vertical = 5.dp),
-                        ) {
-                            Text(
-                                text = source.label,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = if (status == Status.ON) FontWeight.Bold else FontWeight.Normal,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f),
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = statusText(status, source.label) + (fault?.let { " · $it" } ?: ""),
-                                style = MaterialTheme.typography.bodyMedium,
-                                maxLines = 1,
-                            )
-                        }
-                        if (BuildConfig.DEBUG) {
-                            Text(
-                                text = stringResource(R.string.iori_debug_fault_source),
-                                style = MaterialTheme.typography.labelSmall,
-                                modifier = Modifier
-                                    .clickable {
-                                        val next = Fault.CYCLE[(Fault.CYCLE.indexOf(fault) + 1) % Fault.CYCLE.size]
-                                        prefs.edit().putString(Iori.faultKey(source.pkg), next).apply()
-                                        presses++
-                                        IoriLinesRepository.refresh(context)
-                                    }
-                                    .padding(bottom = 4.dp),
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (BuildConfig.DEBUG) {
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.iori_debug_crash_own),
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.clickable {
-                        Iori.prefs(context).edit().putString(Iori.KEY_HOME_FAULT, HomeFault.OWN).commit()
-                        onDismiss()
-                    }.padding(vertical = 4.dp),
-                )
-                Text(
-                    text = stringResource(R.string.iori_debug_crash_upstream),
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.clickable {
-                        Iori.prefs(context).edit().putString(Iori.KEY_HOME_FAULT, HomeFault.UPSTREAM).commit()
-                        onDismiss()
-                    }.padding(vertical = 4.dp),
-                )
-            }
-
+            // Takes what the title and Close leave, so Close is always on screen.
+            FittedPages(rows, Modifier.weight(1f, fill = false))
             Spacer(Modifier.height(16.dp))
             Text(
                 text = stringResource(R.string.iori_close),
@@ -158,6 +117,98 @@ fun LinesDialog(tripped: Boolean, onTurnBackOn: () -> Unit, onDismiss: () -> Uni
             )
         }
     }
+}
+
+/**
+ * [rows] in a [PagedColumn] only as tall as they are, up to the room it is given. A paged list
+ * fills whatever height it is handed, so the rows are measured once on their own first, never
+ * drawn, to know how much of the room a short list needs.
+ */
+@Composable
+private fun FittedPages(rows: List<Pair<String, @Composable () -> Unit>>, modifier: Modifier) {
+    SubcomposeLayout(modifier) { constraints ->
+        val loose = constraints.copy(minWidth = 0, minHeight = 0, maxHeight = Constraints.Infinity)
+        val natural = subcompose("measure") { rows.forEach { (_, row) -> row() } }
+            .sumOf { it.measure(loose).height }
+        val height = natural.coerceIn(constraints.minHeight, constraints.maxHeight)
+        val width = constraints.maxWidth
+        val list = subcompose("rows") {
+            PagedColumn(Modifier.fillMaxWidth()) {
+                rows.forEach { (key, row) -> item(key = key) { row() } }
+            }
+        }.map { it.measure(Constraints.fixed(width, height)) }
+        layout(width, height) { list.forEach { it.place(0, 0) } }
+    }
+}
+
+private fun MutableList<Pair<String, @Composable () -> Unit>>.row(key: String, content: @Composable () -> Unit) {
+    add(key to content)
+}
+
+/** One source, what it is doing, and in a debug build the fault it is made to give. */
+@Composable
+private fun SourceRow(source: IoriLinesRepository.Source, presses: Int, onPressed: () -> Unit) {
+    val context = LocalContext.current
+    val prefs = remember { Iori.prefs(context) }
+    val onHere = remember(presses, source.pkg) { prefs.getBoolean(Iori.lineKey(source.pkg), true) }
+    val status = when {
+        !onHere -> Status.OFF_HERE
+        source.status == Status.OFF_HERE -> Status.ON
+        else -> source.status
+    }
+    val fault = remember(presses, source.pkg) {
+        if (BuildConfig.DEBUG) prefs.getString(Iori.faultKey(source.pkg), null) else null
+    }
+    Column(Modifier.fillMaxWidth()) {
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val statusRoom = maxWidth * 0.6f
+            Row(
+                verticalAlignment = Alignment.Top,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        prefs.edit().putBoolean(Iori.lineKey(source.pkg), !onHere).apply()
+                        onPressed()
+                        IoriLinesRepository.refresh(context)
+                    }
+                    .padding(vertical = 5.dp),
+            ) {
+                Text(
+                    text = source.label,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = if (status == Status.ON) FontWeight.Bold else FontWeight.Normal,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = statusText(status, source.label) + (fault?.let { " · $it" } ?: ""),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.widthIn(max = statusRoom),
+                )
+            }
+        }
+        if (BuildConfig.DEBUG) {
+            DebugPress(stringResource(R.string.iori_debug_fault_source), Modifier.padding(bottom = 4.dp)) {
+                val next = Fault.CYCLE[(Fault.CYCLE.indexOf(fault) + 1) % Fault.CYCLE.size]
+                prefs.edit().putString(Iori.faultKey(source.pkg), next).apply()
+                onPressed()
+                IoriLinesRepository.refresh(context)
+            }
+        }
+    }
+}
+
+/** Debug builds only: a small press for the fault switches. */
+@Composable
+private fun DebugPress(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelSmall,
+        modifier = modifier.clickable(onClick = onClick).padding(vertical = 4.dp),
+    )
 }
 
 @Composable

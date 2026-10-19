@@ -19,7 +19,11 @@ only. Source: https://github.com/wanderwildwood/iori
   When Glance itself is the trouble it says so instead: not installed, needs 0.1.24, does not
   know this build, or did not answer. With no lines to press, the list is still reached from a
   "Home lines" row that home shows while it is being edited, and from **Settings → Home
-  lines**, beside About inkOS:wndr.
+  lines**, beside About inkOS:wndr. The list turns its pages on whole rows, like the house apps'
+  lists (`ui/PagedColumn.kt`, the canonical copy with only its package line changed), with no
+  scrollbar, and Close stays under it at any text size. A source that is not installed is named
+  as its launcher names it ("Medicine", "Wallet"), from a fixed list in `IoriNames.kt`, then by
+  its installed label, then by its package.
 - **If iori's own code ever crashes**, inkOS's crash report still comes up, and home then draws
   without its lines and says "Home lines turned off after a crash". A long press on that row
   turns them back on.
