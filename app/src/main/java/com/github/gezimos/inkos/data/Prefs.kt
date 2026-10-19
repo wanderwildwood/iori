@@ -706,7 +706,7 @@ class Prefs(val context: Context) {
     fun loadFromString(json: String) {
         prefs.edit {
             val all: HashMap<String, Any?> =
-                Gson().fromJson(json, object : TypeToken<HashMap<String, Any?>>() {}.type)
+                Gson().fromJson(com.wanderwildwood.iori.IoriBackup.rewrite(json), object : TypeToken<HashMap<String, Any?>>() {}.type) // iori: inkOS backups restore into iori
             val pm = context.packageManager
             for ((key, value) in all) {
                 if (key in deprecatedImportKeys) continue

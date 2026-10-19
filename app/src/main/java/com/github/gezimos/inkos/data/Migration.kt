@@ -5,7 +5,7 @@ import com.github.gezimos.inkos.BuildConfig
 
 class Migration(val context: Context) {
     fun migratePreferencesOnVersionUpdate(prefs: Prefs) {
-        val currentVersionCode = BuildConfig.VERSION_CODE
+        val currentVersionCode = BuildConfig.UPSTREAM_VERSION_CODE // iori: upstream's code, so its migrations still fire
         val savedVersionCode = prefs.appVersion
 
         val versionCleanupMap = mapOf<Int, List<String>>(
@@ -149,7 +149,7 @@ class Migration(val context: Context) {
                         continue
                     }
                     val newShortcutId = legacyToShortcutId[pkg] ?: continue
-                    editor.putString(pkgKey, "app.inkos")
+                    editor.putString(pkgKey, BuildConfig.APPLICATION_ID) // iori: internal slots point at this launcher
                     editor.putString("APP_SHORTCUT_ID_$slot", newShortcutId)
                     editor.putString("APP_ACTIVITY_$slot", "com.github.gezimos.inkos.MainActivity")
                 }
