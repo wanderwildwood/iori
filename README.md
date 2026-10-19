@@ -1,167 +1,165 @@
-<div style="text-align: center;">
-	<img src="docs/img/inkos.svg" alt="inkOS logo" height="48">
-	<h2>inkOS - Text based & E-ink friendly Android Launcher </h2>
-    <table>
-        <tr>
-            <td><img src='fastlane/metadata/android/en-US/images/phoneScreenshots/0.png' height='300' alt=""></td>
-            <td><img src='fastlane/metadata/android/en-US/images/phoneScreenshots/1.png' height='300' alt=""></td>
-            <td><img src='fastlane/metadata/android/en-US/images/phoneScreenshots/2.png' height='300' alt=""></td>
-            <td><img src='fastlane/metadata/android/en-US/images/phoneScreenshots/3.png' height='300' alt=""></td>
-        </tr>
-        <tr>
-            <td><img src='fastlane/metadata/android/en-US/images/phoneScreenshots/4.png' height='300' alt=""></td>
-            <td><img src='fastlane/metadata/android/en-US/images/phoneScreenshots/5.png' height='300' alt=""></td>
-            <td><img src='fastlane/metadata/android/en-US/images/phoneScreenshots/6.png' height='300' alt=""></td>
-            <td><img src='fastlane/metadata/android/en-US/images/phoneScreenshots/7.png' height='300' alt=""></td>
-        </tr>
-    </table>
+# 庵 iori — inkOS:wndr
 
-</div>
+inkOS, the text launcher for e-ink phones, with a few additions for the
+[Mudita Kompakt](https://mudita.com/products/mudita-kompakt): a few lines under the home apps
+from the phone's other apps, music controls on the lock screen for any player, and contacts
+that open in Contacts.
 
-[Documentation](DOCUMENTATION.md) | [Video demo](https://www.youtube.com/watch?v=dAmHJ5aFLWA)
+*Iori* is 庵 — a hermitage, a small hut: one room, a roof, little in it. It is the kind of place
+a home screen with a handful of words on it is meant to be.
 
-# Tested on Android 10 to 16.
+Based on [inkOS](https://github.com/gezimos/inkos) by [gezimos](https://github.com/gezimos).
+Everything inkOS does still works here, and inkOS's [documentation](DOCUMENTATION.md) applies
+as written. inkOS:wndr is its own app (`com.wanderwildwood.iori`), so it installs beside inkOS
+rather than replacing it, and either can be the home app. For plain inkOS, go to
+[gezimos's repository](https://github.com/gezimos/inkos); it is also on
+[IzzyOnDroid](https://apt.izzysoft.de/fdroid/index/apk/app.inkos).
 
-It works well with these minimal/dumbphone devices:
-
-- Mudita Kompakt
-- LightPhone 3 (tested on emulator)
-- QIN F22
-- Cat S22 flip
-
-
-# Downloading
-
-
-You can download the apk directly on the Release section on the rightside of github, or you can use a manager like IzzyOnDroid. It might come on F-Droid in the future once I figure it out.
-
-[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" alt="Get it on IzzyOnDroid" height='60' >](https://apt.izzysoft.de/fdroid/index/apk/app.inkos)
-
-# Forked with extra features
-
-### Features
-
-**Home Screen**
-- Multi-page home screen support.
-- 9 clock styles: Default, Flip, Boxed, Round, Split, Horizontal, Box Outline, Analog, Stacked.
-- Dual clocks with configurable timezone offset.
-- Per-element alignment: clock, date, apps, and quote each align independently (left/center/right).
-- 7 bottom widget types: Quote, Calendar Events, Android Widget, Shortcuts, Total Usage, Page Dots, or Disabled.
-- Audio widget: appears on playback, persists when paused, dismissible.
-- Embed any native Android widget with adjustable height and margins.
-- Separators (empty space, em dash, dots) for visual grouping.
-- Edit Mode: tap any element to open its settings live on screen.
-
-**App Drawer**
-- A-Z sidebar for quick alphabetical navigation.
-- Sort by A-Z, most used, or last used.
-- Multi-source search: apps, contacts, web, device settings, music, and files.
-- Auto-launch single search results. Auto-show keyboard option.
-- Long-press menu: uninstall, rename, hide, lock, app info.
-- Hide apps already on the home screen from the drawer.
-- App shortcuts and pinned shortcuts from third-party apps.
-
-**Fonts & Typography**
-- Per-element font: clock, date, apps, quote, notifications, settings each get their own font family and size.
-- Universal font mode: set one font for everything, then customize individual elements.
-- Custom .ttf/.otf files from device storage.
-- App name modes: normal, lowercase, UPPERCASE.
-
-**Themes & Look**
-- 15 one-tap theme presets. Custom text and background colors for light and dark mode.
-- Light, Dark, and System theme modes with independent light/dark color settings.
-- Wallpaper support with background opacity slider.
-- 4 icon modes: Text letters, System adaptive, System tinted (monochrome), Icon Packs.
-- Icon shapes: pill, rounded, square.
-- Text islands: pill-shaped backgrounds behind text elements, with color inversion.
-- Theme export/import (JSON).
-
-**Gestures**
-- 4 swipe directions + double tap + clock/date/quote tap, each assignable to 15+ actions.
-- Actions: open app, drawer, notifications, recents, simple tray, hub, settings, e-ink refresh, brightness toggle, lock screen, quick settings, power dialog, restart, exit inkOS, toggle private space, toggle work profile.
-- Configurable short/long swipe sensitivity thresholds.
-- Edge swipe back gesture.
-- Volume keys for page navigation (essential for E-ink/keypad devices).
-
-**Notifications**
-- Notification badges (*) next to app names with pending notifications.
-- Label notifications: actual message content below app names.
-- Media playing indicator with track name display.
-- Letters: full-screen notification reader with vertical paging and keyboard/DPAD shortcuts.
-- Simple Tray: paginated notification tray with per-page density and bottom navigation.
-- Hub: device status dashboard (battery, WiFi, Bluetooth, storage, brightness, DND).
-- Three independent per-app allowlists (home badges, letters, simple tray).
-- Chat options: toggle sender name, group name, message preview independently.
-
-**Recents**
-- Recent apps and usage statistics with time/money/coffee display modes.
-- Filter by today, this week, this month, or all time.
-
-**E-Ink & Hardware**
-- Auto screen refresh after exiting apps (configurable delay, home-only option).
-- 4 E-ink display modes: Disabled, Contrast, Clear, Reading (Mudita Kompakt).
-- T9, D-pad, and QWERTY keyboard navigation support.
-- UI scale modes: Auto, Tiny, Small, Medium, Normal, Big, Large, Extra Large.
-
-**Advanced**
-- Backup/restore all settings. Theme-only export/import.
-- Show/hide status bar and navigation bar independently.
-- Haptic feedback toggle.
-
-## Permissions
-
-> [!NOTE]
-> inkOS does not request internet access and does not collect or transmit any data.
-
-| Permission | Why |
+| | |
 |---|---|
-| `QUERY_ALL_PACKAGES` | List all installed apps |
-| `REQUEST_DELETE_PACKAGES` | Uninstall apps (requires user confirmation) |
-| `EXPAND_STATUS_BAR` | Expand/collapse status bar via gestures |
-| `VIBRATE` | Haptic feedback |
-| `SET_WALLPAPER` | Set wallpapers |
-| `USE_BIOMETRIC` | PIN/fingerprint lock for apps and settings |
-| `WRITE_SETTINGS` | Brightness control (Simple Tray) |
-| `CAMERA` | Flashlight toggle (Simple Tray) |
-| `READ_PHONE_STATE` | Cellular signal display (Simple Tray) |
-| `MODIFY_AUDIO_SETTINGS` | Volume control (Simple Tray) |
-| `ACCESS_WIFI_STATE` | WiFi status (Simple Tray) |
-| `CHANGE_WIFI_STATE` | WiFi toggle (Simple Tray) |
-| `BLUETOOTH` | Bluetooth status (Hub, API 30 and below) |
-| `BLUETOOTH_ADMIN` | Bluetooth admin (Hub, API 30 and below) |
-| `BLUETOOTH_CONNECT` | Bluetooth device info (Hub) |
-| `PACKAGE_USAGE_STATS` | Recent/most-used apps (Recents screen) |
-| `READ_CONTACTS` | Contact search in app drawer |
-| `READ_CALENDAR` | Calendar events widget |
-| `READ_MEDIA_IMAGES` | Wallpaper selection |
-| `READ_MEDIA_AUDIO` | Music search in app drawer |
-| `READ_EXTERNAL_STORAGE` | Media access (Android 12 and below) |
-| `BIND_APPWIDGET` | Embed Android widgets on home screen |
-| `INSTALL_SHORTCUT` | Legacy shortcut pinning |
-| `ACCESS_HIDDEN_PROFILES` | Android 15+ Private Space |
+| ![Home, with lines from Glance under the apps](screenshots/1-home.png) | ![Home lines: each source and what it is doing](screenshots/2-home-lines.png) |
+| ![Settings, with a cup for inkOS's author and a llama for this app](screenshots/3-settings.png) | ![About inkOS:wndr](screenshots/4-about.png) |
 
-## Built With
+## Lines on home
 
-| Component | Details |
-|---|---|
-| **Language** | Kotlin 2.1.20 |
-| **UI** | Jetpack Compose 1.10.4, Material3 1.4.0 |
-| **Build** | AGP 8.10.1 |
-| **Target SDK** | API 26 - 36 (Android 8.0 - 16) |
+Up to three lines under the home apps, in the quote's font, size and alignment: today's events,
+the weather, what is unread, and whatever else [Glance](https://github.com/wanderwildwood/hitome)
+shows on the lock screen. They come from Glance, so **lines need Glance 0.1.24 or later**, and
+they keep to the choices made there: the same apps, in the same order, each following its own
+lock-screen switch. An app whose lock-screen line is off has no line on home either. Other
+apps' notifications are never part of it.
 
-## License
+Pressing a line opens the app it came from. A long press opens **Home lines**, a list of the
+sources and what each is doing: on, off here, not installed, needs an update, nothing now or off
+in the app, off in Glance, did not answer. Pressing one there turns it on or off on home only,
+and leaves the lock screen as it was. When Glance itself is the trouble, the list says so
+instead: not installed, needs 0.1.24, does not know this build, or did not answer.
 
-inkOS is open source under the GPLv3 license, giving you the freedom to use, study, modify, and
-distribute it. The Copyleft provision ensures these freedoms remain intact, so inkOS will always be
-fully open source and customizable by anyone.
+With no lines to press, the same list is under **Settings → Home lines**, and home shows a
+"Home lines" row while it is being edited. The list turns its pages on whole rows, with Close
+always on screen, at any text size.
+
+Apps are named as the Kompakt's launcher names them ("Medicine", "Wallet"), installed or not.
+
+If this app's own code ever crashes, inkOS's crash report still comes up, and home then draws
+without its lines and says "Home lines turned off after a crash". A long press on that row
+turns them back on.
+
+## Music on the lock screen
+
+The Kompakt's own lock-screen music widget is wired to Mudita's player and shows nothing else.
+inkOS:wndr draws a strip above the padlock for whatever else is playing, in the place Music Box
+and Audio Reading draw theirs, and stands aside when the playing app has its own strip turned
+on, so only one ever shows. It shows only while the phone is locked with the screen on, the PIN
+pad is not up and no call is ringing or live.
+
+It is part of inkOS's own accessibility service, shown here as **inkOS:wndr actions**, the one
+that already performs the system actions given to gestures. The way it works comes from
+gezimos's [Katapult](https://github.com/gezimos/Katapult).
+
+## Smaller things
+
+- **Contacts.** A contact found in search opens on its page in
+  [Contacts](https://github.com/wanderwildwood/enishi) when that is installed, and in inkOS's
+  own chooser otherwise.
+- **All-day events** in the Events widget show on their own date.
+- **Badges.** A notification its app has marked as not to badge, such as a running service,
+  no longer puts a dot on the app.
+- **Settings header.** Where inkOS has its Buy Me a Coffee button there are two: a cup, which
+  still opens gezimos's Buy Me a Coffee, and a llama, which feeds the llamas for this one.
+  gezimos's Support page under About is unchanged.
+- **Names.** Accessibility, the widget picker, first run and Settings say inkOS:wndr wherever
+  they mean this app, so the two launchers can be told apart when both are on one phone.
+  Credits to inkOS and gezimos stay as they are.
+- **Backups.** A backup exported from inkOS restores into inkOS:wndr, with its internal slots
+  (the app drawer, notifications and the rest) and hidden apps still working.
+
+## Two launchers on one phone
+
+Each launcher is its own app to Android. Accessibility, notification access, widgets, pinned
+shortcuts and private space are granted to each one separately and do not carry over.
+
+Installed from a file on Android 13 or later, KompaktOS among them, Android may grey out the
+accessibility and notification access switches at first. Open App info, tap ⋮, then **Allow
+restricted settings**, and try again.
+
+## Installing
+
+Android 8 (API 26) or newer. Download
+<https://github.com/wanderwildwood/iori/releases/latest/download/iori.apk> and open it. That
+address always points at the newest release, with a `.sha256` beside it. Every release is
+signed with the same key, so later ones install over it and keep your settings.
+
+For updates, add this repository to [Obtainium](https://github.com/ImranR98/Obtainium):
+
+    https://github.com/wanderwildwood/iori
+
+For the lines on home, install [Glance](https://github.com/wanderwildwood/hitome) 0.1.24 or
+later too. Glance hands its lines only to inkOS:wndr, checked by package name and by the
+certificate its releases are signed with.
+
+## What it sends
+
+Nothing. Like inkOS, it has no internet permission, so it cannot reach a server of any kind.
+Settings, usage counts and everything shown on home stay on the phone. A crash report is sent
+only if you choose to send it, as an email from your own mail app, to this app's address and
+not to gezimos.
+
+The permissions are inkOS's, unchanged, and each belongs to a feature you can leave off:
+
+- **Seeing and managing apps:** the list of installed apps, uninstalling, app usage (for
+  "most used" and Total Usage), pinned shortcuts and widgets, and private space.
+- **Contacts and calendar**, read only, for search and the Events widget, and **music files**,
+  for music search. Android asks before any of them can be read.
+- **Quick settings in the launcher:** Wi-Fi and Bluetooth on and off, brightness (system
+  settings), the camera for the torch, phone state for the signal level, volume, and the
+  status bar.
+- **The rest:** fingerprint or PIN for locked apps and Settings, vibration, the wallpaper, and
+  what Android's background work library needs (network state, starting after a restart, a
+  foreground service, a wake lock). None of them opens a connection.
+
+Two services, both off until you turn them on in Android's settings:
+
+- **inkOS:wndr actions**, an accessibility service. It performs the system actions given to
+  gestures (lock the screen, Recents, quick settings, the power menu) and draws the lock-screen
+  music strip. For the strip it watches only the system lock screen, to know when it is showing
+  and whether the PIN pad is up. It reads no other app.
+- **Notification access**, for inkOS's notification badges, Letters and the music widget, and
+  to find what is playing for the lock-screen strip.
+
+Home lines come from Glance on the phone: inkOS:wndr asks it, and Glance answers from the apps
+that hand it their lines. Nothing in that goes off the phone either.
+
+## For developers
+
+Android Studio, JDK 17 or newer, and a device or emulator on Android 8 (API 26) or newer.
+
+```sh
+./gradlew :app:assembleDebug     # or :app:assembleRelease
+./gradlew :app:installDebug
+```
+
+Everything that makes this build inkOS:wndr rather than inkOS is in `app/iori.gradle` and
+`app/src/iori/`, and upstream files change only at lines marked `// iori:`.
+[IORI.md](IORI.md) lists each of them, how upstream is merged, and how the lines can be tested.
+
+A release is signed by a keystore in `signing/`, which is not in this repository. Without it
+the release APK builds **unsigned**; there is no fallback key. Releases are built locally; the
+GitHub Actions workflows inherited from inkOS are switched off.
+
+The branch `upstream-fixes` holds the fixes that are not particular to this app (badges,
+all-day events), one commit each, so they can be offered back to inkOS.
 
 ## Credits
 
-Originally forked from [mLauncher](https://github.com/DroidWorksStudio/mLauncher), itself a fork of [Olauncher](https://github.com/tanujnotes/Olauncher). At this point inkOS is pretty much its own thing.
+- [inkOS](https://github.com/gezimos/inkos) by gezimos, GPL-3.0, which is nearly all of this.
+  inkOS was itself forked from mLauncher and Olauncher; see inkOS's own credits under
+  Settings → About.
+- The lock-screen music strip follows [Katapult](https://github.com/gezimos/Katapult) by
+  gezimos, GPL-3.0.
 
-## Support the project
+## Licence
 
-<table><tr>
-<td><a href="https://buymeacoffee.com/gezimos"><img src="others/bmc-button.png" alt="Buy me a coffee" height="40" style="max-width:200px;"></a></td>
-<td valign="middle">inkOS is free, open source, and ad-free forever. If it's made your phone better, consider supporting development.</td>
-</tr></table>
+GPL-3.0, the same as upstream inkOS. See [LICENSE](LICENSE).
+
+Copyright © wander wildwood, for the additions; inkOS is gezimos's.
