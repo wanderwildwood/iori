@@ -140,7 +140,8 @@ Android Studio, JDK 17 or newer, and a device or emulator on Android 8 (API 26) 
 ```
 
 Everything that makes this build inkOS:wndr rather than inkOS is in `app/iori.gradle` and
-`app/src/iori/`, and upstream files change only at lines marked `// iori:`.
+`app/src/iori/`. Upstream files change only at lines marked `// iori:`, apart from the
+lock-screen music and the two fixes below, which are whole commits of their own.
 [IORI.md](IORI.md) lists each of them, how upstream is merged, and how the lines can be tested.
 
 A release is signed by a keystore in `signing/`, which is not in this repository. Without it

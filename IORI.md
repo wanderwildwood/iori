@@ -54,7 +54,7 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!IORI.md'` must list exactly these, 20 in all.
+'!app/src/iori/**' --glob '!*.md'` must list exactly these, 20 in all.
 
 | File:line | Purpose |
 |---|---|
@@ -177,7 +177,9 @@ This clone also holds upstream's tags `v0.1` to `v0.6`, so a stray `--tags` woul
 5. `gh workflow disable build.yml -R wanderwildwood/iori` and the same for `release.yml`,
    now that GitHub knows them. The files stay in the tree, so merges stay clean.
 6. Repository settings: Issues on, Wiki and Projects off, topics `mudita-kompakt`, `eink`,
-   `launcher`, `inkos`.
+   `launcher`, `inkos`. `.github/FUNDING.yml` is upstream's, so the repository's Sponsor
+   button would offer gezimos's GitHub Sponsors and Buy Me a Coffee; keep it or drop it
+   before the first push.
 
 **The release**
 
