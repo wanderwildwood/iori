@@ -285,11 +285,15 @@ object IoriLinesRepository {
         else -> Status.NO_ANSWER
     }
 
-    private fun label(pm: PackageManager, pkg: String): String = try {
-        pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
-    } catch (_: Exception) {
-        pkg.substringAfterLast('.')
-    }
+    /** The name its launcher shows, whether or not it is installed. See [IoriNames.shown]. */
+    private fun label(pm: PackageManager, pkg: String): String = IoriNames.shown(
+        pkg,
+        try {
+            pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
+        } catch (_: Exception) {
+            null
+        },
+    )
 
     /**
      * Each source's own provider says when its lines change; so does the panel, when its order,
