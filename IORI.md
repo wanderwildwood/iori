@@ -33,8 +33,9 @@ only. Source: https://github.com/wanderwildwood/iori
   their own date.
 - **Two buttons in the Settings header** where inkOS has Buy Me a Coffee: a coffee cup that still
   opens gezimos's Buy Me a Coffee ("Buy the author of inkOS a coffee"), and a llama ("Feed the
-  llamas") for inkOS:wndr's own. Line drawings at 2.0 on a 24 grid (`iori_support_coffee.xml`,
-  `iori_support_llama.xml`), sized to the words they replace. gezimos's Support page under About
+  llamas") for inkOS:wndr's own. The cup is a line drawing at 2.0 on a 24 grid
+  (`iori_support_coffee.xml`); the llama is the same solid one as in About (`iori_llama.xml`). Both
+  are sized to the words they replace. gezimos's Support page under About
   is unchanged.
 - **Backups.** A backup exported from inkOS restores into inkOS:wndr with its internal slots
   (app drawer, notifications and the rest) and hidden entries still working.

@@ -78,7 +78,7 @@ object IoriAbout {
         val glyph = with(LocalDensity.current) { (if (size.isSpecified) size * 1.25f else 20.sp).toDp() }
         Row(verticalAlignment = Alignment.CenterVertically) {
             HeaderButton(R.drawable.iori_support_coffee, stringResource(R.string.iori_support_coffee), COFFEE, shape, glyph)
-            HeaderButton(R.drawable.iori_support_llama, stringResource(R.string.iori_support_llama), DONATE, shape, glyph)
+            HeaderButton(R.drawable.iori_llama, stringResource(R.string.iori_support_llama), DONATE, shape, glyph)
         }
     }
 
