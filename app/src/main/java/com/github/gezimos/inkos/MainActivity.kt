@@ -464,6 +464,7 @@ class MainActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this)[MainViewModel::class.java]
 
         Thread.setDefaultUncaughtExceptionHandler(CrashHandler(applicationContext))
+        com.wanderwildwood.iori.Iori.guardCrashes(this) // iori: crash guard, after CrashHandler is put back
 
         val themeMode = when (prefs.appTheme) {
             Constants.Theme.Light -> AppCompatDelegate.MODE_NIGHT_NO

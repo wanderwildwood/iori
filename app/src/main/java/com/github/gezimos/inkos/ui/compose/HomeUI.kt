@@ -397,6 +397,8 @@ fun HomeUI(
                 )
             }
 
+            com.wanderwildwood.iori.IoriLines(state, showEditMode) // iori: home lines from Glance
+
             when (state.bottomWidgetType) {
                 Constants.BottomWidgetType.Quote.value -> {
                     if ((state.quoteText.isNotBlank()) || showEditMode) {
