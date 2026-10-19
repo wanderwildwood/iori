@@ -1,0 +1,43 @@
+// inkOS:wndr (iori): everything that makes this build iori rather than inkOS.
+//
+// Applied by one line at the end of app/build.gradle.kts, so upstream's own values are already
+// set when this runs and can be read before they are replaced. Upstream's signing block is left
+// as it is: it reads KEYSTORE_* from the environment, which the build script fills from
+// signing/. Without them the release comes out unsigned. See IORI.md.
+
+def upstreamVersionCode = android.defaultConfig.versionCode
+
+android {
+    defaultConfig {
+        // Upstream's migrations are keyed to upstream's version codes, so they are fed the code
+        // of the base this build actually contains, never iori's own.
+        buildConfigField "int", "UPSTREAM_VERSION_CODE", "${upstreamVersionCode}"
+
+        applicationId "com.wanderwildwood.iori"
+        versionCode 1
+        versionName "0.1.0"
+    }
+
+    buildTypes {
+        debug {
+            resValue "string", "app_name", "inkOS:wndr Debug"
+        }
+        release {
+            resValue "string", "app_name", "inkOS:wndr"
+            proguardFile "src/iori/proguard-iori.pro"
+        }
+    }
+
+    sourceSets {
+        main.java.srcDirs += "src/iori/java"
+        // Build-type resources outrank main's, so iori's overrides of upstream strings win
+        // without a duplicate-resource clash.
+        debug.res.srcDirs += "src/iori/res"
+        release.res.srcDirs += "src/iori/res"
+        test.java.srcDirs += "src/iori/test/java"
+    }
+}
+
+dependencies {
+    testImplementation "junit:junit:4.13.2"
+}

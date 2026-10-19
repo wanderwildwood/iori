@@ -181,3 +181,5 @@ dependencies {
     // Navigation testing
     androidTestImplementation(libs.navigation.testing)
 }
+
+apply(from = "iori.gradle") // iori: identity, iori sources and strings (app/iori.gradle)

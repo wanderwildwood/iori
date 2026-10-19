@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Overrides of upstream names, so the two launchers can be told apart where both appear:
+         Accessibility settings, the widget picker. Build-type resources outrank main's. -->
+    <string name="accessibility_service_name">inkOS:wndr actions</string>
+    <string name="accessibility_permission_message">inkOS:wndr needs accessibility service access to perform this gesture action (lock screen, recent apps, quick settings, or power dialog).\n\nThis service only performs the system action you assigned. It does not read screen content, collect personal data, or transmit any information. All processing stays on your device.\n\nYou will be taken to accessibility settings to enable inkOS:wndr actions.</string>
+    <string name="quote_widget_label">Quote (inkOS:wndr)</string>
+    <string name="notification_widget_label">Notification LS (inkOS:wndr)</string>
+
+    <!-- Home lines -->
+    <string name="iori_lines_title">Home lines</string>
+    <string name="iori_lines_tripped">Home lines turned off after a crash</string>
+    <string name="iori_lines_tripped_dialog">Turned off after a crash. Press here to turn them back on.</string>
+    <string name="iori_lines_none">Glance has no sources to hand over.</string>
+    <string name="iori_glance_not_installed">Glance not installed</string>
+    <string name="iori_glance_needs">Glance needs %1$s</string>
+    <string name="iori_glance_no_answer">Glance did not answer</string>
+    <string name="iori_glance_unknown">Not asked yet</string>
+    <string name="iori_status_on">on</string>
+    <string name="iori_status_off_here">off here</string>
+    <string name="iori_status_not_installed">not installed</string>
+    <string name="iori_status_needs_update">needs an update</string>
+    <string name="iori_status_off_app">off in %1$s</string>
+    <string name="iori_status_off_glance">off in Glance</string>
+    <string name="iori_status_no_answer">did not answer</string>
+    <string name="iori_close">Close</string>
+
+    <!-- Debug builds only -->
+    <string name="iori_debug_fault_source">Fault: none, throw, hang, null</string>
+    <string name="iori_debug_crash_own">Crash home from iori code</string>
+    <string name="iori_debug_crash_upstream">Crash home from upstream code</string>
+
+    <!-- About -->
+    <string name="iori_about_row">About inkOS:wndr</string>
+    <string name="iori_about_row_desc">Version, licence and source</string>
+    <string name="iori_about_version">inkOS:wndr %1$s</string>
+    <string name="iori_about_based">Based on inkOS by gezimos, GPL-3.0.</string>
+    <string name="iori_about_licence">GNU General Public License v3.0 only</string>
+    <string name="iori_about_bundled">Lock-screen music from Katapult by gezimos, GPL-3.0.</string>
+    <string name="iori_about_feed_llamas">feed the llamas</string>
+    <string name="iori_about_no_browser">There is no browser on this phone to open that with.</string>
+</resources>
