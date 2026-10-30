@@ -14,6 +14,14 @@ class IoriNamesTest {
     }
 
     @Test
+    fun musicBoxAndMusicBoxKAreWatchedTogether() {
+        assertEquals(listOf("com.wanderwildwood.jimeikin", "com.wanderwildwood.jimeikin.k"), IoriNames.providers("com.wanderwildwood.jimeikin"))
+        assertEquals(listOf("com.wanderwildwood.jimeikin", "com.wanderwildwood.jimeikin.k"), IoriNames.providers("com.wanderwildwood.jimeikin.k"))
+        assertEquals(listOf("com.wanderwildwood.koyomi"), IoriNames.providers("com.wanderwildwood.koyomi"))
+        assertEquals("Music Box", IoriNames.shown("com.wanderwildwood.jimeikin", null))
+    }
+
+    @Test
     fun anUnknownSourceFallsBackToItsLabelThenItsPackage() {
         assertEquals("Music", IoriNames.shown("org.example.player", "Music"))
         assertEquals("org.example.player", IoriNames.shown("org.example.player", null))

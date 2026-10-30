@@ -302,7 +302,7 @@ object IoriLinesRepository {
      */
     private fun observe(context: Context, pkg: String) {
         register(context, PANEL.toString())
-        register(context, "content://$pkg.glance/lines")
+        IoriNames.providers(pkg).forEach { register(context, "content://$it.glance/lines") }
     }
 
     private fun register(context: Context, uri: String) {

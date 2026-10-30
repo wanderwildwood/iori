@@ -11,7 +11,7 @@ only. Source: https://github.com/wanderwildwood/iori
 
 - **Lines on home.** Up to three lines under the home apps, in the quote's font, size and
   alignment: the next event, the sky, and whatever else Glance shows on the lock screen. They
-  come from Glance (hitome), so **lines need Glance 0.1.24 or later**, and they follow each
+  come from Glance (hitome), and the Music Box line follows Music Box or Music Box K, whichever is playing, so **lines need Glance 0.1.24 or later**, and they follow each
   app's own lock-screen switch: an app whose lock-screen line is off has no line on home
   either. A press opens the app a line came from. A long press opens a list of the sources and
   what each is doing (on, off here, not installed, needs an update, nothing now or off in the

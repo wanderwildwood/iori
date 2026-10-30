@@ -1,0 +1,2 @@
+v0.6.1
+- The Music Box line follows Music Box or Music Box K, whichever is playing

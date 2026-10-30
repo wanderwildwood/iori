@@ -27,6 +27,16 @@ object IoriNames {
         "com.wanderwildwood.zeni" to "Bitcoin",
     )
 
+    const val MUSIC = "com.wanderwildwood.jimeikin"
+    const val MUSIC_K = "com.wanderwildwood.jimeikin.k"
+
+    /**
+     * The packages whose providers can change [pkg]'s lines: Music Box's place on the panel is
+     * answered by Music Box or by Music Box K, whichever is playing, so both are watched.
+     */
+    fun providers(pkg: String): List<String> =
+        if (pkg == MUSIC || pkg == MUSIC_K) listOf(MUSIC, MUSIC_K) else listOf(pkg)
+
     /** [pkg]'s shown name: the fixed one, else [installed] (its label, if it is installed), else [pkg]. */
     fun shown(pkg: String, installed: String?): String =
         SHOWN[pkg] ?: SHOWN[pkg.removeSuffix(".debug")] ?: installed?.takeIf { it.isNotBlank() } ?: pkg
