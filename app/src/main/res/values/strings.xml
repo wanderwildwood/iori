@@ -22,6 +22,13 @@
     <string name="lock">Lock</string>
     <string name="unlock">Unlock</string>
     <string name="rename">Rename</string>
+    <!-- Folders in the app drawer -->
+    <string name="folder">Folder</string>
+    <string name="folder_new">New folder</string>
+    <string name="folder_starters">Starter folders</string>
+    <string name="folder_take_out">Take out of folder</string>
+    <string name="folder_delete">Delete folder</string>
+    <string name="folder_name">Folder name</string>
     <string name="info">Info</string>
     <string name="okay">Okay</string>
     <string name="enabled">Enabled</string>

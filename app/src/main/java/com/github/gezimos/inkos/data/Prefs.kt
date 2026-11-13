@@ -216,6 +216,11 @@ class Prefs(val context: Context) {
             else if (bottomWidgetType == Constants.BottomWidgetType.Quote.value) bottomWidgetType = Constants.BottomWidgetType.Disabled.value
         }
 
+    /** The drawer's folders, as JSON; read and written through [Folders]. */
+    var foldersJson: String
+        get() = prefs.getString("app_folders", "[]") ?: "[]"
+        set(value) = prefs.edit { putString("app_folders", value) }
+
     var quoteText: String
         get() = prefs.getString(QUOTE_TEXT, "Stay inspired") ?: "Stay inspired"
         set(value) = prefs.edit { putString(QUOTE_TEXT, value) }

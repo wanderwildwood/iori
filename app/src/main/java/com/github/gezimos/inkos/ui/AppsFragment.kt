@@ -55,6 +55,7 @@ import com.github.gezimos.inkos.BuildConfig
 import com.github.gezimos.inkos.MainViewModel
 import com.github.gezimos.inkos.R
 import com.github.gezimos.inkos.data.AppListItem
+import com.github.gezimos.inkos.data.Folders
 import com.github.gezimos.inkos.data.Constants
 import com.github.gezimos.inkos.data.Prefs
 import com.github.gezimos.inkos.helper.EditModeHelper
@@ -92,6 +93,18 @@ class AppsFragment : Fragment() {
     private var showSearchArg: Boolean = false
     private var searchMode: Int = -1 // -1=normal, 0=search (forces search bar + keyboard), 1=contacts (pre-loads all contacts)
 
+    // Folders. The id of the open one (null = the drawer's own list), a counter that is bumped
+    // whenever folders change so the list is rebuilt, and whether a search is typed: a search
+    // looks through every app, in a folder or not.
+    private var openFolderId by mutableStateOf<String?>(null)
+    private var foldersVersion by mutableIntStateOf(0)
+    private var drawerSearching by mutableStateOf(false)
+    /** Opened straight at a folder (a home slot or a gesture): back then leaves the drawer. */
+    private var openedAtFolder = false
+    private val folderBack = object : androidx.activity.OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() { closeFolder() }
+    }
+
     private var pendingUninstallPackage: String? = null
     private val uninstallLauncher =
         registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) {
@@ -121,6 +134,10 @@ class AppsFragment : Fragment() {
         appPosition = arguments?.getInt("n", 0) ?: 0
         showSearchArg = arguments?.getBoolean("showSearch", false) ?: false
         searchMode = arguments?.getInt("searchMode", -1) ?: -1
+        // A folder that has since been deleted opens the drawer as usual.
+        openFolderId = Folders.find(prefs, arguments?.getString("folder"))?.id
+        openedAtFolder = openFolderId != null
+        requireActivity().onBackPressedDispatcher.addCallback(this, folderBack)
 
         val includeHidden = flag == Constants.AppDrawerFlag.SetHomeApp || flag == Constants.AppDrawerFlag.HiddenApps || flag == Constants.AppDrawerFlag.EditFavorites || flag == Constants.AppDrawerFlag.EditHiddenApps
 
@@ -173,8 +190,28 @@ class AppsFragment : Fragment() {
                     Constants.AppDrawerFlag.EditHiddenApps -> appsDrawer.appList + appsDrawer.hiddenApps
                     else -> appsDrawer.appList
                 }
-                val appsForDrawer = remember(baseAppList, flag) {
-                    baseAppList
+                val folderId = openFolderId
+                val searching = drawerSearching
+                val appsForDrawer = remember(baseAppList, flag, folderId, searching, foldersVersion) {
+                    val folders = Folders.load(prefs)
+                    if (folders.isEmpty() ||
+                        (flag != Constants.AppDrawerFlag.LaunchApp && flag != Constants.AppDrawerFlag.SetHomeApp)
+                    ) {
+                        baseAppList
+                    } else {
+                        val rows = folders.map { Folders.item(it, android.os.Process.myUserHandle()) }
+                        val open = folders.firstOrNull { it.id == folderId }
+                        when {
+                            // Choosing for a home slot: folders, and every app.
+                            flag == Constants.AppDrawerFlag.SetHomeApp -> rows + baseAppList
+                            open != null -> baseAppList.filter { Folders.keyOf(it) in open.apps }
+                            searching -> rows + baseAppList
+                            else -> {
+                                val foldered = folders.flatMap { it.apps }.toSet()
+                                rows + baseAppList.filter { Folders.keyOf(it) !in foldered }
+                            }
+                        }
+                    }
                 }
                 
                 val state = remember {
@@ -235,6 +272,15 @@ class AppsFragment : Fragment() {
                 
                 LaunchedEffect(appsForDrawer) {
                     state.apps = appsForDrawer
+                }
+                LaunchedEffect(folderId, foldersVersion) {
+                    state.folderTitle = Folders.find(prefs, folderId)?.name
+                    folderBack.isEnabled = folderId != null && !openedAtFolder
+                }
+                LaunchedEffect(folderId) {
+                    state.currentPage = 0
+                    state.selectedItemIndex = 0
+                    state.azFilterLetter = null
                 }
                 
                 LaunchedEffect(Unit) {
@@ -335,6 +381,7 @@ class AppsFragment : Fragment() {
 
                 val sortedApps by remember {
                     derivedStateOf {
+                        Folders.first(
                         if (state.isEditFavoritesMode) {
                             val favSet = state.selectedFavorites.map { it.activityPackage to it.activityClass }.toSet()
                             val remaining = state.apps.filter { app ->
@@ -367,12 +414,13 @@ class AppsFragment : Fragment() {
                                 else -> state.apps.sorted() // Alphabetical
                             }
                         }
+                        )
                     }
                 }
                 
 
                 var searchVersion by remember { mutableIntStateOf(0) }
-                LaunchedEffect(state.searchQuery.text) { searchVersion++; currentSearchQuery = state.searchQuery.text }
+                LaunchedEffect(state.searchQuery.text) { searchVersion++; currentSearchQuery = state.searchQuery.text; drawerSearching = state.searchQuery.text.isNotBlank() }
                 val musicCache = remember(appsDrawer.appDrawerSearchMusicEnabled) { android.util.LruCache<String, List<AppListItem>>(16) }
                 val fileCache = remember(appsDrawer.appDrawerSearchFilesEnabled) { android.util.LruCache<String, List<AppListItem>>(16) }
                 var allContacts by remember { mutableStateOf<List<AppListItem>>(emptyList()) }
@@ -802,10 +850,11 @@ class AppsFragment : Fragment() {
                                                             findNavController().popBackStack()
                                                         }
                                                         else -> {
-                                                            dialogManager.showAppContextMenu(
+                                                            if (Folders.isFolder(selectedApp)) showFolderMenu(selectedApp) else dialogManager.showAppContextMenu(
                                                                 app = selectedApp,
                                                                 flag = flag,
                                                                 isLocked = viewModel.isAppLocked(selectedApp),
+                                                                onFolder = { picked -> view?.post { showFolderPicker(picked) } },
                                                                 onDelete = { handleAppDelete(it) },
                                                                 onRename = { pkg, newName ->
                                                                     if (newName.isEmpty()) {
@@ -1098,10 +1147,11 @@ class AppsFragment : Fragment() {
                                                 findNavController().popBackStack()
                                             }
                                             else -> {
-                                                dialogManager.showAppContextMenu(
+                                                if (Folders.isFolder(app)) showFolderMenu(app) else dialogManager.showAppContextMenu(
                                                     app = app,
                                                     flag = flag,
                                                     isLocked = viewModel.isAppLocked(app),
+                                                    onFolder = { picked -> view?.post { showFolderPicker(picked) } },
                                                     onDelete = { handleAppDelete(it) },
                                                     onRename = { pkg, newName ->
                                                         if (newName.isEmpty()) {
@@ -1328,8 +1378,91 @@ class AppsFragment : Fragment() {
         return root
     }
 
+    private fun closeFolder() {
+        openFolderId = null
+    }
+
+    /** Hold on a folder: rename it, or delete it (its apps go back to the list). */
+    private fun showFolderMenu(folderRow: AppListItem) {
+        val id = Folders.idOf(folderRow.activityPackage)
+        val folder = Folders.find(prefs, id) ?: return
+        val rename = getString(R.string.rename)
+        val delete = getString(R.string.folder_delete)
+        dialogManager.showSingleChoiceDialog(
+            context = requireContext(),
+            options = arrayOf(rename, delete),
+            titleResId = R.string.folder,
+            onItemSelected = { choice ->
+                if (choice == delete) {
+                    Folders.delete(prefs, id)
+                    foldersVersion++
+                } else {
+                    // Shown once the menu has closed, or closing it would take this with it.
+                    view?.post {
+                        dialogManager.showInputDialog(requireContext(), getString(R.string.folder_name), folder.name) { name ->
+                            Folders.rename(prefs, id, name)
+                            foldersVersion++
+                        }
+                    }
+                }
+            }
+        )
+    }
+
+    /** Hold on an app, Folder: put it in a folder, a new one, or take it out. */
+    private fun showFolderPicker(app: AppListItem) {
+        val folders = Folders.load(prefs).sortedBy { it.name.lowercase() }
+        val current = Folders.folderOf(prefs, app)
+        val newFolder = getString(R.string.folder_new)
+        val starters = getString(R.string.folder_starters)
+        val takeOut = getString(R.string.folder_take_out)
+        val options = buildList {
+            folders.forEach { add(it.name) }
+            add(newFolder)
+            if (folders.isEmpty()) add(starters)
+            if (current != null) add(takeOut)
+        }
+        dialogManager.showSingleChoiceDialog(
+            context = requireContext(),
+            options = options.toTypedArray(),
+            titleResId = R.string.folder,
+            selectedIndex = current?.let { c -> folders.indexOfFirst { it.id == c.id } }?.takeIf { it >= 0 },
+            maxHeightRatio = 0.5f,
+            onItemSelected = { choice ->
+                val index = options.indexOf(choice)
+                when {
+                    index in folders.indices -> {
+                        Folders.move(prefs, app, folders[index].id)
+                        foldersVersion++
+                    }
+                    choice == takeOut -> {
+                        Folders.move(prefs, app, null)
+                        foldersVersion++
+                    }
+                    choice == starters -> {
+                        Folders.addStarters(prefs, viewModel.appsDrawerUiState.value.appList)
+                        foldersVersion++
+                    }
+                    else -> view?.post {
+                        dialogManager.showInputDialog(requireContext(), getString(R.string.folder_name), "") { name ->
+                            Folders.create(prefs, name)?.let { Folders.move(prefs, app, it.id) }
+                            foldersVersion++
+                        }
+                    }
+                }
+            }
+        )
+    }
+
     private fun handleAppClick(app: AppListItem) {
         if (flag == Constants.AppDrawerFlag.EditFavorites || flag == Constants.AppDrawerFlag.EditHiddenApps) return
+
+        // A folder opens in place. When one is being chosen for a home slot or a gesture it
+        // falls through and is stored like an app.
+        if (Folders.isFolder(app) && flag == Constants.AppDrawerFlag.LaunchApp) {
+            openFolderId = Folders.idOf(app.activityPackage)
+            return
+        }
 
         // Record launch for frequency boosting
         if (currentSearchQuery.isNotBlank()) {

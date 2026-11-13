@@ -421,6 +421,21 @@ class AppsRepository(application: Application) {
     fun launchSyntheticOrSystemApp(
         context: Context, packageName: String, fragment: Fragment, shortcutId: String? = null
     ): Boolean {
+        if (com.github.gezimos.inkos.data.Folders.isFolderPackage(packageName)) {
+            try {
+                val bundle = androidx.core.os.bundleOf(
+                    "flag" to Constants.AppDrawerFlag.LaunchApp.toString(),
+                    "folder" to com.github.gezimos.inkos.data.Folders.idOf(packageName)
+                )
+                val nav = fragment.findNavController()
+                if (nav.currentDestination?.id == R.id.mainFragment) {
+                    nav.navigate(R.id.action_mainFragment_to_appListFragment, bundle)
+                } else {
+                    nav.navigate(R.id.appListFragment, bundle)
+                }
+            } catch (_: Exception) {}
+            return true
+        }
         when {
             packageName == BuildConfig.APPLICATION_ID && shortcutId != null -> {
                 try {

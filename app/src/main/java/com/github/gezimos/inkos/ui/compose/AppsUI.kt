@@ -36,6 +36,7 @@ import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material.icons.rounded.DriveFileRenameOutline
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.CheckBox
 import androidx.compose.material.icons.rounded.CheckBoxOutlineBlank
 import androidx.compose.material.icons.rounded.Info
@@ -234,14 +235,14 @@ fun AppsDrawerLayout(
                         verticalArrangement = Arrangement.SpaceBetween,
                         userScrollEnabled = false
                     ) {
-                        if (state.flag == Constants.AppDrawerFlag.SetHomeApp || state.flag == Constants.AppDrawerFlag.HiddenApps || state.flag == Constants.AppDrawerFlag.EditFavorites || state.flag == Constants.AppDrawerFlag.EditHiddenApps) {
+                        if (state.folderTitle != null || state.flag == Constants.AppDrawerFlag.SetHomeApp || state.flag == Constants.AppDrawerFlag.HiddenApps || state.flag == Constants.AppDrawerFlag.EditFavorites || state.flag == Constants.AppDrawerFlag.EditHiddenApps) {
                             item(key = "title") {
                                 val titleText = when (state.flag) {
                                     Constants.AppDrawerFlag.SetHomeApp -> "SELECT APP"
                                     Constants.AppDrawerFlag.HiddenApps -> "HIDDEN APPS"
                                     Constants.AppDrawerFlag.EditFavorites -> "$selectedFavoritesCount/$maxFavorites apps"
                                     Constants.AppDrawerFlag.EditHiddenApps -> "$selectedFavoritesCount hidden"
-                                    else -> ""
+                                    else -> state.folderTitle?.uppercase() ?: ""
                                 }
 
                                 val hasDone = onDone != null
@@ -368,7 +369,9 @@ fun AppsDrawerLayout(
                             }
                         }
                         
-                        if (state.searchEnabled && !state.isHiddenAppsMode) {
+                        // An open folder shows its name where the search row would be: the page has
+                        // room for one of the two, and a folder is short enough not to need a search.
+                        if (state.searchEnabled && !state.isHiddenAppsMode && state.folderTitle == null) {
                             item(key = "search_field") {
                                 SearchField(
                                     searchQuery = state.searchQuery,
@@ -1386,6 +1389,7 @@ fun AppContextMenuSheet(
     onHideShow: (Constants.AppDrawerFlag, AppListItem) -> Unit,
     onLock: (AppListItem) -> Unit,
     onInfo: (AppListItem) -> Unit,
+    onFolder: ((AppListItem) -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     val ctx = LocalContext.current
@@ -1443,6 +1447,14 @@ fun AppContextMenuSheet(
             if (isLocked) Icons.Rounded.LockOpen else Icons.Rounded.Lock,
             if (isLocked) stringResource(R.string.unlock) else stringResource(R.string.lock),
             { onLock(app); onDismiss() }
+        ))
+        // Only real apps and shortcuts go in a folder, and only from the drawer itself.
+        if (onFolder != null && flag == Constants.AppDrawerFlag.LaunchApp &&
+            !app.activityPackage.startsWith("com.inkos.")
+        ) add(AppSheetAction(
+            Icons.Rounded.Folder,
+            stringResource(R.string.folder),
+            { onFolder(app); onDismiss() }
         ))
         if (menuItemsEnabled[4]) add(AppSheetAction(
             Icons.Rounded.Info,

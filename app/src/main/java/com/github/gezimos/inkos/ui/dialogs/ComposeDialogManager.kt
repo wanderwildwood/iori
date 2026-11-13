@@ -393,7 +393,8 @@ class ComposeDialogManager(val context: Context, val activity: Activity) {
         onRename: (String, String) -> Unit,
         onHideShow: (AppDrawerFlag, AppListItem) -> Unit,
         onLock: (AppListItem) -> Unit,
-        onInfo: (AppListItem) -> Unit
+        onInfo: (AppListItem) -> Unit,
+        onFolder: ((AppListItem) -> Unit)? = null
     ) {
         sheetHost.show {
             AppContextMenuSheet(
@@ -405,6 +406,7 @@ class ComposeDialogManager(val context: Context, val activity: Activity) {
                 onHideShow = onHideShow,
                 onLock = onLock,
                 onInfo = onInfo,
+                onFolder = onFolder,
                 onDismiss = sheetHost::dismiss
             )
         }

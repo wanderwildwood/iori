@@ -36,6 +36,9 @@ class AppsDrawerState(
     var azFilterSelectedIndex by mutableStateOf(0)
     var privateSpaceFilter by mutableStateOf(false)
     var searchFocused by mutableStateOf(false)
+
+    /** The name of the folder the drawer is showing, or null for the drawer's own list. */
+    var folderTitle by mutableStateOf<String?>(null)
     
     val isHiddenAppsMode = flag == Constants.AppDrawerFlag.HiddenApps
     val isEditFavoritesMode = flag == Constants.AppDrawerFlag.EditFavorites
