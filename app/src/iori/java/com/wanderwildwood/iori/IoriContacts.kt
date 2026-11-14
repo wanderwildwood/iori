@@ -20,7 +20,7 @@ object IoriContacts {
         val missing = try { context.packageManager.getPackageInfo(ENISHI, 0); false } catch (_: PackageManager.NameNotFoundException) { true }
         if (missing) {
             return IoriHandOff.handOver(context, ENISHI, null) {
-                com.github.gezimos.inkos.helper.SearchHelper.launchContactQuickActions(context, contactId, lookupKey)
+                com.github.gezimos.inkos.helper.ContactsHelper.launchContactQuickActions(context, contactId, lookupKey)
             }
         }
         return try {
