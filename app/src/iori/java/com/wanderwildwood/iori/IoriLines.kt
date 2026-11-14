@@ -49,7 +49,7 @@ import com.github.gezimos.inkos.ui.compose.HomeUiRenderState
  * home is being edited, when one "Home lines" row stands in for them so the dialog can always be
  * reached. A press opens the app a line came from. A long press, or any press while home is
  * being edited, opens the lines dialog, which says what each source is doing. The dialog is
- * also in Settings, beside About inkOS:wndr.
+ * also in Settings, beside About Home.
  *
  * After a crash in iori's own code it draws one row saying lines were turned off, and a long
  * press there turns them back on.

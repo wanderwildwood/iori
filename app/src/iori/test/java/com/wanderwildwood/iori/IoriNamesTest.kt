@@ -31,15 +31,15 @@ class IoriNamesTest {
     @Test
     fun upstreamNameBecomesThisAppsName() {
         assertEquals(
-            "To get the most out of inkOS:wndr, grant permissions so inkOS:wndr can forward",
+            "To get the most out of Home, grant permissions so Home can forward",
             IoriNames.named("To get the most out of inkOS, grant permissions so inkOS can forward"),
         )
-        assertEquals("What is inkOS:wndr Wallpaper?", IoriNames.named("What is inkOS Wallpaper?"))
+        assertEquals("What is Home Wallpaper?", IoriNames.named("What is inkOS Wallpaper?"))
     }
 
     @Test
     fun linksAndItsOwnNameAreLeftAlone() {
-        assertEquals("inkOS:wndr", IoriNames.named("inkOS:wndr"))
+        assertEquals("Home", IoriNames.named("Home"))
         assertEquals("github.com/gezimos/inkOS/issues", IoriNames.named("github.com/gezimos/inkOS/issues"))
         assertEquals("Reddit — r/inkos", IoriNames.named("Reddit — r/inkos"))
         assertEquals("Android", IoriNames.named("Android"))

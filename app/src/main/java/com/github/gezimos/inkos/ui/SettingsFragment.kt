@@ -386,7 +386,7 @@ class SettingsFragment : Fragment() {
                                     }
                                 },
                                 showStatusBar = uiState.showStatusBar,
-                                pageIndicator = { com.wanderwildwood.iori.IoriAbout.HeaderButtons(supportButtonShape, if (settingsSize > 0) (settingsSize * 1.2).sp else TextUnit.Unspecified) }, // iori: a coffee cup for gezimos and a llama for inkOS:wndr
+                                pageIndicator = { com.wanderwildwood.iori.IoriAbout.HeaderButtons(supportButtonShape, if (settingsSize > 0) (settingsSize * 1.2).sp else TextUnit.Unspecified) }, // iori: a coffee cup for gezimos and a llama for Home
                                 titleFontSize = if (settingsSize > 0) (settingsSize * 1.5).sp else TextUnit.Unspecified
                             )
                         } else {
@@ -625,7 +625,8 @@ class SettingsFragment : Fragment() {
                 titleFontSize = titleFontSize,
                 onClick = { navigateTo(SettingsRoute.Support) },
             )
-            com.wanderwildwood.iori.IoriAbout.SettingsRow(titleFontSize) // iori: About inkOS:wndr
+            com.wanderwildwood.iori.IoriFolders.SettingsRow(titleFontSize, dialogBuilder) // iori: the drawer's folders
+            com.wanderwildwood.iori.IoriAbout.SettingsRow(titleFontSize) // iori: About Home
             Spacer(modifier = Modifier.height(16.dp))
         }
     }

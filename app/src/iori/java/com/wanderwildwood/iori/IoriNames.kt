@@ -10,7 +10,7 @@ package com.wanderwildwood.iori
  */
 object IoriNames {
 
-    const val SELF = "inkOS:wndr"
+    const val SELF = "Home"
 
     private val SHOWN = mapOf(
         "com.wanderwildwood.fukuyaku" to "Medicine",
@@ -41,7 +41,7 @@ object IoriNames {
     fun shown(pkg: String, installed: String?): String =
         SHOWN[pkg] ?: SHOWN[pkg.removeSuffix(".debug")] ?: installed?.takeIf { it.isNotBlank() } ?: pkg
 
-    // "inkOS" as a word on its own: not already "inkOS:wndr", not part of a longer word or a link.
+    // "inkOS" as a word on its own: not already "Home", not part of a longer word or a link.
     private val UPSTREAM_NAME = Regex("""(?<![\w/.])inkOS(?![\w:/])""")
 
     /** [text] with upstream's name for this app replaced by [SELF]. */

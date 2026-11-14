@@ -29,6 +29,13 @@
     <string name="folder_take_out">Take out of folder</string>
     <string name="folder_delete">Delete folder</string>
     <string name="folder_name">Folder name</string>
+    <string name="folders">Folders</string>
+    <string name="folders_row_desc">Groups of apps in the app drawer</string>
+    <!-- A folder in the Settings list: its name and how many apps it holds -->
+    <plurals name="folder_with_count">
+        <item quantity="one">%1$s, %2$d app</item>
+        <item quantity="other">%1$s, %2$d apps</item>
+    </plurals>
     <string name="info">Info</string>
     <string name="okay">Okay</string>
     <string name="enabled">Enabled</string>

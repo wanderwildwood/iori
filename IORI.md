@@ -1,10 +1,10 @@
-# inkOS:wndr (iori, 庵)
+# Home (iori, 庵)
 
-inkOS:wndr is inkOS by gezimos with a few additions for the Mudita Kompakt. It installs beside
+Home is inkOS by gezimos with a few additions for the Mudita Kompakt. It installs beside
 inkOS as `com.wanderwildwood.iori`, so both can be on one phone and either can be the home app.
 
 Based on [inkOS](https://github.com/gezimos/inkos) by gezimos, GPL-3.0. The lock-screen music
-strip comes from gezimos's Katapult, GPL-3.0. inkOS:wndr is GNU General Public License v3.0
+strip comes from gezimos's Katapult, GPL-3.0. Home is GNU General Public License v3.0
 only. Source: https://github.com/wanderwildwood/iori
 
 ## What it adds
@@ -19,7 +19,7 @@ only. Source: https://github.com/wanderwildwood/iori
   When Glance itself is the trouble it says so instead: not installed, needs 0.1.24, does not
   know this build, or did not answer. With no lines to press, the list is still reached from a
   "Home lines" row that home shows while it is being edited, and from **Settings → Home
-  lines**, beside About inkOS:wndr. The list turns its pages on whole rows, like the house apps'
+  lines**, beside About Home. The list turns its pages on whole rows, like the house apps'
   lists (`ui/PagedColumn.kt`, the canonical copy with only its package line changed), with no
   scrollbar, and Close stays under it at any text size. A source that is not installed is named
   as its launcher names it ("Medicine", "Wallet"), from a fixed list in `IoriNames.kt`, then by
@@ -33,16 +33,16 @@ only. Source: https://github.com/wanderwildwood/iori
   their own date.
 - **Two buttons in the Settings header** where inkOS has Buy Me a Coffee: a coffee cup that still
   opens gezimos's Buy Me a Coffee ("Buy the author of inkOS a coffee"), and a llama ("Feed the
-  llamas") for inkOS:wndr's own. The cup is a line drawing at 2.0 on a 24 grid
+  llamas") for Home's own. The cup is a line drawing at 2.0 on a 24 grid
   (`iori_support_coffee.xml`); the llama is the same solid one as in About (`iori_llama.xml`). Both
   are sized to the words they replace. gezimos's Support page under About
   is unchanged.
-- **Backups.** A backup exported from inkOS restores into inkOS:wndr with its internal slots
+- **Backups.** A backup exported from inkOS restores into Home with its internal slots
   (app drawer, notifications and the rest) and hidden entries still working.
 
 ## Two launchers on one phone
 
-Each launcher is its own app to Android. Accessibility (shown as "inkOS:wndr actions"),
+Each launcher is its own app to Android. Accessibility (shown as "Home actions"),
 notification access, widget binds, pinned shortcuts and private-space access are granted to
 each one separately and do not carry over.
 
@@ -69,7 +69,7 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:467` | `Iori.guardCrashes(this)`, right after onCreate puts CrashHandler back |
 | `app/src/main/java/com/github/gezimos/inkos/helper/SearchHelper.kt:585` | a contact opens in enishi first, inkOS's chooser if that fails |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:389` | the Settings header's Buy Me a Coffee button becomes `IoriAbout.HeaderButtons`: a cup that opens gezimos's Buy Me a Coffee, and a llama that opens this app's donation page (upstream's 27 lines of the button are gone from here) |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:628` | iori's Settings rows under inkOS's own About: "Home lines" (the lines dialog) and "About inkOS:wndr" |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:628` | iori's Settings rows under inkOS's own About: "Home lines" (the lines dialog) and "About Home" |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:843` | Advanced → Restart's description, written in code, through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:351` | the first-run pages' body text, written in code, through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/helper/utils/BrightnessHelper.kt:17` | the brightness-gesture toast, written in code, through `IoriNames.named` |
@@ -97,12 +97,12 @@ which also covers lock-screen music), `accessibility_permission_message`,
 (`settings_exit_inkos_title`, `gesture_tab_inkos`, `no_inkos_shortcuts`, `text_biometric_login`,
 `wallpaper_inkos`, `about_inkos_wallpaper`, `what_is_inkos_wallpaper`,
 `inkos_wallpaper_explanation`, `privacy_no_data_body`, `privacy_no_server_body`,
-`privacy_local_body`, `privacy_open_source_body`), and `acra_email` (crash reports from inkOS:wndr go to
+`privacy_local_body`, `privacy_open_source_body`), and `acra_email` (crash reports from Home go to
 email@wanderthe.dev, never to gezimos). `lockscreen_music_nothing` is iori's own and lives there
 too, so main's `strings.xml` differs from upstream only by the `upstream-fixes` `events_*`
 strings. If upstream rewords one of these, carry the new wording over by hand. Upstream's words that are
 written in code, not in strings.xml, go through `IoriNames.named`, which turns "inkOS" as a word on
-its own into "inkOS:wndr" and leaves links alone; it is used only where the words mean this app,
+its own into "Home" and leaves links alone; it is used only where the words mean this app,
 never on a credit to inkOS or gezimos. Only the English
 default is overridden; another locale's upstream translation still says inkOS.
 
@@ -118,7 +118,7 @@ they are keeps those files out of the carried diff. Everywhere else it is an ord
 - reads upstream's `defaultConfig.versionCode` first and keeps it as
   `BuildConfig.UPSTREAM_VERSION_CODE`, so the field always equals the base it was built on;
 - sets `applicationId` `com.wanderwildwood.iori` (debug keeps upstream's `.debug` suffix),
-  `versionCode` 1, `versionName` 0.1.0, and `app_name` "inkOS:wndr" ("inkOS:wndr Debug");
+  `versionCode` 1, `versionName` 0.1.0, and `app_name` "Home" ("Home Debug");
 - adds `src/iori/java` to main, `src/iori/res` to the debug and release resources, and
   `src/iori/test/java` to the unit tests;
 - keeps iori's classes unrenamed in release (`src/iori/proguard-iori.pro`), because the crash
@@ -191,7 +191,7 @@ This clone also holds upstream's tags `v0.1` to `v0.6`, so a stray `--tags` woul
    `iori.apk`, `iori.apk.sha256`, `iori-v0.1.0.apk`, `iori-v0.1.0.apk.sha256`. Each `.sha256`
    is `sha256sum` output naming its own file. The README's download link is
    `releases/latest/download/iori.apk`, so `iori.apk` must be there.
-9. `git tag -a v0.1.0 -m "inkOS:wndr 0.1.0"` on that commit, `git push origin v0.1.0`
+9. `git tag -a v0.1.0 -m "Home 0.1.0"` on that commit, `git push origin v0.1.0`
    (that one tag, by name), then `gh release create v0.1.0 --repo wanderwildwood/iori
    --title v0.1.0 --notes-file <notes>` with the four assets. Notes below.
 
@@ -203,8 +203,8 @@ This clone also holds upstream's tags `v0.1` to `v0.6`, so a stray `--tags` woul
 
         <div class="app" id="iori">
           <img class="shot" src="shots/iori.png" width="400" height="627" loading="lazy"
-               alt="inkOS:wndr's home: four apps, and today's events and texts under them">
-          <h4>inkOS:wndr <button type="button" class="jp" aria-pressed="false" title="日本語で読む">/ 庵 iori</button></h4>
+               alt="Home's home: four apps, and today's events and texts under them">
+          <h4>Home <button type="button" class="jp" aria-pressed="false" title="日本語で読む">/ 庵 iori</button></h4>
           <p class="en">gezimos's inkOS launcher, with lines from Glance under the home apps and
           music on the lock screen for any player. Installs beside inkOS.</p>
           <p class="ja" lang="ja" hidden>gezimosのinkOSランチャーに、ホームのアプリの下へGlanceの行を、ロック画面にどのプレーヤーの音楽も。inkOSと並べて入る。</p>
@@ -217,7 +217,7 @@ This clone also holds upstream's tags `v0.1` to `v0.6`, so a stray `--tags` woul
 
 11. Profile README (`wanderwildwood/wanderwildwood`): nothing to add; it points to
     wanderthe.dev for the list.
-12. Glance's README already says it hands its lines to inkOS:wndr; once the repository is up,
+12. Glance's README already says it hands its lines to Home; once the repository is up,
     link the name there to it.
 13. Upstream fixes: the two commits on `upstream-fixes` can go to gezimos as issue patches,
     each on its own.

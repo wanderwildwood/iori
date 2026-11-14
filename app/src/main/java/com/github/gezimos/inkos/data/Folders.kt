@@ -133,8 +133,13 @@ object Folders {
     )
 
     /** Returns how many folders were made or added to. */
-    fun addStarters(prefs: Prefs, installed: List<AppListItem>): Int {
-        val onPhone = installed.filter { it.shortcutId == null }.map { it.activityPackage }.toSet()
+    fun addStarters(prefs: Prefs, installed: List<AppListItem>): Int =
+        addStarters(prefs, installed.filter { it.shortcutId == null }.map { it.activityPackage }.toSet())
+
+    /** The packages the starter folders are made from, for a caller that has to look them up itself. */
+    val starterPackages: List<String> get() = STARTERS.flatMap { it.second }.map { "com.wanderwildwood.$it" }
+
+    fun addStarters(prefs: Prefs, onPhone: Set<String>): Int {
         var touched = 0
         for ((name, ids) in STARTERS) {
             val taken = load(prefs).flatMap { it.apps }.toSet()

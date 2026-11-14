@@ -1,4 +1,4 @@
-// inkOS:wndr (iori): everything that makes this build iori rather than inkOS.
+// Home (iori): everything that makes this build iori rather than inkOS.
 //
 // Applied by one line at the end of app/build.gradle.kts, so upstream's own values are already
 // set when this runs and can be read before they are replaced. Upstream's signing block is left
@@ -20,10 +20,10 @@ android {
 
     buildTypes {
         debug {
-            resValue "string", "app_name", "inkOS:wndr Debug"
+            resValue "string", "app_name", "Home Debug"
         }
         release {
-            resValue "string", "app_name", "inkOS:wndr"
+            resValue "string", "app_name", "Home"
             proguardFile "src/iori/proguard-iori.pro"
         }
     }

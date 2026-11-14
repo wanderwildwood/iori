@@ -55,7 +55,7 @@ import com.wanderwildwood.iori.ui.EInkDialog
 import com.wanderwildwood.iori.ui.monochrome
 
 /**
- * The About for inkOS:wndr: a row on the Settings home page, under inkOS's own About, which
+ * The About for Home: a row on the Settings home page, under inkOS's own About, which
  * keeps gezimos's credits and support links where gezimos put them. Beside it, a row for the home
  * lines dialog, so the lines' status can be seen and changed even when home has no lines.
  */

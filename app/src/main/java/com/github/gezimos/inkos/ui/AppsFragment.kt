@@ -204,6 +204,8 @@ class AppsFragment : Fragment() {
                         when {
                             // Choosing for a home slot: folders, and every app.
                             flag == Constants.AppDrawerFlag.SetHomeApp -> rows + baseAppList
+                            // Inside a folder a letter narrows that folder; in the drawer it
+                            // reaches every app, as a search does.
                             open != null -> baseAppList.filter { Folders.keyOf(it) in open.apps }
                             searching -> rows + baseAppList
                             else -> {
@@ -276,6 +278,10 @@ class AppsFragment : Fragment() {
                 LaunchedEffect(folderId, foldersVersion) {
                     state.folderTitle = Folders.find(prefs, folderId)?.name
                     folderBack.isEnabled = folderId != null && !openedAtFolder
+                }
+                // A typed search and a pressed letter both look through every app, foldered or not.
+                LaunchedEffect(state.searchQuery.text, state.azFilterLetter) {
+                    drawerSearching = state.searchQuery.text.isNotBlank() || state.azFilterLetter != null
                 }
                 LaunchedEffect(folderId) {
                     state.currentPage = 0
@@ -420,7 +426,7 @@ class AppsFragment : Fragment() {
                 
 
                 var searchVersion by remember { mutableIntStateOf(0) }
-                LaunchedEffect(state.searchQuery.text) { searchVersion++; currentSearchQuery = state.searchQuery.text; drawerSearching = state.searchQuery.text.isNotBlank() }
+                LaunchedEffect(state.searchQuery.text) { searchVersion++; currentSearchQuery = state.searchQuery.text }
                 val musicCache = remember(appsDrawer.appDrawerSearchMusicEnabled) { android.util.LruCache<String, List<AppListItem>>(16) }
                 val fileCache = remember(appsDrawer.appDrawerSearchFilesEnabled) { android.util.LruCache<String, List<AppListItem>>(16) }
                 var allContacts by remember { mutableStateOf<List<AppListItem>>(emptyList()) }

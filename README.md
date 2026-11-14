@@ -1,4 +1,4 @@
-# 庵 iori — inkOS:wndr
+# 庵 iori — Home
 
 inkOS, the text launcher for e-ink phones, with a few additions for the
 [Mudita Kompakt](https://mudita.com/products/mudita-kompakt): a few lines under the home apps
@@ -10,7 +10,7 @@ a home screen with a handful of words on it is meant to be.
 
 Based on [inkOS](https://github.com/gezimos/inkos) by [gezimos](https://github.com/gezimos).
 Everything inkOS does still works here, and inkOS's [documentation](DOCUMENTATION.md) applies
-as written. inkOS:wndr is its own app (`com.wanderwildwood.iori`), so it installs beside inkOS
+as written. Home is its own app (`com.wanderwildwood.iori`), so it installs beside inkOS
 rather than replacing it, and either can be the home app. For plain inkOS, go to
 [gezimos's repository](https://github.com/gezimos/inkos); it is also on
 [IzzyOnDroid](https://apt.izzysoft.de/fdroid/index/apk/app.inkos).
@@ -18,7 +18,7 @@ rather than replacing it, and either can be the home app. For plain inkOS, go to
 | | |
 |---|---|
 | ![Home, with lines from Glance under the apps](screenshots/1-home.png) | ![Home lines: each source and what it is doing](screenshots/2-home-lines.png) |
-| ![Settings, with a cup for inkOS's author and a llama for this app](screenshots/3-settings.png) | ![About inkOS:wndr](screenshots/4-about.png) |
+| ![Settings, with a cup for inkOS's author and a llama for this app](screenshots/3-settings.png) | ![About Home](screenshots/4-about.png) |
 
 ## Lines on home
 
@@ -48,12 +48,12 @@ turns them back on.
 ## Music on the lock screen
 
 The Kompakt's own lock-screen music widget is wired to Mudita's player and shows nothing else.
-inkOS:wndr draws a strip above the padlock for whatever else is playing, in the place Music Box
+Home draws a strip above the padlock for whatever else is playing, in the place Music Box
 and Audio Reading draw theirs, and stands aside when the playing app has its own strip turned
 on, so only one ever shows. It shows only while the phone is locked with the screen on, the PIN
 pad is not up and no call is ringing or live.
 
-It is part of inkOS's own accessibility service, shown here as **inkOS:wndr actions**, the one
+It is part of inkOS's own accessibility service, shown here as **Home actions**, the one
 that already performs the system actions given to gestures. The way it works comes from
 gezimos's [Katapult](https://github.com/gezimos/Katapult).
 
@@ -68,10 +68,10 @@ gezimos's [Katapult](https://github.com/gezimos/Katapult).
 - **Settings header.** Where inkOS has its Buy Me a Coffee button there are two: a cup, which
   still opens gezimos's Buy Me a Coffee, and a llama, which feeds the llamas for this one.
   gezimos's Support page under About is unchanged.
-- **Names.** Accessibility, the widget picker, first run and Settings say inkOS:wndr wherever
+- **Names.** Accessibility, the widget picker, first run and Settings say Home wherever
   they mean this app, so the two launchers can be told apart when both are on one phone.
   Credits to inkOS and gezimos stay as they are.
-- **Backups.** A backup exported from inkOS restores into inkOS:wndr, with its internal slots
+- **Backups.** A backup exported from inkOS restores into Home, with its internal slots
   (the app drawer, notifications and the rest) and hidden apps still working.
 
 ## Two launchers on one phone
@@ -95,7 +95,7 @@ For updates, add this repository to [Obtainium](https://github.com/ImranR98/Obta
     https://github.com/wanderwildwood/iori
 
 For the lines on home, install [Glance](https://github.com/wanderwildwood/hitome) 0.1.24 or
-later too. Glance hands its lines only to inkOS:wndr, checked by package name and by the
+later too. Glance hands its lines only to Home, checked by package name and by the
 certificate its releases are signed with.
 
 ## What it sends
@@ -120,14 +120,14 @@ The permissions are inkOS's, unchanged, and each belongs to a feature you can le
 
 Two services, both off until you turn them on in Android's settings:
 
-- **inkOS:wndr actions**, an accessibility service. It performs the system actions given to
+- **Home actions**, an accessibility service. It performs the system actions given to
   gestures (lock the screen, Recents, quick settings, the power menu) and draws the lock-screen
   music strip. For the strip it watches only the system lock screen, to know when it is showing
   and whether the PIN pad is up. It reads no other app.
 - **Notification access**, for inkOS's notification badges, Letters and the music widget, and
   to find what is playing for the lock-screen strip.
 
-Home lines come from Glance on the phone: inkOS:wndr asks it, and Glance answers from the apps
+Home lines come from Glance on the phone: Home asks it, and Glance answers from the apps
 that hand it their lines. Nothing in that goes off the phone either.
 
 ## For developers
@@ -139,7 +139,7 @@ Android Studio, JDK 17 or newer, and a device or emulator on Android 8 (API 26) 
 ./gradlew :app:installDebug
 ```
 
-Everything that makes this build inkOS:wndr rather than inkOS is in `app/iori.gradle` and
+Everything that makes this build Home rather than inkOS is in `app/iori.gradle` and
 `app/src/iori/`. Upstream files change only at lines marked `// iori:`, apart from the
 lock-screen music and the two fixes below, which are whole commits of their own.
 [IORI.md](IORI.md) lists each of them, how upstream is merged, and how the lines can be tested.
