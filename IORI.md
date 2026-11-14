@@ -27,6 +27,15 @@ only. Source: https://github.com/wanderwildwood/iori
 - **If iori's own code ever crashes**, inkOS's crash report still comes up, and home then draws
   without its lines and says "Home lines turned off after a crash". A long press on that row
   turns them back on.
+- **Dark mode for every app.** Settings → Dark mode turns Home dark (inkOS's own dark theme)
+  and is the one switch the other apps follow: each asks Home's read-only provider
+  (`IoriDarkProvider`, two numbers: dark or not, and when the switch was last pressed) when it
+  comes to the front (`IoriDark.kt`; the apps' side is `/opt/projects/shared-dark`). Home's own
+  dialogs are drawn through an inverting filter while Home is dark (`ui/DarkWindow.kt`).
+- **Hand-offs.** With no app picked for the clock or the date, a press opens Time or Datebook;
+  a contact opens in Connections. When that app is not on the phone, Home says so and offers
+  to get it; "Use the phone's own" is remembered and inkOS's behaviour comes back
+  (`IoriHandOff.kt`).
 - **Contacts.** A contact found in search opens on its page in Contacts (enishi) when that is
   installed, and inkOS's own chooser otherwise.
 - **Lock-screen music** for any player, and an Events widget that shows all-day events on
@@ -54,7 +63,7 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!*.md'` must list exactly these, 24 in all.
+'!app/src/iori/**' --glob '!*.md'` must list exactly these, 27 in all.
 
 | File:line | Purpose |
 |---|---|
@@ -69,8 +78,10 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:467` | `Iori.guardCrashes(this)`, right after onCreate puts CrashHandler back |
 | `app/src/main/java/com/github/gezimos/inkos/helper/SearchHelper.kt:585` | a contact opens in enishi first, inkOS's chooser if that fails |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:389` | the Settings header's Buy Me a Coffee button becomes `IoriAbout.HeaderButtons`: a cup that opens gezimos's Buy Me a Coffee, and a llama that opens this app's donation page (upstream's 27 lines of the button are gone from here) |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:628` | iori's Settings rows under inkOS's own About, three lines (628 to 630), each marked: "Your apps", "Folders" and "About Home" (which also holds "Home lines") |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:845` | Advanced → Restart's description, written in code, through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:628` | iori's Settings rows under inkOS's own About, four lines (628 to 631), each marked: "Dark mode" (Home and every app), "Your apps", "Folders" and "About Home" (which also holds "Home lines") |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/GestureHelper.kt:270` | a press on the clock with no app picked goes to Time, or to the offer to get it (`IoriHandOff.clock`); inkOS's own alarm intent when that is declined |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/GestureHelper.kt:291` | the same for the date and Datebook (`IoriHandOff.date`) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:846` | Advanced → Restart's description, written in code, through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:80` | the first run's FINISH goes through `IoriPickApps.before`, which shows the Your apps page first when any of the apps is missing |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:97` | `IoriPickApps.Page()`, drawn over the last first-run page while it is up |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:352` | the first-run pages' body text, written in code, through `IoriNames.named` |

@@ -15,6 +15,14 @@ object IoriContacts {
 
     /** True when the contact was opened in Contacts; false to fall through to inkOS's chooser. */
     fun openInEnishi(context: Context, contactId: String, lookupKey: String): Boolean {
+        // Not on the phone: offer to get it. "Use the phone's own" comes back through here,
+        // is refused below, and inkOS's chooser comes up.
+        val missing = try { context.packageManager.getPackageInfo(ENISHI, 0); false } catch (_: PackageManager.NameNotFoundException) { true }
+        if (missing) {
+            return IoriHandOff.handOver(context, ENISHI, null) {
+                com.github.gezimos.inkos.helper.SearchHelper.launchContactQuickActions(context, contactId, lookupKey)
+            }
+        }
         return try {
             val id = contactId.toLongOrNull() ?: return false
             val uri = ContactsContract.Contacts.getLookupUri(id, lookupKey) ?: return false

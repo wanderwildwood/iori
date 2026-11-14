@@ -267,7 +267,7 @@ object GestureHelper {
         if (action == Action.OpenApp) {
             if (app.activityPackage.isNotEmpty()) {
                 executeAction(context, fragment, viewModel, action, app)
-            } else {
+            } else if (!com.wanderwildwood.iori.IoriHandOff.clock(context) { context.openAlarmApp() }) { // iori: Time, or the offer to get it
                 context.openAlarmApp()
             }
         } else if (action != Action.Disabled) {
@@ -288,7 +288,7 @@ object GestureHelper {
         if (action == Action.OpenApp) {
             if (app.activityPackage.isNotEmpty()) {
                 executeAction(context, fragment, viewModel, action, app)
-            } else {
+            } else if (!com.wanderwildwood.iori.IoriHandOff.date(context) { context.launchCalendar() }) { // iori: Datebook, or the offer to get it
                 context.launchCalendar()
             }
         } else if (action != Action.Disabled) {
