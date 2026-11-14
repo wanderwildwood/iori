@@ -164,6 +164,12 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+        <!-- iori: dark mode for every app; the other apps read Home's switch here (two numbers, read-only) -->
+        <provider
+            android:name="com.wanderwildwood.iori.IoriDarkProvider"
+            android:authorities="${applicationId}.dark"
+            android:exported="true"
+            android:writePermission="android.permission.MANAGE_DOCUMENTS" />
         <!-- iori: Android's answer to an install asked for from "Your apps" -->
         <receiver
             android:name="com.wanderwildwood.iori.IoriInstallReceiver"

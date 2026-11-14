@@ -59,6 +59,11 @@
     <string name="iori_debug_crash_own">Crash home from iori code</string>
     <string name="iori_debug_crash_upstream">Crash home from upstream code</string>
 
+    <!-- Dark mode, every app -->
+    <string name="iori_dark_title">Dark mode</string>
+    <string name="iori_dark_on">On, here and in every app</string>
+    <string name="iori_dark_off">Off. Press for white on black, here and in every app</string>
+
     <!-- Your apps -->
     <string name="iori_apps_title">Your apps</string>
     <string name="iori_apps_row_desc">Installed or missing, get and update</string>

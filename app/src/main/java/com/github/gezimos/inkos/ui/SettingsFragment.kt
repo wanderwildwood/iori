@@ -625,6 +625,7 @@ class SettingsFragment : Fragment() {
                 titleFontSize = titleFontSize,
                 onClick = { navigateTo(SettingsRoute.Support) },
             )
+            com.wanderwildwood.iori.IoriDark.SettingsRow(titleFontSize) { viewModel.setAppTheme(it) } // iori: dark mode, every app
             com.wanderwildwood.iori.IoriAppsRow.SettingsRow(titleFontSize) // iori: Your apps
             com.wanderwildwood.iori.IoriFolders.SettingsRow(titleFontSize, dialogBuilder) // iori: the drawer's folders
             com.wanderwildwood.iori.IoriAbout.SettingsRow(titleFontSize) // iori: About Home
