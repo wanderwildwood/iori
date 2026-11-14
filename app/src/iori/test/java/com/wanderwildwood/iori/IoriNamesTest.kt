@@ -38,6 +38,14 @@ class IoriNamesTest {
     }
 
     @Test
+    fun theFirstRunPrivacyPageSaysWhatHomeConnectsTo() {
+        assertEquals(
+            "Home does not collect, store, or share any data. There is no tracking. The only connection Home makes is to GitHub, when you get or update your apps.",
+            IoriNames.named("inkOS does not collect, store, or share any data. There are no server connections and no tracking. Everything stays on your device."),
+        )
+    }
+
+    @Test
     fun linksAndItsOwnNameAreLeftAlone() {
         assertEquals("Home", IoriNames.named("Home"))
         assertEquals("github.com/gezimos/inkOS/issues", IoriNames.named("github.com/gezimos/inkOS/issues"))

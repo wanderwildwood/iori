@@ -19,9 +19,9 @@
     <string name="about_inkos_wallpaper">About Home Wallpaper</string>
     <string name="what_is_inkos_wallpaper">What is Home Wallpaper?</string>
     <string name="inkos_wallpaper_explanation">Home wallpaper is a \"faux\" wallpaper, it\'s an image that appears over the actual android wallpaper layer.\n\nIt\'s function it\'s meant to circumvent Android cropping and zooming in your wallpaper which might break the the 1:1 pixel scaling which can cause defect to your image especially if you\'re using an e-ink device.\n\nMake sure to use correct aspect ratio, or have the exact resolution as your display.\n\nSetting an Android wallpaper will automatically clear the Home wallpaper.</string>
-    <string name="privacy_no_data_body">Home does not track you. We cannot collect, store, or share your data because Home does not have the capability to access or transmit your personal information.</string>
-    <string name="privacy_no_server_body">Home does not connect to any servers. All functionality operates entirely on your device. There is no network communication and no external connections.</string>
-    <string name="privacy_local_body">Home only previews and displays data that already exists on your phone. All app information, notifications, and settings are processed locally. Nothing leaves your device.</string>
+    <string name="privacy_no_data_body">Home does not track you. It does not collect, store, or share your data.</string>
+    <string name="privacy_no_server_body">Home has no server of its own. It uses the network for one thing: when you open Your apps or ask for an app there, it reaches GitHub to see the latest version and to download it. Nothing about you or your phone is sent.</string>
+    <string name="privacy_local_body">Home only previews and displays data that already exists on your phone. All app information, notifications, and settings are processed locally and stay on your device.</string>
     <string name="privacy_open_source_body">Home is open source. You can review the source code on GitHub to verify these claims.</string>
     <!-- Crash reports go to Home, not to inkOS's maintainer. -->
     <string name="acra_email" translatable="false">email@wanderthe.dev</string>
@@ -55,6 +55,25 @@
     <string name="iori_debug_fault_source">Fault: none, throw, hang, null</string>
     <string name="iori_debug_crash_own">Crash home from iori code</string>
     <string name="iori_debug_crash_upstream">Crash home from upstream code</string>
+
+    <!-- Your apps -->
+    <string name="iori_apps_title">Your apps</string>
+    <string name="iori_apps_row_desc">Installed or missing, get and update</string>
+    <string name="iori_apps_core">Core</string>
+    <string name="iori_apps_extras">Extras</string>
+    <string name="iori_apps_get">Get</string>
+    <string name="iori_apps_update">Update to %1$s</string>
+    <string name="iori_apps_downloading">Downloading %1$d%%</string>
+    <string name="iori_apps_checking">Checking</string>
+    <string name="iori_apps_installing">Installing</string>
+    <string name="iori_apps_confirm">Waiting for your OK</string>
+    <!-- Shown after Android's "allow this app to install apps" screen was opened -->
+    <string name="iori_apps_failed_allow">Allow, then press again</string>
+    <string name="iori_apps_failed_network">No connection. Try again</string>
+    <string name="iori_apps_failed_checksum">Download damaged. Try again</string>
+    <string name="iori_apps_failed_app">Not the right app</string>
+    <string name="iori_apps_failed_key">Not signed by its maker</string>
+    <string name="iori_apps_failed_refused">Not installed. Try again</string>
 
     <!-- About -->
     <string name="iori_about_row">About Home</string>

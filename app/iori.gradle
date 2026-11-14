@@ -30,6 +30,8 @@ android {
 
     sourceSets {
         main.java.srcDirs += "src/iori/java"
+        // The list of apps behind "Your apps" (tools/make-apps-list.py writes it).
+        main.assets.srcDirs += "src/iori/assets"
         // Build-type resources outrank main's, so iori's overrides of upstream strings win
         // without a duplicate-resource clash.
         debug.res.srcDirs += "src/iori/res"

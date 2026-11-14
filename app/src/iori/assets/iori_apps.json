@@ -1,0 +1,428 @@
+{
+ "apps": [
+  {
+   "name": "Handset",
+   "package": "com.wanderwildwood.itodenwa",
+   "repo": "wanderwildwood/itodenwa",
+   "file": "itodenwa.apk",
+   "cert": "be687b45625f90ebb9a48d09405c2d0700f6cfad9e96db9c3a9b1c5b2ae6b163",
+   "section": "core"
+  },
+  {
+   "name": "Messaging",
+   "package": "com.wanderwildwood.kotozute",
+   "repo": "wanderwildwood/kotozute",
+   "file": "kotozute.apk",
+   "cert": "f4adf9a4ba3644c7ee15e0fb3619bd9c6f25073acd36d69d3bad9cd7f1a2fbcf",
+   "section": "core"
+  },
+  {
+   "name": "Connections",
+   "package": "com.wanderwildwood.enishi",
+   "repo": "wanderwildwood/enishi",
+   "file": "enishi.apk",
+   "cert": "def146af0a169328cee14b3cb40db62f8d352fadf1e20371dbcf68018c8a5c5b",
+   "section": "core"
+  },
+  {
+   "name": "Datebook",
+   "package": "com.wanderwildwood.koyomi",
+   "repo": "wanderwildwood/koyomi",
+   "file": "koyomi.apk",
+   "cert": "96f0e571a4e14ce861d40e4f6c536adac2026fa271b8a4ec932eb922351957bd",
+   "section": "core"
+  },
+  {
+   "name": "Memo",
+   "package": "com.wanderwildwood.oboegaki",
+   "repo": "wanderwildwood/oboegaki",
+   "file": "oboegaki.apk",
+   "cert": "20e289f7dcdd22e11dc4dfdb46ecd1b883615f3350904c7575afc1849632514e",
+   "section": "core"
+  },
+  {
+   "name": "Mailbox",
+   "package": "com.wanderwildwood.tayori",
+   "repo": "wanderwildwood/tayori",
+   "file": "tayori.apk",
+   "cert": "0ef6de6e5de9a155a7b5dc91c37004b2ba0ccb50efab2cafcbdb8ac56f370a76",
+   "section": "core"
+  },
+  {
+   "name": "Pictures",
+   "package": "com.wanderwildwood.garo",
+   "repo": "wanderwildwood/garo",
+   "file": "garo.apk",
+   "cert": "fb01c054c1e349eb5df5937c7e6c4968824dd719ada7566342dfcb1a562d96c5",
+   "section": "core"
+  },
+  {
+   "name": "Lens",
+   "package": "com.wanderwildwood.shashinki",
+   "repo": "wanderwildwood/shashinki",
+   "file": "shashinki.apk",
+   "cert": "b0cf20d891f0c95455293f3a0c6b8e615835bd16e120aae14921854dffed2273",
+   "section": "core"
+  },
+  {
+   "name": "Cabinet",
+   "package": "com.wanderwildwood.tana",
+   "repo": "wanderwildwood/tana",
+   "file": "tana.apk",
+   "cert": "2b3995b71fe50c7514d975b8df753b1ea9695e695c3c4d1f1ed83d64c81afe86",
+   "section": "core"
+  },
+  {
+   "name": "Passwords",
+   "package": "com.wanderwildwood.aikotoba",
+   "repo": "wanderwildwood/aikotoba",
+   "file": "aikotoba.apk",
+   "cert": "9b9fbd10920e2c8a94609f3aa9a1bb11213e36d5d21b53c973de11033fba25e1",
+   "section": "core"
+  },
+  {
+   "name": "Time",
+   "package": "com.wanderwildwood.tokei",
+   "repo": "wanderwildwood/tokei",
+   "file": "tokei.apk",
+   "cert": "9166ab4a621bab6aaa5c1e35303ac1a25216f2f885560dcb5918f12174337287",
+   "section": "core"
+  },
+  {
+   "name": "Glance",
+   "package": "com.wanderwildwood.hitome",
+   "repo": "wanderwildwood/hitome",
+   "file": "hitome.apk",
+   "cert": "8b5ad77e1b6c23ad805c7aef9864967bfefbafd442e43a472ab212f0593248b8",
+   "section": "core"
+  },
+  {
+   "name": "Sky",
+   "package": "com.wanderwildwood.soramoyo",
+   "repo": "wanderwildwood/soramoyo",
+   "file": "soramoyo.apk",
+   "cert": "64478d370bbe9fc6effa240fcdc04b5f3976d4c80c94d18c80f9059b3b7c29dc",
+   "section": "core"
+  },
+  {
+   "name": "Music Box",
+   "package": "com.wanderwildwood.jimeikin",
+   "repo": "wanderwildwood/jimeikin",
+   "file": "jimeikin.apk",
+   "cert": "1c65d9181220aa301ee081d172afad194763712ae9e0da634f6596ae1e20764f",
+   "section": "core"
+  },
+  {
+   "name": "Feeds",
+   "package": "com.wanderwildwood.kirinuki",
+   "repo": "wanderwildwood/kirinuki",
+   "file": "kirinuki.apk",
+   "cert": "bbbc92440c2333077deca468c24b98cec426626be04f49daef1a4f284fd464af",
+   "section": "core"
+  },
+  {
+   "name": "Dictionary",
+   "package": "com.wanderwildwood.jibiki",
+   "repo": "wanderwildwood/jibiki",
+   "file": "jibiki.apk",
+   "cert": "85554e02a836b49469abbe4af4bedae533bf221e6dbd5dffe26444011a040b32",
+   "section": "core"
+  },
+  {
+   "name": "Translate",
+   "package": "com.wanderwildwood.tsuyaku",
+   "repo": "wanderwildwood/tsuyaku",
+   "file": "tsuyaku.apk",
+   "cert": "55ca52127af00a95b1311819e2662c4db3c8befcd99a671cc38cf04f48dc60fd",
+   "section": "core"
+  },
+  {
+   "name": "Abacus",
+   "package": "com.wanderwildwood.soroban",
+   "repo": "wanderwildwood/soroban",
+   "file": "soroban.apk",
+   "cert": "2b921240b8f7934d4884da215d1274953d90c8a776e7b5d027a4f7fc147118e4",
+   "section": "extras"
+  },
+  {
+   "name": "Atlas",
+   "package": "com.wanderwildwood.chizu",
+   "repo": "wanderwildwood/chizu",
+   "file": "chizu.apk",
+   "cert": "5a70b5e59d7948322897a032382b85d36556f3fe1ace7ad894e788c35265d2b2",
+   "section": "extras"
+  },
+  {
+   "name": "Audio Reader",
+   "package": "com.wanderwildwood.mimidoku",
+   "repo": "wanderwildwood/mimidoku",
+   "file": "mimidoku.apk",
+   "cert": "dd932da2650dfc58b52ac6897648eb2a2e9ee8ae67d750c3869ddd3ca0d83f0e",
+   "section": "extras"
+  },
+  {
+   "name": "Birding",
+   "package": "com.wanderwildwood.tancho",
+   "repo": "wanderwildwood/tancho",
+   "file": "tancho.apk",
+   "cert": "bb02ac4490ec6e26b7edc4e285bb5b61349efa1ef18c515e2a739bb6d8a9b66e",
+   "section": "extras"
+  },
+  {
+   "name": "Bitcoin",
+   "package": "com.wanderwildwood.zeni",
+   "repo": "wanderwildwood/zeni",
+   "file": "zeni.apk",
+   "cert": "f2e0f1ecd2a26920fa4872fb114cc174b1ee5f7badb894c36af02487000d8b5f",
+   "section": "extras"
+  },
+  {
+   "name": "Car Check",
+   "package": "com.wanderwildwood.tenken",
+   "repo": "wanderwildwood/tenken",
+   "file": "tenken.apk",
+   "cert": "0611f33ca14953843bbca28a5d90c0b9b6e60b4c4069736bd97bc2ae20433d6f",
+   "section": "extras"
+  },
+  {
+   "name": "Chess+",
+   "package": "com.wanderwildwood.chessplus",
+   "repo": "wanderwildwood/MuditaOS-K-Chess-opensource",
+   "file": "chessplus.apk",
+   "cert": "30ead42dd3c02414067c31a0693e803a0a5cb18bbdd951a6bcd525d9fa9b8f3b",
+   "section": "extras"
+  },
+  {
+   "name": "Cycle",
+   "package": "com.wanderwildwood.cycle",
+   "repo": "wanderwildwood/cycle",
+   "file": "cycle.apk",
+   "cert": "2143d98d30f5554134830165237b053c61460f27d1620e96950065e2fd15257c",
+   "section": "extras"
+  },
+  {
+   "name": "Detour",
+   "package": "com.wanderwildwood.yorimichi",
+   "repo": "wanderwildwood/yorimichi",
+   "file": "yorimichi.apk",
+   "cert": "f28551f6ba160850f930cc966031475c9152bbc2aaf30f8972497853b7fc28af",
+   "section": "extras"
+  },
+  {
+   "name": "Dream Log",
+   "package": "com.wanderwildwood.yumecho",
+   "repo": "wanderwildwood/yumecho",
+   "file": "yumecho.apk",
+   "cert": "6ce096a3c48c12e1ef0d158e0d4eb3a8c355c74be8ac84c92697de2d84f9f62f",
+   "section": "extras"
+  },
+  {
+   "name": "Engraver",
+   "package": "com.wanderwildwood.josho",
+   "repo": "wanderwildwood/josho",
+   "file": "josho.apk",
+   "cert": "c2df56acc6ee8bfae8972397de81653de1800357324cb7c891bf934f90ee949c",
+   "section": "extras"
+  },
+  {
+   "name": "Field Kit",
+   "package": "com.wanderwildwood.zatsuno",
+   "repo": "wanderwildwood/zatsuno",
+   "file": "zatsuno.apk",
+   "cert": "ee9ea93dd29e85ac4686b6318c790726d570e364af3cfa5f8bcd6ff09710a3f4",
+   "section": "extras"
+  },
+  {
+   "name": "Go",
+   "package": "com.wanderwildwood.kuroban",
+   "repo": "wanderwildwood/kuroban",
+   "file": "kuroban.apk",
+   "cert": "31b49ced8da3885fb155b569f01182ed60a194a838cd5d84e239783d58a424a7",
+   "section": "extras"
+  },
+  {
+   "name": "Handheld Games",
+   "package": "com.wanderwildwood.keitaiyugi",
+   "repo": "wanderwildwood/keitaiyugi",
+   "file": "keitaiyugi.apk",
+   "cert": "813e7847802726274c4ba901b665994149efa53f253667f6281c7c1f63009b78",
+   "section": "extras"
+  },
+  {
+   "name": "Hum",
+   "package": "com.wanderwildwood.hanauta",
+   "repo": "wanderwildwood/hanauta",
+   "file": "hanauta.apk",
+   "cert": "4385225cf326742bb98bb43fc146ba37346157a21dcbfb3736dee191f9cb5fad",
+   "section": "extras"
+  },
+  {
+   "name": "I Ching",
+   "package": "com.wanderwildwood.ekikyo",
+   "repo": "wanderwildwood/ekikyo",
+   "file": "ekikyo.apk",
+   "cert": "d8d1afa9f8d7293914d11dfc1ace34bd189b2422d2513951317d6cd9e743004a",
+   "section": "extras"
+  },
+  {
+   "name": "Level",
+   "package": "com.wanderwildwood.mizumori",
+   "repo": "wanderwildwood/mizumori",
+   "file": "mizumori.apk",
+   "cert": "0ba1a47376e5fd3b33c3ea1a7fce5997287de12abd51774f76f6d7e0e69cf276",
+   "section": "extras"
+  },
+  {
+   "name": "Medicine",
+   "package": "com.wanderwildwood.fukuyaku",
+   "repo": "wanderwildwood/fukuyaku",
+   "file": "fukuyaku.apk",
+   "cert": "8f891b77935e4b6ca9b3839ef57371151c5195ddb73df3c4b9f3e74cf35c17b8",
+   "section": "extras"
+  },
+  {
+   "name": "Mesh",
+   "package": "com.wanderwildwood.amime",
+   "repo": "wanderwildwood/amime",
+   "file": "amime.apk",
+   "cert": "e7d6b9c642b199d6083ba08daacfe90a4254dc7ec1bbdc122ab5f240a71a2c73",
+   "section": "extras"
+  },
+  {
+   "name": "Mushroom Journal",
+   "package": "com.wanderwildwood.kinokocho",
+   "repo": "wanderwildwood/kinokocho",
+   "file": "kinokocho.apk",
+   "cert": "d08ec862513896a11d962c283dfb7c004c4fbfff3382bba4aaea1411c2c5b6e7",
+   "section": "extras"
+  },
+  {
+   "name": "Parked",
+   "package": "com.wanderwildwood.okiba",
+   "repo": "wanderwildwood/okiba",
+   "file": "okiba.apk",
+   "cert": "56a20627cdef76887e735168ec2bc3a11b024f8ca7a4c699354573794d38e5ca",
+   "section": "extras"
+  },
+  {
+   "name": "Practice",
+   "package": "com.wanderwildwood.nikka",
+   "repo": "wanderwildwood/nikka",
+   "file": "nikka.apk",
+   "cert": "66398e8b68313da337a60da303433e2cc7d4a88143fc2a9c3b0a1f57ed3630dc",
+   "section": "extras"
+  },
+  {
+   "name": "Recipes",
+   "package": "com.wanderwildwood.kondate",
+   "repo": "wanderwildwood/kondate",
+   "file": "kondate.apk",
+   "cert": "f886bee796090ba4f97dd8babe7616b347c4a86cbab5954ab34dc43ed4072bd2",
+   "section": "extras"
+  },
+  {
+   "name": "Remote",
+   "package": "com.wanderwildwood.enkaku",
+   "repo": "wanderwildwood/enkaku",
+   "file": "enkaku.apk",
+   "cert": "d305ca7ce878cee4eca26ed7bf8604c9dd05baecd7719738767051daf90e6166",
+   "section": "extras"
+  },
+  {
+   "name": "Shelf",
+   "package": "com.wanderwildwood.shoka",
+   "repo": "wanderwildwood/shoka",
+   "file": "shoka.apk",
+   "cert": "7479c85dab42dd4e97629ccff0b7eb62e1f09722b9da86ab781737286a5c6342",
+   "section": "extras"
+  },
+  {
+   "name": "Solitaire",
+   "package": "com.wanderwildwood.solitaire",
+   "repo": "wanderwildwood/solitaire",
+   "file": "solitaire.apk",
+   "cert": "608921d5af7d0d8121422d16579e48a4d8ace11758c39c2b345d6e529b11283a",
+   "section": "extras"
+  },
+  {
+   "name": "Songbook",
+   "package": "com.wanderwildwood.utahon",
+   "repo": "wanderwildwood/utahon",
+   "file": "utahon.apk",
+   "cert": "b6f04691f0e4a0b75bad3ec496a8503661fc96c830082e7861495c1499dd3ae8",
+   "section": "extras"
+  },
+  {
+   "name": "Speedometer",
+   "package": "com.wanderwildwood.sokudokei",
+   "repo": "wanderwildwood/sokudokei",
+   "file": "sokudokei.apk",
+   "cert": "b5359275dc2e3fcad457461a984898c0d2f261643cdfb5f2f72348d5d42d400c",
+   "section": "extras"
+  },
+  {
+   "name": "Star Chart",
+   "package": "com.wanderwildwood.seizu",
+   "repo": "wanderwildwood/seizu",
+   "file": "seizu.apk",
+   "cert": "3ea10477fa071491fa9075ba16d129b728431366cd37120c218f15836229e157",
+   "section": "extras"
+  },
+  {
+   "name": "Tarot",
+   "package": "com.wanderwildwood.tarot",
+   "repo": "wanderwildwood/tarot",
+   "file": "tarot.apk",
+   "cert": "7ca9d3570f89790fee8d3ac2e2457e20913fd0f49608053962c068b180ac44e0",
+   "section": "extras"
+  },
+  {
+   "name": "Topo",
+   "package": "com.wanderwildwood.chikei",
+   "repo": "wanderwildwood/chikei",
+   "file": "chikei.apk",
+   "cert": "a8571008cc56ed3e64bdcf7de0fe999bdd85babe8dfc4fb6c1077e72bd5e6ced",
+   "section": "extras"
+  },
+  {
+   "name": "Torrents",
+   "package": "com.wanderwildwood.honryu",
+   "repo": "wanderwildwood/honryu",
+   "file": "honryu.apk",
+   "cert": "2724c8c1bd77cf8888036eff5bb07195a3532adc94e99f46827c32ec9f709630",
+   "section": "extras"
+  },
+  {
+   "name": "Tuner",
+   "package": "com.wanderwildwood.onsa",
+   "repo": "wanderwildwood/onsa",
+   "file": "onsa.apk",
+   "cert": "9576fa799934795c26d036b2af8a774d69a9c22190cd44e4190ec6d31e0cf3db",
+   "section": "extras"
+  },
+  {
+   "name": "Typewriter",
+   "package": "com.wanderwildwood.dajiki",
+   "repo": "wanderwildwood/dajiki",
+   "file": "dajiki.apk",
+   "cert": "01414a052801e31cf5f0786e461293efdeed09511dc7dc48f0cbd26a3ba23f39",
+   "section": "extras"
+  },
+  {
+   "name": "Wallet",
+   "package": "com.wanderwildwood.satsuire",
+   "repo": "wanderwildwood/satsuire",
+   "file": "satsuire.apk",
+   "cert": "e8dd0e8acf311e519c336dc5898acb0eba0eb627b51306cf3cdb594c3ffdd637",
+   "section": "extras"
+  },
+  {
+   "name": "Whereabouts",
+   "package": "com.wanderwildwood.ibasho",
+   "repo": "wanderwildwood/ibasho",
+   "file": "ibasho.apk",
+   "cert": "68cb6d51f84389d495f5ae998acc921bb3525f0650bfc8620bc2a96408242648",
+   "section": "extras"
+  }
+ ]
+}

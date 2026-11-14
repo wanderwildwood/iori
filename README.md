@@ -100,12 +100,18 @@ certificate its releases are signed with.
 
 ## What it sends
 
-Nothing. Like inkOS, it has no internet permission, so it cannot reach a server of any kind.
-Settings, usage counts and everything shown on home stay on the phone. A crash report is sent
+Nothing about you. Unlike inkOS, Home has the internet permission, for one thing: **Your apps**
+(in Settings). When you open that page it asks GitHub for the latest release of each of the
+apps you have, and when you press Get or Update it downloads that app from its GitHub release.
+A download is installed only if it is signed with the key listed for that app inside Home.
+GitHub sees the request, as it would from a browser; Home sends nothing else, and has no
+server of its own. Settings, usage counts and everything shown on home stay on the phone. A crash report is sent
 only if you choose to send it, as an email from your own mail app, to this app's address and
 not to gezimos.
 
-The permissions are inkOS's, unchanged, and each belongs to a feature you can leave off:
+The permissions are inkOS's, plus three for Your apps (internet, asking Android to install an
+app, and updating an app Home installed without asking again). Each belongs to a feature you
+can leave off:
 
 - **Seeing and managing apps:** the list of installed apps, uninstalling, app usage (for
   "most used" and Total Usage), pinned shortcuts and widgets, and private space.
@@ -116,7 +122,7 @@ The permissions are inkOS's, unchanged, and each belongs to a feature you can le
   status bar.
 - **The rest:** fingerprint or PIN for locked apps and Settings, vibration, the wallpaper, and
   what Android's background work library needs (network state, starting after a restart, a
-  foreground service, a wake lock). None of them opens a connection.
+  foreground service, a wake lock). None of these opens a connection.
 
 Two services, both off until you turn them on in Android's settings:
 

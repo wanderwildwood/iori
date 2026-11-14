@@ -81,6 +81,13 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 
 Not hooks, but carried on top of v0.6:
 
+- **Folders in the app drawer** (`data/Folders.kt`, and changes inside `ui/AppsFragment.kt`,
+  `ui/compose/AppsUI.kt`, `ui/AppsDrawerState.kt`, `ui/dialogs/ComposeDialogManager.kt`,
+  `data/Prefs.kt`, `data/repository/AppsRepository.kt`): these are edits to upstream's drawer,
+  not one-line hooks, and will need care at the next upstream merge.
+- **Your apps** (`IoriApps.kt`, `IoriAppsDialog.kt`, `assets/iori_apps.json` from
+  `tools/make-apps-list.py`): three permissions and a receiver in the manifest.
+
 - `upstream-fixes`: "Honour canShowBadge() so service notifications stop badging" and
   "Events widget: all-day events by their date". Each is its own commit so it can be offered
   to gezimos as an issue patch.
