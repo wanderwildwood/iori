@@ -42,7 +42,8 @@ import com.wanderwildwood.iori.ui.monochrome
 /**
  * Every source the lines come from, and what each is doing: on, off here, not installed, needs
  * an update, off in its own app, off in Glance, or did not answer. When the trouble is Glance
- * itself it says that instead. Pressing a source switches it on or off on home only.
+ * itself it says that instead. Pressing a source switches it on or off on home only; pressing
+ * one that is not installed or needs an update gets it, and so for Glance, as Your apps would.
  */
 @Composable
 fun LinesDialog(tripped: Boolean, onTurnBackOn: () -> Unit, onDismiss: () -> Unit) {
@@ -52,8 +53,16 @@ fun LinesDialog(tripped: Boolean, onTurnBackOn: () -> Unit, onDismiss: () -> Uni
     var presses by remember { mutableIntStateOf(0) }
     // Asked afresh on opening, even while lines are turned off after a crash: reading the
     // sources' status is the guarded part, and the dialog is where the reader looks for why.
-    LaunchedEffect(Unit) { IoriLinesRepository.refresh(context) }
+    LaunchedEffect(Unit) {
+        IoriLinesRepository.refresh(context)
+        IoriApps.refreshInstalled(context)
+    }
+    OnResume { IoriApps.resumed(context) }
     val prefs = remember { Iori.prefs(context) }
+    val installs by IoriApps.states.collectAsState()
+    // Asked again once an app got from here is on the phone.
+    val onPhone = installs.count { it.value.installed != null }
+    LaunchedEffect(onPhone) { IoriLinesRepository.refresh(context) }
 
     // Each row on its own, so a long list or a large text size pages by whole rows.
     val rows = ArrayList<Pair<String, @Composable () -> Unit>>()
@@ -65,9 +74,11 @@ fun LinesDialog(tripped: Boolean, onTurnBackOn: () -> Unit, onDismiss: () -> Uni
         }
     }
     when (snapshot.glance) {
-        GlanceState.NOT_INSTALLED -> rows.row("glance") { Line(stringResource(R.string.iori_glance_not_installed)) }
+        GlanceState.NOT_INSTALLED -> rows.row("glance") {
+            GetLine(stringResource(R.string.iori_glance_not_installed), IoriLinesRepository.GLANCE, installs)
+        }
         GlanceState.NEEDS_UPDATE -> rows.row("glance") {
-            Line(stringResource(R.string.iori_glance_needs, IoriLinesRepository.GLANCE_NEEDED))
+            GetLine(stringResource(R.string.iori_glance_needs, IoriLinesRepository.GLANCE_NEEDED), IoriLinesRepository.GLANCE, installs)
         }
         GlanceState.REFUSED -> rows.row("glance") { Line(stringResource(R.string.iori_glance_refused)) }
         GlanceState.NO_ANSWER -> rows.row("glance") { Line(stringResource(R.string.iori_glance_no_answer)) }
@@ -75,7 +86,7 @@ fun LinesDialog(tripped: Boolean, onTurnBackOn: () -> Unit, onDismiss: () -> Uni
         GlanceState.OK -> {
             if (snapshot.sources.isEmpty()) rows.row("none") { Line(stringResource(R.string.iori_lines_none)) }
             snapshot.sources.forEach { source ->
-                rows.row("source:${source.pkg}") { SourceRow(source, presses) { presses++ } }
+                rows.row("source:${source.pkg}") { SourceRow(source, presses, installs[source.pkg]) { presses++ } }
             }
         }
     }
@@ -147,7 +158,7 @@ private fun MutableList<Pair<String, @Composable () -> Unit>>.row(key: String, c
 
 /** One source, what it is doing, and in a debug build the fault it is made to give. */
 @Composable
-private fun SourceRow(source: IoriLinesRepository.Source, presses: Int, onPressed: () -> Unit) {
+private fun SourceRow(source: IoriLinesRepository.Source, presses: Int, install: IoriApps.State?, onPressed: () -> Unit) {
     val context = LocalContext.current
     val prefs = remember { Iori.prefs(context) }
     val onHere = remember(presses, source.pkg) { prefs.getBoolean(Iori.lineKey(source.pkg), true) }
@@ -159,6 +170,10 @@ private fun SourceRow(source: IoriLinesRepository.Source, presses: Int, onPresse
     val fault = remember(presses, source.pkg) {
         if (BuildConfig.DEBUG) prefs.getString(Iori.faultKey(source.pkg), null) else null
     }
+    // A source that is missing or too old, and is one of the apps Home can get: a press gets it.
+    val gettable = remember(source.pkg) { IoriApps.find(context, source.pkg) }
+        .takeIf { status == Status.NOT_INSTALLED || status == Status.NEEDS_UPDATE }
+    val progress = if (gettable != null) progressText(install ?: IoriApps.State()) else null
     Column(Modifier.fillMaxWidth()) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val statusRoom = maxWidth * 0.6f
@@ -167,9 +182,13 @@ private fun SourceRow(source: IoriLinesRepository.Source, presses: Int, onPresse
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable {
-                        prefs.edit().putBoolean(Iori.lineKey(source.pkg), !onHere).apply()
-                        onPressed()
-                        IoriLinesRepository.refresh(context)
+                        if (gettable != null) {
+                            IoriApps.install(context, gettable)
+                        } else {
+                            prefs.edit().putBoolean(Iori.lineKey(source.pkg), !onHere).apply()
+                            onPressed()
+                            IoriLinesRepository.refresh(context)
+                        }
                     }
                     .padding(vertical = 5.dp),
             ) {
@@ -183,7 +202,7 @@ private fun SourceRow(source: IoriLinesRepository.Source, presses: Int, onPresse
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = statusText(status, source.label) + (fault?.let { " · $it" } ?: ""),
+                    text = (progress ?: statusText(status, source.label, gettable != null)) + (fault?.let { " · $it" } ?: ""),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.End,
                     modifier = Modifier.widthIn(max = statusRoom),
@@ -216,12 +235,38 @@ private fun Line(text: String) {
     Text(text = text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 5.dp))
 }
 
+/** Glance's own trouble, with Get beside it when Glance is one of the apps Home can get. */
 @Composable
-private fun statusText(status: Status, label: String): String = when (status) {
+private fun GetLine(text: String, pkg: String, installs: Map<String, IoriApps.State>) {
+    val context = LocalContext.current
+    val app = remember(pkg) { IoriApps.find(context, pkg) }
+    if (app == null) {
+        Line(text)
+        return
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { IoriApps.install(context, app) }
+            .padding(vertical = 5.dp),
+    ) {
+        Text(text = text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = progressText(installs[pkg] ?: IoriApps.State()) ?: stringResource(R.string.iori_apps_get),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.End,
+        )
+    }
+}
+
+@Composable
+private fun statusText(status: Status, label: String, gettable: Boolean = false): String = when (status) {
     Status.ON -> stringResource(R.string.iori_status_on)
     Status.OFF_HERE -> stringResource(R.string.iori_status_off_here)
-    Status.NOT_INSTALLED -> stringResource(R.string.iori_status_not_installed)
-    Status.NEEDS_UPDATE -> stringResource(R.string.iori_status_needs_update)
+    Status.NOT_INSTALLED -> stringResource(if (gettable) R.string.iori_status_not_installed_get else R.string.iori_status_not_installed)
+    Status.NEEDS_UPDATE -> stringResource(if (gettable) R.string.iori_status_needs_update_get else R.string.iori_status_needs_update)
     Status.OFF_APP -> stringResource(R.string.iori_status_off_app, label)
     Status.OFF_GLANCE -> stringResource(R.string.iori_status_off_glance)
     Status.NO_ANSWER -> stringResource(R.string.iori_status_no_answer)

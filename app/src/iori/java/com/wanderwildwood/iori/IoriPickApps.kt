@@ -201,7 +201,17 @@ object IoriPickApps {
                     modifier = Modifier.fillMaxWidth().height(48.dp.scaled(screenScale)),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    FooterButton(stringResource(R.string.btn_back_upper), titleFontSize, textColor, Modifier.weight(1f)) { leave() }
+                    // With apps ticked the left button passes them by; the back key still goes back a page.
+                    val canSkip = !running && wanted.isNotEmpty()
+                    FooterButton(
+                        text = stringResource(if (canSkip) R.string.btn_skip else R.string.btn_back_upper),
+                        fontSize = titleFontSize,
+                        color = textColor,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        leave()
+                        if (canSkip) finish()
+                    }
                     Box(Modifier.width(1.5.dp.scaled(screenScale)).fillMaxHeight().background(textColor))
                     Box(Modifier.width(54.dp.scaled(screenScale)), contentAlignment = Alignment.Center) {
                         Text(

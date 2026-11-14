@@ -46,6 +46,9 @@
     <string name="iori_status_off_here">off here</string>
     <string name="iori_status_not_installed">not installed</string>
     <string name="iori_status_needs_update">needs an update</string>
+    <!-- The same two, for an app Home can get: a press on the row gets it -->
+    <string name="iori_status_not_installed_get">not installed. Get</string>
+    <string name="iori_status_needs_update_get">needs an update. Get</string>
     <string name="iori_status_off_app">nothing now, or off in %1$s</string>
     <string name="iori_status_off_glance">off in Glance</string>
     <string name="iori_status_no_answer">did not answer</string>
