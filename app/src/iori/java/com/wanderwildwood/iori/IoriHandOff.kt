@@ -113,7 +113,9 @@ object IoriHandOff {
                 onDismiss = { close() },
             )
         }
-        root.addView(host, ViewGroup.LayoutParams(0, 0))
+        // Full size, though it draws nothing itself (the offer is a window of its own): a view
+        // with no size is never measured, and then never composed.
+        root.addView(host, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
     }
 
     @Composable
