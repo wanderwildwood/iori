@@ -101,8 +101,10 @@ certificate its releases are signed with.
 ## What it sends
 
 Nothing about you. Unlike inkOS, Home has the internet permission, for one thing: **Your apps**
-(in Settings). When you open that page it asks GitHub for the latest release of each of the
-apps you have, and when you press Get or Update it downloads that app from its GitHub release.
+(in Settings, and as the last page of a first run). When you open the page in Settings it asks
+GitHub for the latest release of each of the apps you have, and when you press Get or Update,
+or GET on the first run's page, it downloads that app from its GitHub release. The first run's
+page reaches nothing until GET is pressed.
 A download is installed only if it is signed with the key listed for that app inside Home.
 GitHub sees the request, as it would from a browser; Home sends nothing else, and has no
 server of its own. Settings, usage counts and everything shown on home stay on the phone. A crash report is sent

@@ -54,14 +54,14 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!*.md'` must list exactly these, 20 in all.
+'!app/src/iori/**' --glob '!*.md'` must list exactly these, 24 in all.
 
 | File:line | Purpose |
 |---|---|
 | `app/build.gradle.kts:185` | `apply(from = "iori.gradle")`: identity, iori sources and strings |
 | `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt:8` | migrations run on `UPSTREAM_VERSION_CODE`, so upstream's thresholds still fire; line 258 writes back the same value |
 | `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt:152` | migrated internal slots point at `BuildConfig.APPLICATION_ID`, not `app.inkos` |
-| `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt:709` | imports pass through `IoriBackup.rewrite`, so an inkOS backup restores into iori |
+| `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt:714` | imports pass through `IoriBackup.rewrite`, so an inkOS backup restores into iori |
 | `app/src/main/java/com/github/gezimos/inkos/ui/RecentsFragment.kt:672` | iori is left out of its own Recents |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:400` | `IoriLines(state, showEditMode)`, after the media widget, before the bottom widget |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:3601` | the placeholder icon uses iori's own package |
@@ -69,9 +69,11 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:467` | `Iori.guardCrashes(this)`, right after onCreate puts CrashHandler back |
 | `app/src/main/java/com/github/gezimos/inkos/helper/SearchHelper.kt:585` | a contact opens in enishi first, inkOS's chooser if that fails |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:389` | the Settings header's Buy Me a Coffee button becomes `IoriAbout.HeaderButtons`: a cup that opens gezimos's Buy Me a Coffee, and a llama that opens this app's donation page (upstream's 27 lines of the button are gone from here) |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:628` | iori's Settings rows under inkOS's own About: "Home lines" (the lines dialog) and "About Home" |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:843` | Advanced → Restart's description, written in code, through `IoriNames.named` |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:351` | the first-run pages' body text, written in code, through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:628` | iori's Settings rows under inkOS's own About, three lines (628 to 630), each marked: "Your apps", "Folders" and "About Home" (which also holds "Home lines") |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:845` | Advanced → Restart's description, written in code, through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:80` | the first run's FINISH goes through `IoriPickApps.before`, which shows the Your apps page first when any of the apps is missing |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:97` | `IoriPickApps.Page()`, drawn over the last first-run page while it is up |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:352` | the first-run pages' body text, written in code, through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/helper/utils/BrightnessHelper.kt:17` | the brightness-gesture toast, written in code, through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/notifications/NotificationsUI.kt:400` | the notification-access message reads `perm_notification_body` (upstream's same words), which iori overrides |
 | `app/src/main/java/com/github/gezimos/inkos/ui/notifications/LettersFragment.kt:305` | the same, in Letters |
@@ -86,7 +88,11 @@ Not hooks, but carried on top of v0.6:
   `data/Prefs.kt`, `data/repository/AppsRepository.kt`): these are edits to upstream's drawer,
   not one-line hooks, and will need care at the next upstream merge.
 - **Your apps** (`IoriApps.kt`, `IoriAppsDialog.kt`, `assets/iori_apps.json` from
-  `tools/make-apps-list.py`): three permissions and a receiver in the manifest.
+  `tools/make-apps-list.py`): three permissions and a receiver in the manifest. The first run
+  ends on the same list as a page of tick boxes (`IoriPickApps.kt`): the core apps that are
+  missing come ticked, GET fetches the ticked ones one after the other (`IoriApps.installAll`),
+  and an install question put away without an answer is given up when the page is back in
+  front (`IoriApps.resumed`), so the ones behind it are not held up.
 
 - `upstream-fixes`: "Honour canShowBadge() so service notifications stop badging" and
   "Events widget: all-day events by their date". Each is its own commit so it can be offered

@@ -1,5 +1,6 @@
 package com.wanderwildwood.iori
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -25,5 +26,15 @@ class IoriAppsTest {
     fun aTestBuildOfTheSameVersionIsNotBehind() {
         assertFalse(IoriApps.newer("1.35.33", "1.35.33-test"))
         assertTrue(IoriApps.newer("1.35.34", "1.35.33-test"))
+    }
+
+    private fun app(pkg: String, core: Boolean) = IoriApps.App(pkg, pkg, "o/$pkg", "$pkg.apk", "00", core)
+
+    @Test
+    fun aFirstRunTicksTheCoreAppsThatAreMissing() {
+        val apps = listOf(app("a", true), app("b", true), app("c", false), app("d", false))
+        assertEquals(setOf("b"), IoriApps.firstPick(apps, installed = setOf("a", "d")))
+        assertEquals(setOf("a", "b"), IoriApps.firstPick(apps, installed = emptySet()))
+        assertEquals(emptySet<String>(), IoriApps.firstPick(apps, installed = setOf("a", "b")))
     }
 }

@@ -74,6 +74,12 @@
     <string name="iori_apps_failed_app">Not the right app</string>
     <string name="iori_apps_failed_key">Not signed by its maker</string>
     <string name="iori_apps_failed_refused">Not installed. Try again</string>
+    <!-- First run: Pick your apps -->
+    <string name="iori_pick_body">Home works with these apps. Tick the ones you want and press GET. Android asks once for each. The rest stay in Settings, under Your apps.</string>
+    <string name="iori_pick_allow">Allow Home to install apps on the screen that opened, come back, and press GET again.</string>
+    <string name="iori_pick_get">GET</string>
+    <string name="iori_pick_on_phone">On the phone</string>
+    <string name="iori_pick_waiting">Waiting</string>
 
     <!-- About -->
     <string name="iori_about_row">About Home</string>

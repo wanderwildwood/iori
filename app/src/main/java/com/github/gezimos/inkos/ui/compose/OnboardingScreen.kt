@@ -77,7 +77,7 @@ class OnboardingFragment : Fragment() {
                 val prefs = remember { Prefs(context) }
                 val viewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
                 OnboardingScreen.Show(
-                    onFinish = {
+                    onFinish = com.wanderwildwood.iori.IoriPickApps.before(context) { // iori: FINISH leads to Your apps first
                         prefs.commitFirstOpen(false)
                         prefs.onboardingPage = 0
                         viewModel.setFirstOpen(false)
@@ -94,6 +94,7 @@ class OnboardingFragment : Fragment() {
                         )
                     }
                 )
+                com.wanderwildwood.iori.IoriPickApps.Page() // iori: the Your apps page, over the last first-run page
             }
         }
     }

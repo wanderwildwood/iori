@@ -11,9 +11,12 @@ import android.os.Build
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
@@ -23,6 +26,7 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * "Your apps": the apps Home is made to work with, whether each is on the phone, and getting
@@ -156,6 +160,66 @@ object IoriApps {
         return false
     }
 
+    /** Whether the person has let Home install apps. */
+    fun allowed(context: Context): Boolean = context.packageManager.canRequestPackageInstalls()
+
+    /** Opens Android's own screen with the switch that lets Home install apps. */
+    fun askToAllow(context: Context) {
+        runCatching {
+            context.startActivity(
+                Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, android.net.Uri.parse("package:${context.packageName}"))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        }
+    }
+
+    /** What a first run offers ticked: the core set, less what is already on the phone. */
+    internal fun firstPick(apps: List<App>, installed: Set<String>): Set<String> =
+        apps.filter { it.core && it.pkg !in installed }.map { it.pkg }.toSet()
+
+    private val queueLock = Any()
+    private var worker: Job? = null
+    private val _queue = MutableStateFlow<List<String>>(emptyList())
+
+    /** The packages still to be got by [installAll]; the first is the one in hand. */
+    val queue: StateFlow<List<String>> = _queue
+
+    /**
+     * Gets several apps one after the other, so Android's "install this app?" questions come
+     * one at a time. An app that fails is passed over; the rest go on.
+     */
+    fun installAll(context: Context, list: List<App>) {
+        val app = context.applicationContext
+        synchronized(queueLock) {
+            _queue.update { now -> now + list.map { it.pkg }.filter { it !in now } }
+            if (worker != null) return
+            worker = scope.launch {
+                while (true) {
+                    val pkg = synchronized(queueLock) {
+                        _queue.value.firstOrNull().also { if (it == null) worker = null }
+                    } ?: break
+                    val a = find(app, pkg)
+                    if (a != null) {
+                        install(app, a)
+                        // install() has set the step before it returns, so IDLE here means done.
+                        val end = states.first { all ->
+                            val step = all[pkg]?.step
+                            step == Step.IDLE || step == Step.FAILED
+                        }[pkg]
+                        // Not allowed to install: the same answer waits for every other app.
+                        if (end?.failure == Failure.NOT_ALLOWED) _queue.value = listOf(pkg)
+                    }
+                    _queue.update { it - pkg }
+                }
+            }
+        }
+    }
+
+    /** Lets the app in hand finish and drops the ones waiting behind it. */
+    fun stopQueue() {
+        _queue.update { it.take(1) }
+    }
+
     /** Fetches [a]'s latest release, checks it, and hands it to Android to install. */
     fun install(context: Context, a: App) {
         val app = context.applicationContext
@@ -164,14 +228,9 @@ object IoriApps {
         // Android lets an app install others only once the person has allowed it, on a screen
         // of its own. Asked for before anything is downloaded: an install begun without it is
         // thrown away by Android even if the switch is then turned on.
-        if (!app.packageManager.canRequestPackageInstalls()) {
+        if (!allowed(app)) {
             set(a.pkg) { it.copy(step = Step.FAILED, failure = Failure.NOT_ALLOWED) }
-            runCatching {
-                app.startActivity(
-                    Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, android.net.Uri.parse("package:${app.packageName}"))
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
-            }
+            askToAllow(app)
             return
         }
         set(a.pkg) { it.copy(step = Step.DOWNLOADING, percent = 0, failure = null) }
@@ -285,6 +344,7 @@ object IoriApps {
         // and lock its restricted settings.
         if (Build.VERSION.SDK_INT >= 33) params.setPackageSource(PackageInstaller.PACKAGE_SOURCE_STORE)
         val id = installer.createSession(params)
+        sessions[a.pkg] = id
         installer.openSession(id).use { session ->
             session.openWrite("base.apk", 0, apk.length()).use { out ->
                 apk.inputStream().use { it.copyTo(out) }
@@ -299,8 +359,42 @@ object IoriApps {
         }
     }
 
+    /** The install session Android holds for each app that is with it now. */
+    private val sessions = ConcurrentHashMap<String, Int>()
+
+    /**
+     * Called when a page that shows installs is in front again. Android's "install this app?"
+     * question can be put away without an answer (a touch beside it, the home key), and then
+     * Android says nothing at all: the app would wait for an OK for good, and so would every
+     * app queued behind it. An install still unanswered a few seconds after the page is back
+     * is given up, and reads as not installed.
+     */
+    fun resumed(context: Context) {
+        val app = context.applicationContext
+        _states.value.filterValues { it.step == Step.CONFIRM }.keys.forEach { pkg ->
+            scope.launch {
+                delay(3_000)
+                if (_states.value[pkg]?.step != Step.CONFIRM) return@launch
+                val id = sessions[pkg] ?: return@launch
+                val installer = app.packageManager.packageInstaller
+                val info = runCatching { installer.getSessionInfo(id) }.getOrNull()
+                // No session left: Android has finished with it and its answer is on the way.
+                // Progress past the copied file: the OK was given and the install is running.
+                if (info == null || info.progress > COPIED) return@launch
+                Log.w(TAG, "$pkg: the install question went unanswered")
+                runCatching { installer.abandonSession(id) }
+                sessions.remove(pkg)
+                set(pkg) { if (it.step == Step.CONFIRM) it.copy(step = Step.FAILED, failure = Failure.REFUSED) else it }
+            }
+        }
+    }
+
+    /** A session's progress once its file is written and it waits for the person: 80%. */
+    private const val COPIED = 0.81f
+
     /** What Android answered for an install; called by [IoriInstallReceiver]. */
     internal fun answered(context: Context, pkg: String, status: Int, message: String?) {
+        if (status != PackageInstaller.STATUS_PENDING_USER_ACTION) sessions.remove(pkg)
         when (status) {
             PackageInstaller.STATUS_PENDING_USER_ACTION -> set(pkg) { it.copy(step = Step.CONFIRM) }
             PackageInstaller.STATUS_SUCCESS -> {

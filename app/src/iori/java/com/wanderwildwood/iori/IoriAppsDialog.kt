@@ -64,6 +64,7 @@ fun AppsDialog(onDismiss: () -> Unit) {
         IoriApps.refreshInstalled(context)
         IoriApps.checkLatest(context)
     }
+    OnResume { IoriApps.resumed(context) }
 
     MaterialTheme(colorScheme = monochrome) {
         EInkDialog(onDismiss = onDismiss) {
@@ -112,26 +113,10 @@ private fun SectionHead(text: String) {
 @Composable
 private fun AppRow(app: IoriApps.App, state: IoriApps.State) {
     val context = LocalContext.current
-    val status = when (state.step) {
-        IoriApps.Step.DOWNLOADING -> stringResource(R.string.iori_apps_downloading, state.percent)
-        IoriApps.Step.CHECKING -> stringResource(R.string.iori_apps_checking)
-        IoriApps.Step.INSTALLING -> stringResource(R.string.iori_apps_installing)
-        IoriApps.Step.CONFIRM -> stringResource(R.string.iori_apps_confirm)
-        IoriApps.Step.FAILED -> stringResource(
-            when (state.failure) {
-                IoriApps.Failure.NOT_ALLOWED -> R.string.iori_apps_failed_allow
-                IoriApps.Failure.NETWORK -> R.string.iori_apps_failed_network
-                IoriApps.Failure.CHECKSUM -> R.string.iori_apps_failed_checksum
-                IoriApps.Failure.WRONG_APP -> R.string.iori_apps_failed_app
-                IoriApps.Failure.WRONG_KEY -> R.string.iori_apps_failed_key
-                else -> R.string.iori_apps_failed_refused
-            }
-        )
-        IoriApps.Step.IDLE -> when {
-            state.installed == null -> stringResource(R.string.iori_apps_get)
-            state.canUpdate -> stringResource(R.string.iori_apps_update, state.latest ?: "")
-            else -> state.installed
-        }
+    val status = progressText(state) ?: when {
+        state.installed == null -> stringResource(R.string.iori_apps_get)
+        state.canUpdate -> stringResource(R.string.iori_apps_update, state.latest ?: "")
+        else -> state.installed
     }
     Row(
         modifier = Modifier
@@ -161,5 +146,39 @@ private fun AppRow(app: IoriApps.App, state: IoriApps.State) {
             fontWeight = if (state.installed == null || state.canUpdate) FontWeight.Bold else FontWeight.Normal,
             maxLines = 1,
         )
+    }
+}
+
+/** What an install is doing or why it stopped, as a row says it; null when nothing is going on. */
+@Composable
+internal fun progressText(state: IoriApps.State): String? = when (state.step) {
+    IoriApps.Step.DOWNLOADING -> stringResource(R.string.iori_apps_downloading, state.percent)
+    IoriApps.Step.CHECKING -> stringResource(R.string.iori_apps_checking)
+    IoriApps.Step.INSTALLING -> stringResource(R.string.iori_apps_installing)
+    IoriApps.Step.CONFIRM -> stringResource(R.string.iori_apps_confirm)
+    IoriApps.Step.FAILED -> stringResource(
+        when (state.failure) {
+            IoriApps.Failure.NOT_ALLOWED -> R.string.iori_apps_failed_allow
+            IoriApps.Failure.NETWORK -> R.string.iori_apps_failed_network
+            IoriApps.Failure.CHECKSUM -> R.string.iori_apps_failed_checksum
+            IoriApps.Failure.WRONG_APP -> R.string.iori_apps_failed_app
+            IoriApps.Failure.WRONG_KEY -> R.string.iori_apps_failed_key
+            else -> R.string.iori_apps_failed_refused
+        }
+    )
+    IoriApps.Step.IDLE -> null
+}
+
+/** Runs [block] each time the screen this is on comes back in front. */
+@Composable
+internal fun OnResume(block: () -> Unit) {
+    val owner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val latest by androidx.compose.runtime.rememberUpdatedState(block)
+    androidx.compose.runtime.DisposableEffect(owner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) latest()
+        }
+        owner.lifecycle.addObserver(observer)
+        onDispose { owner.lifecycle.removeObserver(observer) }
     }
 }
