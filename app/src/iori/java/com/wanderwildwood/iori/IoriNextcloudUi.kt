@@ -183,6 +183,7 @@ object IoriNextcloudUi {
         val armed = armedAt == presses
 
         val busy = phase is Phase.Asking || phase is Phase.Waiting || phase is Phase.Checking
+        val browser = remember { IoriNextcloud.hasBrowser(context) }
 
         PagedColumn(
             modifier.pointerInput(Unit) {
@@ -229,7 +230,10 @@ object IoriNextcloudUi {
             }
             if (typing) {
                 item(key = "user") {
-                    Field(stringResource(R.string.iori_nc_user), user, look, keyboard = KeyboardType.Email) { user = it }
+                    Field(stringResource(R.string.iori_nc_user), user, look, keyboard = KeyboardType.Email) {
+                        user = it
+                        if (phase is Phase.Failed) IoriNextcloud.stop()
+                    }
                 }
                 item(key = "password") {
                     Row(verticalAlignment = Alignment.Bottom) {
@@ -237,7 +241,10 @@ object IoriNextcloudUi {
                             Field(
                                 stringResource(R.string.iori_nc_password), password, look,
                                 keyboard = KeyboardType.Password, hidden = !reveal, last = true,
-                            ) { password = it }
+                            ) {
+                                password = it
+                                if (phase is Phase.Failed) IoriNextcloud.stop()
+                            }
                         }
                         Spacer(Modifier.width(8.dp))
                         Text(
@@ -278,6 +285,11 @@ object IoriNextcloudUi {
                         typing = true
                         IoriNextcloud.stop()
                     }
+                } else if (browser) item(key = "browser") {
+                    Button(stringResource(R.string.iori_nc_browser), look) {
+                        typing = false
+                        IoriNextcloud.stop()
+                    }
                 }
             }
         }
@@ -316,14 +328,17 @@ object IoriNextcloudUi {
                     Spacer(Modifier.height(16.dp.scaled(screenScale)))
                     Box(Modifier.width(60.dp.scaled(screenScale)).height(5.dp).background(textColor))
                     Spacer(Modifier.height(16.dp.scaled(screenScale)))
-                    Text(
-                        text = stringResource(R.string.iori_nc_body) + " " + stringResource(R.string.iori_nc_skip),
-                        style = SettingsTheme.typography.body,
-                        fontSize = sizes.body,
-                        color = textColor,
-                        lineHeight = (sizes.body.value * 1.4f).sp,
-                    )
-                    Spacer(Modifier.height(8.dp.scaled(screenScale)))
+                    // The invitation is for someone not signed in; signed in, the rows say what there is to say.
+                    if (IoriNextcloud.shown == null) {
+                        Text(
+                            text = stringResource(R.string.iori_nc_body) + " " + stringResource(R.string.iori_nc_skip),
+                            style = SettingsTheme.typography.body,
+                            fontSize = sizes.body,
+                            color = textColor,
+                            lineHeight = (sizes.body.value * 1.4f).sp,
+                        )
+                        Spacer(Modifier.height(8.dp.scaled(screenScale)))
+                    }
                     val body = SettingsTheme.typography.body.copy(color = textColor)
                     val look = Look(body.copy(fontSize = sizes.title), body.copy(fontSize = sizes.body), textColor, bgColor, shape, wide = false)
                     MaterialTheme(colorScheme = monochrome.copy(primary = textColor, onPrimary = bgColor)) {

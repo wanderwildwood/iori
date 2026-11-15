@@ -32,6 +32,25 @@ only. Source: https://github.com/wanderwildwood/iori
   (`IoriDarkProvider`, two numbers: dark or not, and when the switch was last pressed) when it
   comes to the front (`IoriDark.kt`; the apps' side is `/opt/projects/shared-dark`). Home's own
   dialogs are drawn through an inverting filter while Home is dark (`ui/DarkWindow.kt`).
+  Where the phone's system has a dark setting of its own (its Settings app answers
+  `android.settings.DARK_THEME_SETTINGS`; `IoriDark.systemHasDarkSetting`, the one place this
+  is decided), that setting is the switch: Home's row and the first run's light/dark button are
+  not drawn, Home's theme follows the system's night setting, and the provider answers "not
+  dark", since each app follows the system by itself there.
+- **One Nextcloud login.** Home signs in to the person's Nextcloud once (first run, page 5, or
+  Settings → Nextcloud account): Login Flow v2 in the browser, or an app password typed in
+  where there is no browser. It keeps ONE app password (Nextcloud will not make an app password
+  from an app password), sealed by a keystore key, in a file left out of backups
+  (`IoriAccount.kt`). `IoriAccountProvider` (`content://<package>.accounts/nextcloud`: server,
+  user, password, stamp) hands it only to callers whose package AND signing certificate are
+  pinned in `IoriAccount.CALLERS` (Memo and Recipes to begin with; the test holds the list to
+  `iori_apps.json`), and a change notice goes out on sign-in and sign-out. Sign out also asks
+  the server to delete the app password. https only; a debug build also takes plain http to a
+  host on its own network, for a stand-in server (`app/src/debug/AndroidManifest.xml`). The
+  apps' side is `sync/HomeAccount.kt`, the same file in each app that has the row "Use the
+  phone's Nextcloud account".
+- **The Settings home page in groups** (`IoriSettings.kt`): Phone, Apps, Home screen (inkOS's
+  own rows, untouched), Setup and about. Still inkOS's page, rows and headings.
 - **Hand-offs.** With no app picked for the clock or the date, a press opens Time or Datebook;
   a contact opens in Connections. When that app is not on the phone, Home says so and offers
   to get it; "Use the phone's own" is remembered and inkOS's behaviour comes back
@@ -63,7 +82,7 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!*.md'` must list exactly these, 33 in all.
+'!app/src/iori/**' --glob '!*.md'` must list exactly these, 32 in all.
 
 | File:line | Purpose |
 |---|---|
@@ -81,14 +100,17 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:3605` | the placeholder icon uses iori's own package |
 | `app/src/main/java/com/github/gezimos/inkos/helper/IconUtility.kt:280` | `isSyntheticPackage` accepts iori's package, and `app.inkos` only when this build is inkOS, so the real inkOS beside it is an ordinary app |
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:467` | `Iori.guardCrashes(this)`, right after onCreate puts CrashHandler back |
+| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:468` | `IoriDark.atStart(...)`, before onCreate reads the theme: where the system has a dark setting of its own, Home's theme is the system's |
+| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:644` | `IoriDark.systemChanged(...)` in `onConfigurationChanged`: the system's dark setting changed while Home was up, and Home turns with it |
 | `app/src/main/java/com/github/gezimos/inkos/helper/SearchHelper.kt:585` | a contact opens in enishi first, inkOS's chooser if that fails |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:389` | the Settings header's Buy Me a Coffee button becomes `IoriAbout.HeaderButtons`: a cup that opens gezimos's Buy Me a Coffee, and a llama that opens this app's donation page (upstream's 27 lines of the button are gone from here) |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:621` | `if (false)` in front of inkOS's own About row: it is not drawn, and its page (gezimos's credits and links, untouched) opens from a row of About Home |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:629` | iori's Settings rows at the foot of the page, five lines (629 to 633), each marked: "Dark mode" (Home and every app), "Ecosystem apps", "Default apps", "Folders", and "Home lines" with "About Home 庵 iori" (the one About, in the house shape: what it is, source, llama, then drawers) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:536` | `IoriSettings.Top(...)`, the first line of the Settings home page: the headings Phone (Dark mode, Nextcloud account) and Apps (Ecosystem apps, Default apps), then the heading Home screen over inkOS's own rows |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:622` | `if (false)` in front of inkOS's own About row: it is not drawn, and its page (gezimos's credits and links, untouched) opens from a row of About Home |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:630` | `IoriSettings.Foot(...)`, one line at the foot of the page: Folders and Home lines close the home screen's rows, then the heading Setup and about with "Run setup again" (opens the first run at its first page; nothing is reset) and "About Home 庵 iori" (the one About, in the house shape: what it is, source, llama, then drawers) |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/GestureHelper.kt:270` | a press on the clock with no app picked goes to Time, or to the offer to get it (`IoriHandOff.clock`); inkOS's own alarm intent when that is declined |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/GestureHelper.kt:291` | the same for the date and Datebook (`IoriHandOff.date`) |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:848` | Advanced → Restart's description, written in code, through `IoriNames.named` |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:79` | the first run is `IoriFirstRun.Show`, Home's own four pages (Welcome with privacy, Setup, Ecosystem, Theme and home apps); upstream's `OnboardingScreen.Show` below it is untouched and not called |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:845` | Advanced → Restart's description, written in code, through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:79` | the first run is `IoriFirstRun.Show`, Home's own six pages (Welcome with privacy, Setup, Ecosystem, Default apps, Nextcloud, Theme and home apps); upstream's `OnboardingScreen.Show` below it is untouched and not called |
 | `app/src/main/java/com/github/gezimos/inkos/helper/utils/BrightnessHelper.kt:17` | the brightness-gesture toast, written in code, through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/notifications/NotificationsUI.kt:400` | the notification-access message reads `perm_notification_body` (upstream's same words), which iori overrides |
 | `app/src/main/java/com/github/gezimos/inkos/ui/notifications/LettersFragment.kt:305` | the same, in Letters |

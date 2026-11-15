@@ -88,7 +88,10 @@ object IoriDark {
         val theme = owed(activity) ?: return
         setHomeTheme(theme)
         AppCompatDelegate.setDefaultNightMode(if (theme == Constants.Theme.Dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO)
-        activity.recreate()
+        // Not in the middle of a first run: inkOS opens the first run again on every start while it
+        // is unfinished, so a restart there would stack a second one under the first. The pages
+        // keep the look they have, and Home has the system's from the home screen on.
+        if (!Prefs(activity).firstOpen) activity.recreate()
     }
 
     fun on(context: Context): Boolean = Iori.prefs(context).getBoolean(KEY_ON, false)

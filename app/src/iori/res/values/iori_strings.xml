@@ -91,6 +91,7 @@
     <string name="iori_nc_hide">Hide</string>
     <string name="iori_nc_sign_in">Sign in</string>
     <string name="iori_nc_type">Type an app password instead</string>
+    <string name="iori_nc_browser">Sign in with the browser instead</string>
     <string name="iori_nc_stop">Stop</string>
     <string name="iori_nc_asking">Asking the server</string>
     <string name="iori_nc_waiting">The server\'s sign-in page is open in the browser. Sign in there, then come back. Home keeps asking for twenty minutes.</string>
