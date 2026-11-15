@@ -124,6 +124,11 @@ Not hooks, but carried on top of v0.6:
   shop's reader), with its license, address and full text (`src/iori/res/raw`: Apache-2.0, and
   Glide's and protobuf's own BSD files; `IoriAbout.textsFor`). What Gradle cannot see is in
   `config/libraries` (MMD's chevrons). inkOS's bundled fonts are not listed there yet.
+- **Launcher icon** (14 Nov): a small plain thatched hut, which is what iori means, in the
+  stock Kompakt style of the other apps (81 grid, the stock ring, stroke 2.5).
+  `src/iori/res/mipmap-anydpi-v26/ic_launcher.xml` and `ic_launcher_round.xml` are plain vectors
+  that stand in for upstream's adaptive icon; upstream's own icon files are untouched, and the
+  mark inside the app (Settings header) is still inkOS's.
 - **Home lines, Place on home** (14 Nov): Bottom (as before) or Top, under the date line; at the
   top the home apps' last row sits at the bottom of the screen (`IoriLinesPlace`, kept in iori's
   own settings, not in a Backup export).
