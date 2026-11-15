@@ -126,7 +126,7 @@ Not hooks, but carried on top of v0.6:
   `config/libraries` (MMD's chevrons). inkOS's bundled fonts are not listed there yet.
 - **Default apps** (14 Nov, `IoriDefaults.kt`): a first-run page after Ecosystem (the first run
   is five pages now) and a Settings row. One row for each kind of thing one of Home's apps is
-  meant to open (calls and texts, which are roles; contacts, calendar, email, alarms and timers,
+  meant to open (calls and texts, which are roles, and filling in passwords; contacts, calendar, email, alarms and timers,
   camera, gallery, music, files, text files, map links, calculator; and, as notes only, opening
   a picture, a song or a PDF, magnet and bitcoin links). A row is shown only when that app is on
   the phone and is one of the apps Android would offer. It says what Android would do today:
@@ -136,7 +136,8 @@ Not hooks, but carried on top of v0.6:
   One line in `SettingsFragment.kt` (the row, among iori's rows there), the SET_ALARM permission
   in the manifest (to ask the clock question), and `src/iori/res/xml/file_paths.xml`, which
   stands in for main's and adds the folder of the sample text file handed to Android.
-  Autofill is not on the page yet.
+  Filling in passwords is a row too: which autofill service is chosen is read from Android's
+  settings, and the press opens Android's autofill screen with Passwords named (seen on API 31).
 - **Launcher icon** (14 Nov): a small plain thatched hut, which is what iori means, in the
   stock Kompakt style of the other apps (81 grid, the stock ring, stroke 2.5).
   `src/iori/res/mipmap-anydpi-v26/ic_launcher.xml` and `ic_launcher_round.xml` are plain vectors

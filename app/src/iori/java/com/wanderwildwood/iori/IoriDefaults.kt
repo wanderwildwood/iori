@@ -74,7 +74,8 @@ import java.io.File
  * thing changes, so a row may go back to "not chosen" after an app is installed.
  *
  * Phone and Texts are roles, which only the app itself may ask for; their rows show the state
- * and open Android's Default apps screen.
+ * and open Android's Default apps screen. Filling in passwords is chosen on Android's autofill
+ * screen, which the row opens with Passwords named.
  */
 object IoriDefaults {
 
@@ -102,6 +103,8 @@ object IoriDefaults {
         val pkg: String,
         val askable: Boolean = true,
         val role: ((Context) -> String?)? = null,
+        /** For a role: the screen of Android's where it is chosen. */
+        val screen: (Context) -> Intent = { Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS) },
         val intents: (Context) -> List<Intent> = { emptyList() },
     )
 
@@ -115,6 +118,13 @@ object IoriDefaults {
     private val SLOTS = listOf(
         Slot(R.string.iori_defaults_phone, OURS + "itodenwa", role = { it.getSystemService(TelecomManager::class.java)?.defaultDialerPackage }),
         Slot(R.string.iori_defaults_texts, OURS + "kotozute", role = { Telephony.Sms.getDefaultSmsPackage(it) }),
+        // Filling in passwords: one service is chosen on Android's own autofill screen, which opens
+        // with Passwords named. Which service is chosen is read from Android's settings.
+        Slot(
+            R.string.iori_defaults_autofill, OURS + "aikotoba",
+            role = { Settings.Secure.getString(it.contentResolver, "autofill_service")?.substringBefore('/')?.ifBlank { null } },
+            screen = { Intent(Settings.ACTION_REQUEST_SET_AUTOFILL_SERVICE, Uri.parse("package:${OURS}aikotoba")) },
+        ),
         Slot(R.string.iori_defaults_contacts, OURS + "enishi") {
             listOf(main(Intent.CATEGORY_APP_CONTACTS), Intent(Intent.ACTION_VIEW, android.provider.ContactsContract.Contacts.CONTENT_URI))
         },
@@ -142,7 +152,7 @@ object IoriDefaults {
     )
 
     /** A row of the page: the slot's label, the app of ours it belongs to, and Android's state. */
-    class Line(val label: Int, val app: String, val state: State)
+    class Line(val label: Int, val app: String, val state: State, val screen: Intent? = null)
 
     /** A real small text file of Home's own, handed over readable, for the "open a text file" question. */
     private fun textFile(context: Context): Intent {
@@ -196,7 +206,7 @@ object IoriDefaults {
                     else -> return@mapNotNull null // nothing on the phone answers it at all
                 }
             }
-            Line(slot.label, app, state)
+            Line(slot.label, app, state, if (slot.role != null) runCatching { slot.screen(context) }.getOrNull() else null)
         }
     }
 
@@ -204,9 +214,9 @@ object IoriDefaults {
     private fun press(context: Context, line: Line) {
         val intent = when (val s = line.state) {
             is State.Ours -> return
-            is State.NotChosen -> s.ask ?: if (s.role) Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS) else return
+            is State.NotChosen -> s.ask ?: if (s.role) line.screen ?: return else return
             // A role is changed on Android's Default apps screen; an "Always" answer on the other app's own page.
-            is State.Other -> if (s.role) Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS) else
+            is State.Other -> if (s.role) line.screen ?: return else
                 Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${s.pkg}"))
         }
         try {

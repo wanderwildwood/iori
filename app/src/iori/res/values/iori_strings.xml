@@ -110,6 +110,7 @@
     <string name="iori_defaults_pictures">Gallery</string>
     <string name="iori_defaults_maps">Map links</string>
     <string name="iori_defaults_text_files">Text files</string>
+    <string name="iori_defaults_autofill">Filling in passwords</string>
     <string name="iori_defaults_contacts">Contacts</string>
     <string name="iori_defaults_calendar">Calendar</string>
     <string name="iori_defaults_email">Email</string>
@@ -122,10 +123,10 @@
     <string name="iori_defaults_calculator">Calculator</string>
     <string name="iori_defaults_magnet">Magnet links</string>
     <string name="iori_defaults_bitcoin">Bitcoin links</string>
-    <string name="iori_defaults_not_chosen_role">Not chosen yet. Press to open Android\'s Default apps and pick %1$s</string>
+    <string name="iori_defaults_not_chosen_role">Not chosen yet. Press, and pick %1$s on the screen that opens</string>
     <string name="iori_defaults_not_chosen_later">Not chosen yet. Android asks the first time one is opened: pick %1$s, then Always</string>
     <string name="iori_defaults_not_chosen">Not chosen yet. Press, pick %1$s, then Always</string>
-    <string name="iori_defaults_other">Opens in %1$s. Press to change it in Android\'s settings</string>
+    <string name="iori_defaults_other">Set to %1$s. Press to change it in Android\'s settings</string>
     <string name="iori_defaults_none">The apps these belong to are not on the phone yet.</string>
     <string name="iori_defaults_cannot_ask">Android could not ask about that here.</string>
     <string name="iori_defaults_sample_text">A sample text file from Home.</string>
