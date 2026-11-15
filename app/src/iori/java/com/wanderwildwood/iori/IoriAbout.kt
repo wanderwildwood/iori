@@ -67,8 +67,8 @@ import com.wanderwildwood.iori.ui.monochrome
 /**
  * The About for Home: the one About row on the Settings home page. inkOS's own About page keeps
  * gezimos's credits and support links as gezimos wrote them and is opened from a row of this one.
- * Beside it, a row for the home lines dialog, so the lines' status can be seen and changed even
- * when home has no lines.
+ * Also here, the row for the home lines dialog, so the lines' status can be seen and changed even
+ * when home has no lines. [IoriSettings] places both.
  */
 object IoriAbout {
 
@@ -117,13 +117,9 @@ object IoriAbout {
 
     private var open by mutableStateOf(false)
 
-    /**
-     * Home's rows at the foot of the Settings home page: Home lines, then the one About. inkOS's
-     * own About row is not drawn; its page, with gezimos's credits and links, is a row of this
-     * About ([onUpstreamAbout] opens it).
-     */
+    /** The Home lines row of the Settings home page: the lines' status, seen and changed even when home has none. */
     @Composable
-    fun SettingsRow(titleFontSize: TextUnit, onUpstreamAbout: () -> Unit) {
+    fun LinesRow(titleFontSize: TextUnit) {
         val context = LocalContext.current
         var lines by remember { mutableStateOf(false) }
         var tripped by remember { mutableStateOf(false) }
@@ -148,6 +144,14 @@ object IoriAbout {
                 onDismiss = { lines = false },
             )
         }
+    }
+
+    /**
+     * The one About row, last on the Settings home page. inkOS's own About row is not drawn; its
+     * page, with gezimos's credits and links, is a row of this About ([onUpstreamAbout] opens it).
+     */
+    @Composable
+    fun AboutRow(titleFontSize: TextUnit, onUpstreamAbout: () -> Unit) {
         SettingsHomeItem(
             title = stringResource(R.string.iori_about_row),
             imageVector = Icons.Rounded.Info,

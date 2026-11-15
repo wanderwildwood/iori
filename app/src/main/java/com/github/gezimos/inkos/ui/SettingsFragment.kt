@@ -533,6 +533,7 @@ class SettingsFragment : Fragment() {
         val titleFontSize = if (fontSize.isSpecified) (fontSize.value * 1.5).sp else fontSize
         val privateSpaceManager = remember { ProfileManager(requireContext()) }
         Column(modifier = Modifier.fillMaxWidth()) {
+            com.wanderwildwood.iori.IoriSettings.Top(titleFontSize) { viewModel.setAppTheme(it) } // iori: the phone-wide rows first (dark mode, Nextcloud, apps), then a heading over inkOS's own
             SettingsHomeItem(
                 title = stringResource(R.string.settings_home_title),
                 imageVector = Icons.Rounded.Widgets,
@@ -626,11 +627,7 @@ class SettingsFragment : Fragment() {
                 titleFontSize = titleFontSize,
                 onClick = { navigateTo(SettingsRoute.Support) },
             )
-            com.wanderwildwood.iori.IoriDark.SettingsRow(titleFontSize) { viewModel.setAppTheme(it) } // iori: dark mode, every app
-            com.wanderwildwood.iori.IoriAppsRow.SettingsRow(titleFontSize) // iori: Ecosystem apps
-            com.wanderwildwood.iori.IoriDefaults.SettingsRow(titleFontSize) // iori: default apps
-            com.wanderwildwood.iori.IoriFolders.SettingsRow(titleFontSize, dialogBuilder) // iori: the drawer's folders
-            com.wanderwildwood.iori.IoriAbout.SettingsRow(titleFontSize) { navigateTo(SettingsRoute.Support) } // iori: Home lines, and the one About
+            com.wanderwildwood.iori.IoriSettings.Foot(titleFontSize, dialogBuilder, onUpstreamAbout = { navigateTo(SettingsRoute.Support) }) { prefs.onboardingPage = 0; findNavController().navigate(R.id.onboardingFragment) } // iori: Folders and Home lines close the home screen's rows; then Run setup again and the one About
             Spacer(modifier = Modifier.height(16.dp))
         }
     }

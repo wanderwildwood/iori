@@ -67,6 +67,14 @@
     <string name="iori_dark_on">On. Press for black on white.</string>
     <string name="iori_dark_off">Off. Press for white on black.</string>
 
+    <!-- The Settings home page: Home's headings and its Run setup again row -->
+    <string name="iori_settings_phone">Phone</string>
+    <string name="iori_settings_apps">Apps</string>
+    <string name="iori_settings_home">Home screen</string>
+    <string name="iori_settings_setup">Setup and about</string>
+    <string name="iori_setup_again">Run setup again</string>
+    <string name="iori_setup_again_desc">The first-run pages, from the start. Nothing is reset</string>
+
     <!-- The phone's Nextcloud account -->
     <string name="iori_first_nextcloud">NEXTCLOUD</string>
     <string name="iori_nc_title">Nextcloud account</string>
