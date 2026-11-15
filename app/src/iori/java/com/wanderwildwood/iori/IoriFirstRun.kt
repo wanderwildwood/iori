@@ -246,7 +246,8 @@ object IoriFirstRun {
                                     .clickable { einkMode = !einkMode }
                                     .padding(horizontal = 12.dp, vertical = 6.dp),
                             )
-                            Box(
+                            // Light, dark or the system's: not asked where the system's own dark setting decides.
+                            if (!remember { IoriDark.systemHasDarkSetting(context) }) Box(
                                 modifier = Modifier
                                     .fillMaxHeight()
                                     .clip(buttonShape)

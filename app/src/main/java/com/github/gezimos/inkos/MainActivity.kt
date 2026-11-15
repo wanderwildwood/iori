@@ -465,6 +465,7 @@ class MainActivity : AppCompatActivity() {
 
         Thread.setDefaultUncaughtExceptionHandler(CrashHandler(applicationContext))
         com.wanderwildwood.iori.Iori.guardCrashes(this) // iori: crash guard, after CrashHandler is put back
+        com.wanderwildwood.iori.IoriDark.atStart(this) { viewModel.setAppTheme(it) } // iori: where the system has a dark setting, Home's theme is the system's
 
         val themeMode = when (prefs.appTheme) {
             Constants.Theme.Light -> AppCompatDelegate.MODE_NIGHT_NO
@@ -640,6 +641,7 @@ class MainActivity : AppCompatActivity() {
         einkHelper?.reinitializeMeinkService()
 
         prefs.onSystemThemeChanged()
+        com.wanderwildwood.iori.IoriDark.systemChanged(this) { viewModel.setAppTheme(it) } // iori: the system's dark setting changed, and Home turns with it
 
         // --- Update AppCompat night mode for System theme ---
         if (prefs.appTheme == Constants.Theme.System) {
