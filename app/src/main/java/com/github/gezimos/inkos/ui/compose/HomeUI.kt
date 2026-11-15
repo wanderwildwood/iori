@@ -3142,7 +3142,7 @@ private fun HomeMediaWidget(
                 if (showTextIslands) {
                     Modifier.background(backgroundColor, containerShape).padding(horizontal = 8.dp, vertical = 5.dp)
                 } else {
-                    Modifier.border(width = 2.dp, color = Theme.colors.text, shape = containerShape).padding(horizontal = 8.dp, vertical = 5.dp)
+                    Modifier.padding(horizontal = 8.dp, vertical = 5.dp) // iori: no outline round the player
                 }
             ),
         horizontalArrangement = Arrangement.SpaceBetween,
