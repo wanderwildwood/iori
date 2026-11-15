@@ -83,22 +83,24 @@ import com.github.gezimos.inkos.ui.dialogs.ComposeDialogManager
 import kotlinx.coroutines.delay
 
 /**
- * Home's first run, four pages in place of inkOS's seven, drawn the way inkOS draws its own:
+ * Home's first run, five pages in place of inkOS's seven, drawn the way inkOS draws its own:
  *
  *  1. Welcome: what Home is, what it sends, and the privacy tick.
  *  2. Setup: notification access, the home app, and where Settings is (with its tick).
  *  3. Ecosystem: the apps Home works with, to tick and get ([IoriPickApps]).
- *  4. Theme and home apps, last, so the apps just got can be put on the home screen.
+ *  4. Default apps: which app Android opens for alarms, pictures, maps and the like ([IoriDefaults]).
+ *  5. Theme and home apps, last, so the apps just got can be put on the home screen.
  *
  * inkOS's own `OnboardingScreen.Show` is left as upstream wrote it and is not called.
  */
 object IoriFirstRun {
 
-    const val PAGES = 4
+    const val PAGES = 5
     private const val WELCOME = 0
     private const val SETUP = 1
     private const val ECOSYSTEM = 2
-    private const val LOOK = 3
+    private const val DEFAULTS = 3
+    private const val LOOK = 4
 
     /** The sizes inkOS's first-run pages work out for themselves. */
     internal class Sizes(val title: TextUnit, val body: TextUnit, val big: TextUnit)
@@ -135,7 +137,7 @@ object IoriFirstRun {
             Constants.Theme.Light -> false
             Constants.Theme.System -> systemDark
         }
-        // A page number kept from inkOS's seven pages lands on the last of these four.
+        // A page number kept from inkOS's seven pages lands on the last of these.
         var page by remember { mutableIntStateOf(prefs.onboardingPage.coerceIn(0, PAGES - 1)) }
         LaunchedEffect(page) { prefs.onboardingPage = page }
 
@@ -172,6 +174,15 @@ object IoriFirstRun {
                 pageLabel = "${ECOSYSTEM + 1}/$PAGES",
                 isDark = isDark,
                 onBack = { page = SETUP },
+                onNext = { page = DEFAULTS },
+            )
+            return
+        }
+        if (page == DEFAULTS) {
+            IoriDefaults.Page(
+                pageLabel = "${DEFAULTS + 1}/$PAGES",
+                isDark = isDark,
+                onBack = { page = ECOSYSTEM },
                 onNext = { page = LOOK },
             )
             return

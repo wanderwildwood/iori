@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- inkOS's own paths (crash_logs), plus the folder of the sample file Home hands to Android
+     when it asks which app opens a text file (IoriDefaults). Stands in for main's file_paths. -->
+<paths>
+    <files-path
+        name="crash_logs"
+        path="crash_logs/" />
+    <files-path
+        name="iori_samples"
+        path="iori_samples/" />
+</paths>

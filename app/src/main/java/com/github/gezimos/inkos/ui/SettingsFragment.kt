@@ -628,6 +628,7 @@ class SettingsFragment : Fragment() {
             )
             com.wanderwildwood.iori.IoriDark.SettingsRow(titleFontSize) { viewModel.setAppTheme(it) } // iori: dark mode, every app
             com.wanderwildwood.iori.IoriAppsRow.SettingsRow(titleFontSize) // iori: Ecosystem apps
+            com.wanderwildwood.iori.IoriDefaults.SettingsRow(titleFontSize) // iori: default apps
             com.wanderwildwood.iori.IoriFolders.SettingsRow(titleFontSize, dialogBuilder) // iori: the drawer's folders
             com.wanderwildwood.iori.IoriAbout.SettingsRow(titleFontSize) { navigateTo(SettingsRoute.Support) } // iori: Home lines, and the one About
             Spacer(modifier = Modifier.height(16.dp))

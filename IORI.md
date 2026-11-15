@@ -63,7 +63,7 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!*.md'` must list exactly these, 32 in all.
+'!app/src/iori/**' --glob '!*.md'` must list exactly these, 33 in all.
 
 | File:line | Purpose |
 |---|---|
@@ -84,10 +84,10 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/helper/SearchHelper.kt:585` | a contact opens in enishi first, inkOS's chooser if that fails |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:389` | the Settings header's Buy Me a Coffee button becomes `IoriAbout.HeaderButtons`: a cup that opens gezimos's Buy Me a Coffee, and a llama that opens this app's donation page (upstream's 27 lines of the button are gone from here) |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:621` | `if (false)` in front of inkOS's own About row: it is not drawn, and its page (gezimos's credits and links, untouched) opens from a row of About Home |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:629` | iori's Settings rows at the foot of the page, four lines (629 to 632), each marked: "Dark mode" (Home and every app), "Ecosystem apps", "Folders", and "Home lines" with "About Home 庵 iori" (the one About, in the house shape: what it is, source, llama, then drawers) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:629` | iori's Settings rows at the foot of the page, five lines (629 to 633), each marked: "Dark mode" (Home and every app), "Ecosystem apps", "Default apps", "Folders", and "Home lines" with "About Home 庵 iori" (the one About, in the house shape: what it is, source, llama, then drawers) |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/GestureHelper.kt:270` | a press on the clock with no app picked goes to Time, or to the offer to get it (`IoriHandOff.clock`); inkOS's own alarm intent when that is declined |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/GestureHelper.kt:291` | the same for the date and Datebook (`IoriHandOff.date`) |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:847` | Advanced → Restart's description, written in code, through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:848` | Advanced → Restart's description, written in code, through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:79` | the first run is `IoriFirstRun.Show`, Home's own four pages (Welcome with privacy, Setup, Ecosystem, Theme and home apps); upstream's `OnboardingScreen.Show` below it is untouched and not called |
 | `app/src/main/java/com/github/gezimos/inkos/helper/utils/BrightnessHelper.kt:17` | the brightness-gesture toast, written in code, through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/notifications/NotificationsUI.kt:400` | the notification-access message reads `perm_notification_body` (upstream's same words), which iori overrides |
@@ -124,6 +124,19 @@ Not hooks, but carried on top of v0.6:
   shop's reader), with its license, address and full text (`src/iori/res/raw`: Apache-2.0, and
   Glide's and protobuf's own BSD files; `IoriAbout.textsFor`). What Gradle cannot see is in
   `config/libraries` (MMD's chevrons). inkOS's bundled fonts are not listed there yet.
+- **Default apps** (14 Nov, `IoriDefaults.kt`): a first-run page after Ecosystem (the first run
+  is five pages now) and a Settings row. One row for each kind of thing one of Home's apps is
+  meant to open (calls and texts, which are roles; contacts, calendar, email, alarms and timers,
+  camera, gallery, music, files, text files, map links, calculator; and, as notes only, opening
+  a picture, a song or a PDF, magnet and bitcoin links). A row is shown only when that app is on
+  the phone and is one of the apps Android would offer. It says what Android would do today:
+  ours, not chosen yet, or another app. A press on "not chosen" raises Android's own "open with"
+  question (pick the app, then Always); where another app holds it, the press opens the screen
+  where that is changed. The state is read again every time the page comes back in front.
+  One line in `SettingsFragment.kt` (the row, among iori's rows there), the SET_ALARM permission
+  in the manifest (to ask the clock question), and `src/iori/res/xml/file_paths.xml`, which
+  stands in for main's and adds the folder of the sample text file handed to Android.
+  Autofill is not on the page yet.
 - **Launcher icon** (14 Nov): a small plain thatched hut, which is what iori means, in the
   stock Kompakt style of the other apps (81 grid, the stock ring, stroke 2.5).
   `src/iori/res/mipmap-anydpi-v26/ic_launcher.xml` and `ic_launcher_round.xml` are plain vectors

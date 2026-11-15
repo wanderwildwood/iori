@@ -6,6 +6,8 @@
     <!-- iori: "Your apps" fetches an app from its GitHub release and hands it to Android to install -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- iori: to raise Android's "which clock app" question from Default apps -->
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
     <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" />
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"

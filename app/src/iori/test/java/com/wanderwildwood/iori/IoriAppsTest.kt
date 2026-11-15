@@ -47,4 +47,14 @@ class IoriAppsTest {
         assertEquals(setOf("a", "b"), IoriApps.firstPick(apps, installed = emptySet()))
         assertEquals(emptySet<String>(), IoriApps.firstPick(apps, installed = setOf("a", "b")))
     }
+
+    @Test
+    fun aDefaultIsOursAskedOrAnothers() {
+        val ours = "com.wanderwildwood.tokei"
+        assertEquals("ours", IoriDefaults.whose(ours, ours))
+        assertEquals("ours", IoriDefaults.whose("$ours.debug", ours))
+        assertEquals("ask", IoriDefaults.whose("android", ours))
+        assertEquals("other", IoriDefaults.whose("com.android.deskclock", ours))
+        assertEquals("none", IoriDefaults.whose(null, ours))
+    }
 }
