@@ -101,7 +101,7 @@ certificate its releases are signed with.
 ## What it sends
 
 Nothing about you. Unlike inkOS, Home has the internet permission, for one thing: **Ecosystem apps**
-(in Settings, and as the last page of a first run). When you open the page in Settings it asks
+(in Settings, and as the Ecosystem page of a first run). When you open the page in Settings it asks
 GitHub for the latest release of each of the apps you have, and when you press Get or Update,
 or GET on the first run's page, it downloads that app from its GitHub release. The first run's
 page reaches nothing until GET is pressed.
