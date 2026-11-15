@@ -97,6 +97,7 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:340` | `IoriLinesPlace.appsRoom()` on the home apps' box, and line 342 its `contentAlignment` through `IoriLinesPlace.appsAlignment()`: with the lines at the top the apps' last row sits at the bottom, above what is at the foot |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:387` | `IoriLinesPlace.footMeasured` on the foot column, so the apps know how much room it takes |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:404` | `IoriLines(state, showEditMode)`, after the media widget, before the bottom widget |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:3161` | the player's icon tile is a square with 8 dp round corners, the Kompakt app icon's shape, whatever the islands shape is; line 3186 its highlight follows it |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:3145` | the home player has no outline round it (inkOS drew a 2 dp border when text islands are off) |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:3605` | the placeholder icon uses iori's own package |
 | `app/src/main/java/com/github/gezimos/inkos/helper/IconUtility.kt:280` | `isSyntheticPackage` accepts iori's package, and `app.inkos` only when this build is inkOS, so the real inkOS beside it is an ordinary app |

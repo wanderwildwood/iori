@@ -3158,12 +3158,7 @@ private fun HomeMediaWidget(
         }
 
         // Shape for cover image/icon (36dp size)
-        val coverShape = remember(textIslandsShape) {
-            ShapeHelper.getRoundedCornerShape(
-                textIslandsShape = textIslandsShape,
-                pillRadius = 18.dp // 36dp / 2 = 18dp
-            )
-        }
+        val coverShape = remember { RoundedCornerShape(8.dp) } // iori: the player's tile has the Kompakt app icon's shape, a square with round corners
         
         Box(
             modifier = Modifier
@@ -3184,10 +3179,12 @@ private fun HomeMediaWidget(
                                 topLeft = Offset(-4.dp.toPx(), -4.dp.toPx())
                             )
                         } else {
-                            // Use circle when text islands disabled
-                            drawCircle(
+                            // iori: the highlight follows the tile's own shape
+                            drawRoundRect(
                                 color = highlightColor,
-                                radius = size.minDimension / 2f + 4.dp.toPx()
+                                size = Size(36.dp.toPx() + 8.dp.toPx(), 36.dp.toPx() + 8.dp.toPx()),
+                                cornerRadius = CornerRadius(12.dp.toPx(), 12.dp.toPx()),
+                                topLeft = Offset(-4.dp.toPx(), -4.dp.toPx())
                             )
                         }
                     }
