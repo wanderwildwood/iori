@@ -76,13 +76,11 @@ fun AppsDialog(onDismiss: () -> Unit) {
             Spacer(Modifier.height(10.dp))
             // The list takes the room the title and Close leave, and turns its pages on whole rows.
             PagedColumn(Modifier.fillMaxWidth().weight(1f)) {
-                item(key = "head:core") { SectionHead(stringResource(R.string.iori_apps_core)) }
-                apps.filter { it.core }.forEach { app ->
-                    item(key = app.pkg) { AppRow(app, states[app.pkg] ?: IoriApps.State()) }
-                }
-                item(key = "head:extras") { SectionHead(stringResource(R.string.iori_apps_extras)) }
-                apps.filter { !it.core }.forEach { app ->
-                    item(key = app.pkg) { AppRow(app, states[app.pkg] ?: IoriApps.State()) }
+                IoriApps.sections(apps).forEach { (head, inSection) ->
+                    item(key = "head:$head") { SectionHead(stringResource(head)) }
+                    inSection.forEach { app ->
+                        item(key = app.pkg) { AppRow(app, states[app.pkg] ?: IoriApps.State()) }
+                    }
                 }
             }
             Spacer(Modifier.height(16.dp))

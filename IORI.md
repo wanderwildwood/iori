@@ -63,7 +63,7 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!*.md'` must list exactly these, 27 in all.
+'!app/src/iori/**' --glob '!*.md'` must list exactly these, 25 in all.
 
 | File:line | Purpose |
 |---|---|
@@ -82,9 +82,7 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/GestureHelper.kt:270` | a press on the clock with no app picked goes to Time, or to the offer to get it (`IoriHandOff.clock`); inkOS's own alarm intent when that is declined |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/GestureHelper.kt:291` | the same for the date and Datebook (`IoriHandOff.date`) |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:846` | Advanced → Restart's description, written in code, through `IoriNames.named` |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:80` | the first run's FINISH goes through `IoriPickApps.before`, which shows the Your apps page first when any of the apps is missing |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:97` | `IoriPickApps.Page()`, drawn over the last first-run page while it is up |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:352` | the first-run pages' body text, written in code, through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:79` | the first run is `IoriFirstRun.Show`, Home's own four pages (Welcome with privacy, Setup, Ecosystem, Theme and home apps); upstream's `OnboardingScreen.Show` below it is untouched and not called |
 | `app/src/main/java/com/github/gezimos/inkos/helper/utils/BrightnessHelper.kt:17` | the brightness-gesture toast, written in code, through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/notifications/NotificationsUI.kt:400` | the notification-access message reads `perm_notification_body` (upstream's same words), which iori overrides |
 | `app/src/main/java/com/github/gezimos/inkos/ui/notifications/LettersFragment.kt:305` | the same, in Letters |
@@ -98,10 +96,14 @@ Not hooks, but carried on top of v0.6:
   `ui/compose/AppsUI.kt`, `ui/AppsDrawerState.kt`, `ui/dialogs/ComposeDialogManager.kt`,
   `data/Prefs.kt`, `data/repository/AppsRepository.kt`): these are edits to upstream's drawer,
   not one-line hooks, and will need care at the next upstream merge.
-- **Your apps** (`IoriApps.kt`, `IoriAppsDialog.kt`, `assets/iori_apps.json` from
+- **Your apps**, listed under sections (Core, then Outdoors, On the road, Daily life, Music,
+  Reading and writing, Games and oracles, Tools: `SECTIONS` in `tools/make-apps-list.py`, which
+  stops on an app with no section) (`IoriApps.kt`, `IoriAppsDialog.kt`, `assets/iori_apps.json` from
   `tools/make-apps-list.py`): three permissions and a receiver in the manifest. The first run
-  ends on the same list as a page of tick boxes (`IoriPickApps.kt`): the core apps that are
-  missing come ticked, GET fetches the ticked ones one after the other (`IoriApps.installAll`),
+  (`IoriFirstRun.kt`) has the same list as its third page, Ecosystem, a page of tick boxes
+  (`IoriPickApps.kt`), ahead of Theme and home apps so that what is got there can be put on the
+  home screen: the core apps that are missing come ticked, GET fetches the ticked ones one
+  after the other (`IoriApps.installAll`),
   and an install question put away without an answer is given up when the page is back in
   front (`IoriApps.resumed`), so the ones behind it are not held up.
 

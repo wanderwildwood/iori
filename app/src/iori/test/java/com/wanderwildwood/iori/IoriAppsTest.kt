@@ -28,7 +28,17 @@ class IoriAppsTest {
         assertTrue(IoriApps.newer("1.35.34", "1.35.33-test"))
     }
 
-    private fun app(pkg: String, core: Boolean) = IoriApps.App(pkg, pkg, "o/$pkg", "$pkg.apk", "00", core)
+    private fun app(pkg: String, core: Boolean) = app(pkg, if (core) IoriApps.CORE else "tools")
+
+    private fun app(pkg: String, section: String) = IoriApps.App(pkg, pkg, "o/$pkg", "$pkg.apk", "00", section)
+
+    @Test
+    fun appsAreListedUnderTheirSectionsInOrderAndNoneIsLost() {
+        val apps = listOf(app("a", "music"), app("b", IoriApps.CORE), app("c", "not known yet"), app("d", "tools"))
+        val listed = IoriApps.sections(apps)
+        assertEquals(listOf(listOf("b"), listOf("a"), listOf("c", "d")), listed.map { s -> s.second.map { it.pkg } })
+        assertEquals(apps.size, listed.sumOf { it.second.size })
+    }
 
     @Test
     fun aFirstRunTicksTheCoreAppsThatAreMissing() {

@@ -76,8 +76,8 @@ class OnboardingFragment : Fragment() {
                 val context = LocalContext.current
                 val prefs = remember { Prefs(context) }
                 val viewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
-                OnboardingScreen.Show(
-                    onFinish = com.wanderwildwood.iori.IoriPickApps.before(context) { // iori: FINISH leads to Your apps first
+                com.wanderwildwood.iori.IoriFirstRun.Show( // iori: Home's own four first-run pages, in place of OnboardingScreen.Show
+                    onFinish = {
                         prefs.commitFirstOpen(false)
                         prefs.onboardingPage = 0
                         viewModel.setFirstOpen(false)
@@ -94,7 +94,6 @@ class OnboardingFragment : Fragment() {
                         )
                     }
                 )
-                com.wanderwildwood.iori.IoriPickApps.Page() // iori: the Your apps page, over the last first-run page
             }
         }
     }
@@ -349,7 +348,7 @@ object OnboardingScreen {
                                 5 -> "Choose a color preset for your launcher, or skip to keep your current theme and start from scratch."
                                 6 -> "Select your home shortcuts and order them using Edit Favorites. You can still longpress on single apps in home to replace them individually like before."
                                 else -> ""
-                            }.let(com.wanderwildwood.iori.IoriNames::named), // iori: this app's name in the onboarding text
+                            },
                             style = SettingsTheme.typography.body,
                             fontSize = bodyFontSize,
                             lineHeight = (bodyFontSize.value * 1.6f).sp,

@@ -21,6 +21,21 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "app/src/io
 CORE = ["Handset", "Messaging", "Connections", "Datebook", "Memo", "Mailbox", "Pictures", "Lens",
         "Cabinet", "Passwords", "Time", "Glance", "Sky", "Music Box", "Feeds", "Dictionary", "Translate"]
 
+# Every other app, under the heading it is listed with. The keys are IoriApps.SECTIONS; an app
+# that is in apps.tsv and not here stops the script, so a new app is always given a place.
+SECTIONS = {
+    "outdoors": ["Atlas", "Topo", "Detour", "Field Kit", "Birding", "Mushroom Journal", "Star Chart",
+                 "Whereabouts", "Mesh"],
+    "road": ["Car Check", "Parked", "Speedometer"],
+    "daily": ["Medicine", "Cycle", "Practice", "Recipes", "Wallet"],
+    "music": ["Tuner", "Hum", "Songbook", "Engraver"],
+    "reading": ["Audio Reader", "Shelf", "Typewriter", "Dream Log"],
+    "games": ["Chess+", "Go", "Solitaire", "Handheld Games", "Tarot", "I Ching"],
+    "tools": ["Abacus", "Level", "Remote", "Bitcoin", "Torrents"],
+}
+ORDER = ["core"] + list(SECTIONS)
+SECTION_OF = {name: key for key, names in SECTIONS.items() for name in names}
+
 
 def cert_of(apk):
     tools = sorted(glob.glob(f"{HOME}/Android/Sdk/build-tools/*"), key=lambda p: [int(x) if x.isdigit() else 0 for x in os.path.basename(p).split(".")])[-1]
@@ -37,6 +52,12 @@ def main():
     missing = [c for c in CORE if c not in names]
     if missing:
         raise SystemExit(f"core apps not in apps.tsv: {missing}")
+    unplaced = sorted(n for n in names if n not in CORE and n not in SECTION_OF)
+    if unplaced:
+        raise SystemExit(f"apps with no section (add them to SECTIONS): {unplaced}")
+    gone = sorted(n for n in SECTION_OF if n not in names)
+    if gone:
+        raise SystemExit(f"SECTIONS names apps that are not in apps.tsv: {gone}")
     apps = []
     for r in rows:
         repo = r["repo"]
@@ -49,9 +70,9 @@ def main():
             "repo": r["github"],
             "file": f"{repo}.apk",
             "cert": cert_of(apk),
-            "section": "core" if r["name"] in CORE else "extras",
+            "section": "core" if r["name"] in CORE else SECTION_OF[r["name"]],
         })
-    apps.sort(key=lambda a: (a["section"] != "core", CORE.index(a["name"]) if a["section"] == "core" else 0, a["name"].lower()))
+    apps.sort(key=lambda a: (ORDER.index(a["section"]), CORE.index(a["name"]) if a["section"] == "core" else 0, a["name"].lower()))
     if "--check" in sys.argv:
         bad = 0
         for a in apps:
@@ -68,7 +89,7 @@ def main():
     with open(OUT, "w") as f:
         json.dump({"apps": apps}, f, indent=1)
         f.write("\n")
-    print(f"{len(apps)} apps ({sum(a['section'] == 'core' for a in apps)} core) -> {os.path.normpath(OUT)}")
+    print(f"{len(apps)} apps ({', '.join(f'{sum(a["section"] == k for a in apps)} {k}' for k in ORDER)}) -> {os.path.normpath(OUT)}")
 
 
 if __name__ == "__main__":

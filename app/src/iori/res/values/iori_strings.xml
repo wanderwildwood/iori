@@ -73,7 +73,13 @@
     <string name="iori_apps_title">Your apps</string>
     <string name="iori_apps_row_desc">Installed or missing, get and update</string>
     <string name="iori_apps_core">Core</string>
-    <string name="iori_apps_extras">Extras</string>
+    <string name="iori_apps_outdoors">Outdoors</string>
+    <string name="iori_apps_road">On the road</string>
+    <string name="iori_apps_daily">Daily life</string>
+    <string name="iori_apps_music">Music</string>
+    <string name="iori_apps_reading">Reading and writing</string>
+    <string name="iori_apps_games">Games and oracles</string>
+    <string name="iori_apps_tools">Tools</string>
     <string name="iori_apps_get">Get</string>
     <string name="iori_apps_update">Update to %1$s</string>
     <string name="iori_apps_downloading">Downloading %1$d%%</string>
@@ -88,7 +94,21 @@
     <string name="iori_apps_failed_key">Not signed by its maker</string>
     <string name="iori_apps_failed_refused">Not installed. Try again</string>
     <!-- First run: Pick your apps -->
-    <string name="iori_pick_body">Home works with these apps. Tick the ones you want and press GET. Android asks once for each. The rest stay in Settings, under Your apps.</string>
+    <string name="iori_pick_body">These apps are made to work together. Tick the ones you want and press GET. Android asks once for each. The rest can be got later in Settings, under Your apps.</string>
+    <string name="iori_first_ecosystem">ECOSYSTEM</string>
+    <string name="iori_first_setup">SETUP</string>
+    <string name="iori_first_look">THEME AND HOME APPS</string>
+    <string name="iori_first_mono">Mono</string>
+    <string name="iori_first_welcome_body">Home is a plain, quiet home screen, a fork of inkOS by gezimos. It is the front door to a family of apps that work together: a press on the clock opens Time, a contact opens Connections, and the home screen carries a few lines from the others.</string>
+    <string name="iori_first_privacy_body">Home does not collect, store, or share any data, and there is no tracking. The only connection it makes is to GitHub, when you get or update your apps.</string>
+    <string name="iori_first_privacy_toast">To continue, agree to the privacy policy</string>
+    <string name="iori_first_notifications_body">Let Home read your notifications, so it can show them on the home screen.</string>
+    <string name="iori_first_default_body">Make Home the screen your phone opens to. You can change this later.</string>
+    <string name="iori_first_settings_body">Settings: pinch on an empty part of the home screen. Quick settings open, and All Settings is there.</string>
+    <string name="iori_first_settings_read">I CONFIRM THAT I\'VE READ</string>
+    <string name="iori_first_settings_toast">Tick the box to say you have read where Settings is</string>
+    <string name="iori_first_theme_body">Choose a color preset, or keep the look you have.</string>
+    <string name="iori_first_home_apps_body">Pick the apps for your home screen and put them in order. The apps you just got are in the list.</string>
     <string name="iori_pick_allow">Allow Home to install apps on the screen that opened, come back, and press GET again.</string>
     <string name="iori_pick_get">GET</string>
     <string name="iori_pick_on_phone">On the phone</string>

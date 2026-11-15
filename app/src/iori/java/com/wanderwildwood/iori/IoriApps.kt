@@ -1,5 +1,6 @@
 package com.wanderwildwood.iori
 
+import com.github.gezimos.inkos.R
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -54,8 +55,37 @@ object IoriApps {
         val repo: String,
         val file: String,
         val cert: String,
-        val core: Boolean,
+        /** The section it is listed under, as `tools/make-apps-list.py` wrote it: a key of [SECTIONS]. */
+        val section: String,
+    ) {
+        val core: Boolean get() = section == CORE
+    }
+
+    const val CORE = "core"
+
+    /** The sections, in the order they are listed, each with its heading. The list file names them by key. */
+    val SECTIONS: List<Pair<String, Int>> = listOf(
+        CORE to R.string.iori_apps_core,
+        "outdoors" to R.string.iori_apps_outdoors,
+        "road" to R.string.iori_apps_road,
+        "daily" to R.string.iori_apps_daily,
+        "music" to R.string.iori_apps_music,
+        "reading" to R.string.iori_apps_reading,
+        "games" to R.string.iori_apps_games,
+        "tools" to R.string.iori_apps_tools,
     )
+
+    /**
+     * [apps] under their headings, empty sections left out. An app whose section this build does
+     * not know is listed under the last heading, so a newer list never hides an app.
+     */
+    fun sections(apps: List<App>): List<Pair<Int, List<App>>> {
+        val known = SECTIONS.map { it.first }.toSet()
+        val last = SECTIONS.last().first
+        return SECTIONS.map { (key, head) ->
+            head to apps.filter { it.section == key || (key == last && it.section !in known) }
+        }.filter { it.second.isNotEmpty() }
+    }
 
     enum class Step { IDLE, DOWNLOADING, CHECKING, INSTALLING, CONFIRM, FAILED }
 
@@ -91,7 +121,7 @@ object IoriApps {
                 repo = o.getString("repo"),
                 file = o.getString("file"),
                 cert = o.getString("cert").lowercase(),
-                core = o.getString("section") == "core",
+                section = o.getString("section"),
             )
         }
     }.getOrElse {

@@ -1,17 +1,13 @@
 package com.wanderwildwood.iori
 
-import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -38,7 +33,6 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.gezimos.inkos.R
-import com.github.gezimos.inkos.data.Constants
 import com.github.gezimos.inkos.data.Prefs
 import com.github.gezimos.inkos.style.SettingsTheme
 import com.github.gezimos.inkos.style.Theme
@@ -48,37 +42,17 @@ import com.github.gezimos.inkos.ui.compose.inkOsSafeDrawingPadding
 import com.wanderwildwood.iori.ui.PagedColumn
 
 /**
- * The last page of a first run: the apps Home is made to work with, the core set ticked, the
- * extras not. The ticked ones are got one after the other; Android asks once for each. The
- * page is drawn like inkOS's own first-run pages and comes up when their FINISH is pressed.
+ * The Ecosystem page of a first run ([IoriFirstRun]): the apps Home is made to work with, under
+ * their sections, the core set ticked, the rest not. The ticked ones are got one after the
+ * other; Android asks once for each. Theme and home apps come after it, so what was got here
+ * can be put on the home screen there.
  *
  * Nothing is asked of the network until the person presses GET.
  */
 object IoriPickApps {
 
-    private var showing by mutableStateOf(false)
-    private var finish: () -> Unit = {}
-
-    /**
-     * Wraps the first run's finish: this page comes first when any of the apps is missing,
-     * and its own FINISH then runs [finish].
-     */
-    fun before(context: Context, finish: () -> Unit): () -> Unit = {
-        val app = context.applicationContext
-        IoriApps.refreshInstalled(app)
-        val states = IoriApps.states.value
-        if (IoriApps.apps(app).any { states[it.pkg]?.installed == null }) {
-            this.finish = finish
-            showing = true
-        } else {
-            finish()
-        }
-    }
-
-    /** Drawn over the first-run pages while it is up; nothing otherwise. */
     @Composable
-    fun Page() {
-        if (!showing) return
+    fun Page(pageLabel: String, isDark: Boolean, onBack: () -> Unit, onNext: () -> Unit) {
         val context = LocalContext.current
         val prefs = remember { Prefs(context) }
         val apps = remember { IoriApps.apps(context) }
@@ -88,6 +62,7 @@ object IoriPickApps {
         OnResume { IoriApps.resumed(context) }
 
         var ticked by remember {
+            IoriApps.refreshInstalled(context)
             mutableStateOf(
                 IoriApps.firstPick(apps, apps.filter { IoriApps.states.value[it.pkg]?.installed != null }.map { it.pkg }.toSet())
             )
@@ -99,39 +74,25 @@ object IoriPickApps {
         val wanted = apps.filter { it.pkg in ticked && states[it.pkg]?.installed == null }
         val running = queue.isNotEmpty()
 
-        fun leave() {
+        // Leaving the page lets the app in hand through and drops the ones waiting behind it.
+        fun leave(then: () -> Unit) {
             IoriApps.stopQueue()
-            showing = false
+            then()
         }
 
-        // The same sizes inkOS's first-run pages work out for themselves.
-        val scaleRaw = com.github.gezimos.inkos.style.detectScaleMode(context).let { mode ->
-            if (prefs.uiScaleMode != 0) com.github.gezimos.inkos.style.UiScaleMode.fromId(prefs.uiScaleMode).scale
-            else mode.scale
-        }
-        val settingsSize = prefs.settingsSize - 3
-        val titleFontSize = (settingsSize * 1.5f * scaleRaw).sp
-        val bodyFontSize = (settingsSize * 1.2f * scaleRaw).sp
-        val bigTitleSize = (settingsSize * 3f * scaleRaw).sp
-        val isDark = when (prefs.appTheme) {
-            Constants.Theme.Dark -> true
-            Constants.Theme.Light -> false
-            Constants.Theme.System -> isSystemInDarkTheme()
-        }
+        val sizes = remember { IoriFirstRun.sizes(context, prefs) }
 
         SettingsTheme(isDark = isDark) {
             val textColor = Theme.colors.text
             val bgColor = Theme.colors.background
             val screenScale = rememberScreenScale()
 
-            BackHandler(enabled = true) { leave() }
+            BackHandler(enabled = true) { leave(onBack) }
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(bgColor)
-                    // A press on an empty part of this page stops here, not on the page under it.
-                    .pointerInput(Unit) { detectTapGestures { } }
                     .inkOsSafeDrawingPadding()
             ) {
                 Column(
@@ -142,12 +103,12 @@ object IoriPickApps {
                         .padding(top = 32.dp.scaled(screenScale))
                 ) {
                     Text(
-                        text = stringResource(R.string.iori_apps_title),
+                        text = stringResource(R.string.iori_first_ecosystem),
                         style = SettingsTheme.typography.title,
-                        fontSize = bigTitleSize,
+                        fontSize = sizes.big,
                         fontWeight = FontWeight.Black,
                         color = textColor,
-                        lineHeight = (bigTitleSize.value * 1.05f).sp,
+                        lineHeight = (sizes.big.value * 1.05f).sp,
                     )
                     Spacer(Modifier.height(16.dp.scaled(screenScale)))
                     Box(Modifier.width(60.dp.scaled(screenScale)).height(5.dp).background(textColor))
@@ -160,31 +121,31 @@ object IoriPickApps {
                             }
                         ),
                         style = SettingsTheme.typography.body,
-                        fontSize = bodyFontSize,
+                        fontSize = sizes.body,
                         color = textColor,
-                        lineHeight = (bodyFontSize.value * 1.4f).sp,
+                        lineHeight = (sizes.body.value * 1.4f).sp,
                     )
                     Spacer(Modifier.height(8.dp.scaled(screenScale)))
                     PagedColumn(Modifier.fillMaxWidth().weight(1f)) {
-                        listOf(true to R.string.iori_apps_core, false to R.string.iori_apps_extras).forEach { (core, head) ->
-                            item(key = "head:$core") {
+                        IoriApps.sections(apps).forEach { (head, inSection) ->
+                            item(key = "head:$head") {
                                 Text(
                                     text = stringResource(head),
                                     style = SettingsTheme.typography.title,
-                                    fontSize = titleFontSize,
+                                    fontSize = sizes.title,
                                     fontWeight = FontWeight.Bold,
                                     color = textColor,
                                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp),
                                 )
                             }
-                            apps.filter { it.core == core }.forEach { app ->
+                            inSection.forEach { app ->
                                 item(key = app.pkg) {
                                     PickRow(
                                         app = app,
                                         state = states[app.pkg] ?: IoriApps.State(),
                                         ticked = app.pkg in ticked,
                                         waiting = app.pkg in queue,
-                                        fontSize = bodyFontSize,
+                                        fontSize = sizes.body,
                                         textColor = textColor,
                                         onToggle = {
                                             if (!running) ticked = if (app.pkg in ticked) ticked - app.pkg else ticked + app.pkg
@@ -196,74 +157,38 @@ object IoriPickApps {
                     }
                 }
 
-                Box(Modifier.fillMaxWidth().height(1.5.dp.scaled(screenScale)).background(textColor))
-                Row(
-                    modifier = Modifier.fillMaxWidth().height(48.dp.scaled(screenScale)),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    // With apps ticked the left button passes them by; the back key still goes back a page.
-                    val canSkip = !running && wanted.isNotEmpty()
-                    FooterButton(
-                        text = stringResource(if (canSkip) R.string.btn_skip else R.string.btn_back_upper),
-                        fontSize = titleFontSize,
-                        color = textColor,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        leave()
-                        if (canSkip) finish()
-                    }
-                    Box(Modifier.width(1.5.dp.scaled(screenScale)).fillMaxHeight().background(textColor))
-                    Box(Modifier.width(54.dp.scaled(screenScale)), contentAlignment = Alignment.Center) {
-                        Text(
-                            // While apps are being got, how far along; before that, how many are ticked.
-                            text = if (running) "${total - queue.size + 1}/$total" else wanted.size.toString(),
-                            style = SettingsTheme.typography.body,
-                            fontSize = (titleFontSize.value * 0.7f).sp,
-                            color = textColor,
-                        )
-                    }
-                    Box(Modifier.width(1.5.dp.scaled(screenScale)).fillMaxHeight().background(textColor))
-                    FooterButton(
-                        text = stringResource(if (!running && wanted.isNotEmpty()) R.string.iori_pick_get else R.string.btn_finish),
-                        fontSize = titleFontSize,
-                        color = textColor,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        when {
-                            // FINISH: what is being got is let through, the rest wait in Settings.
-                            running || wanted.isEmpty() -> {
-                                leave()
-                                finish()
+                // With apps ticked the left button passes them by; the back key still goes back a page.
+                val canGet = !running && wanted.isNotEmpty()
+                with(IoriFirstRun) {
+                    Footer(
+                        left = stringResource(if (canGet) R.string.btn_skip else R.string.btn_back_upper),
+                        // While apps are being got, how far along; with apps ticked, how many; else the page.
+                        middle = when {
+                            running -> "${total - queue.size + 1}/$total"
+                            canGet -> wanted.size.toString()
+                            else -> pageLabel
+                        },
+                        right = stringResource(if (canGet) R.string.iori_pick_get else R.string.btn_next),
+                        fontSize = sizes.title,
+                        textColor = textColor,
+                        onLeft = { leave(if (canGet) onNext else onBack) },
+                        onRight = {
+                            when {
+                                running || wanted.isEmpty() -> leave(onNext)
+                                // Android's own switch first; nothing is downloaded without it.
+                                !IoriApps.allowed(context) -> {
+                                    askedToAllow = true
+                                    IoriApps.askToAllow(context)
+                                }
+                                else -> {
+                                    total = wanted.size
+                                    IoriApps.installAll(context, wanted)
+                                }
                             }
-                            // Android's own switch first; nothing is downloaded without it.
-                            !IoriApps.allowed(context) -> {
-                                askedToAllow = true
-                                IoriApps.askToAllow(context)
-                            }
-                            else -> {
-                                total = wanted.size
-                                IoriApps.installAll(context, wanted)
-                            }
-                        }
-                    }
+                        },
+                    )
                 }
             }
-        }
-    }
-
-    @Composable
-    private fun FooterButton(text: String, fontSize: TextUnit, color: Color, modifier: Modifier, onClick: () -> Unit) {
-        Box(
-            modifier = modifier.fillMaxHeight().clickable(onClick = onClick),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = text,
-                style = SettingsTheme.typography.title,
-                fontSize = fontSize,
-                fontWeight = FontWeight.Bold,
-                color = color,
-            )
         }
     }
 
