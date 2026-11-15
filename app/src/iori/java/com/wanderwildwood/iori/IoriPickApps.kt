@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -132,7 +133,8 @@ object IoriPickApps {
                     Spacer(Modifier.height(8.dp.scaled(screenScale)))
                     // The house scrollbar, in this page's own two colors, run out to the screen's edge.
                     MaterialTheme(colorScheme = monochrome.copy(primary = textColor, onPrimary = bgColor)) {
-                        CompositionLocalProvider(LocalListBleed provides 26.dp.scaled(screenScale)) {
+                        // (the arrows of the bar are drawn in the content color, so that is this page's ink too)
+                        CompositionLocalProvider(LocalListBleed provides 26.dp.scaled(screenScale), LocalContentColor provides textColor) {
                             PagedColumn(Modifier.fillMaxWidth().weight(1f)) {
                                 IoriApps.sections(apps).forEach { (head, inSection) ->
                                     item(key = "head:$head") {
