@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.github.gezimos.inkos.R
 import com.wanderwildwood.iori.ui.EInkDialog
+import com.wanderwildwood.iori.ui.houseTypography
 import com.wanderwildwood.iori.ui.monochrome
 
 /**
@@ -128,7 +129,7 @@ object IoriHandOff {
         // Once it is on the phone, the press that started this is carried out.
         LaunchedEffect(state.installed) { if (state.installed != null) onGot() }
 
-        MaterialTheme(colorScheme = monochrome) {
+        MaterialTheme(colorScheme = monochrome, typography = houseTypography) {
             EInkDialog(onDismiss = onDismiss) {
                 Text(
                     text = stringResource(R.string.iori_handoff_missing, app.name),

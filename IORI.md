@@ -63,7 +63,7 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!*.md'` must list exactly these, 25 in all.
+'!app/src/iori/**' --glob '!*.md'` must list exactly these, 26 in all.
 
 | File:line | Purpose |
 |---|---|
@@ -78,10 +78,11 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:467` | `Iori.guardCrashes(this)`, right after onCreate puts CrashHandler back |
 | `app/src/main/java/com/github/gezimos/inkos/helper/SearchHelper.kt:585` | a contact opens in enishi first, inkOS's chooser if that fails |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:389` | the Settings header's Buy Me a Coffee button becomes `IoriAbout.HeaderButtons`: a cup that opens gezimos's Buy Me a Coffee, and a llama that opens this app's donation page (upstream's 27 lines of the button are gone from here) |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:628` | iori's Settings rows under inkOS's own About, four lines (628 to 631), each marked: "Dark mode" (Home and every app), "Your apps", "Folders" and "About Home" (which also holds "Home lines") |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:621` | `if (false)` in front of inkOS's own About row: it is not drawn, and its page (gezimos's credits and links, untouched) opens from a row of About Home |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:629` | iori's Settings rows at the foot of the page, four lines (629 to 632), each marked: "Dark mode" (Home and every app), "Ecosystem apps", "Folders", and "Home lines" with "About Home 庵 iori" (the one About, in the house shape: what it is, source, llama, then drawers) |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/GestureHelper.kt:270` | a press on the clock with no app picked goes to Time, or to the offer to get it (`IoriHandOff.clock`); inkOS's own alarm intent when that is declined |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/GestureHelper.kt:291` | the same for the date and Datebook (`IoriHandOff.date`) |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:846` | Advanced → Restart's description, written in code, through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:847` | Advanced → Restart's description, written in code, through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:79` | the first run is `IoriFirstRun.Show`, Home's own four pages (Welcome with privacy, Setup, Ecosystem, Theme and home apps); upstream's `OnboardingScreen.Show` below it is untouched and not called |
 | `app/src/main/java/com/github/gezimos/inkos/helper/utils/BrightnessHelper.kt:17` | the brightness-gesture toast, written in code, through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/notifications/NotificationsUI.kt:400` | the notification-access message reads `perm_notification_body` (upstream's same words), which iori overrides |
@@ -96,7 +97,7 @@ Not hooks, but carried on top of v0.6:
   `ui/compose/AppsUI.kt`, `ui/AppsDrawerState.kt`, `ui/dialogs/ComposeDialogManager.kt`,
   `data/Prefs.kt`, `data/repository/AppsRepository.kt`): these are edits to upstream's drawer,
   not one-line hooks, and will need care at the next upstream merge.
-- **Your apps**, listed under sections (Core, then Outdoors, On the road, Daily life, Music,
+- **Ecosystem apps** ("Your apps" until 14 Nov), listed under sections (Core, then Outdoors, On the road, Daily life, Music,
   Reading and writing, Games and oracles, Tools: `SECTIONS` in `tools/make-apps-list.py`, which
   stops on an app with no section) (`IoriApps.kt`, `IoriAppsDialog.kt`, `assets/iori_apps.json` from
   `tools/make-apps-list.py`): three permissions and a receiver in the manifest. The first run
@@ -106,6 +107,15 @@ Not hooks, but carried on top of v0.6:
   after the other (`IoriApps.installAll`),
   and an install question put away without an answer is given up when the page is back in
   front (`IoriApps.resumed`), so the ones behind it are not held up.
+
+- **House style on what Home adds, inkOS underneath** (14 Nov): inkOS's home, drawer, A-Z
+  letters, Settings pages and first-run look stay inkOS's. Home's own dialogs take the house type
+  scale (`ui/HouseType.kt`, nothing under 16 sp; written out here because Home does not carry
+  MMD) and the house list with its scrollbar (`ui/PagedColumn.kt` and `ui/EInkDialog.kt` are the
+  shop's shared files; the four chevrons are MMD's, Apache-2.0, as `iori_chevron_*.xml`).
+  Deleting a folder asks in its own row ("Delete folder — tap again"), in Settings and in the
+  drawer. Not done: a Licenses drawer listing every library (the other apps build theirs with
+  the AboutLibraries plugin).
 
 - `upstream-fixes`: "Honour canShowBadge() so service notifications stop badging" and
   "Events widget: all-day events by their date". Each is its own commit so it can be offered

@@ -37,6 +37,7 @@ import com.wanderwildwood.iori.IoriLinesRepository.GlanceState
 import com.wanderwildwood.iori.IoriLinesRepository.Status
 import com.wanderwildwood.iori.ui.EInkDialog
 import com.wanderwildwood.iori.ui.PagedColumn
+import com.wanderwildwood.iori.ui.houseTypography
 import com.wanderwildwood.iori.ui.monochrome
 
 /**
@@ -105,7 +106,7 @@ fun LinesDialog(tripped: Boolean, onTurnBackOn: () -> Unit, onDismiss: () -> Uni
         }
     }
 
-    MaterialTheme(colorScheme = monochrome) {
+    MaterialTheme(colorScheme = monochrome, typography = houseTypography) {
         EInkDialog(onDismiss = onDismiss) {
             Text(
                 text = stringResource(R.string.iori_lines_title),

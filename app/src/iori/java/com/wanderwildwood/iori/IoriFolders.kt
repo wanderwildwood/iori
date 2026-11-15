@@ -70,16 +70,21 @@ object IoriFolders {
         )
     }
 
-    private fun showFolder(context: Context, view: View, dialogs: ComposeDialogManager, folder: Folders.Folder) {
+    /** Delete asks in its own row: pressed once it reads "tap again"; anything else leaves the folder be. */
+    private fun showFolder(
+        context: Context, view: View, dialogs: ComposeDialogManager, folder: Folders.Folder, armed: Boolean = false,
+    ) {
         val prefs = Prefs(context)
         val rename = context.getString(R.string.rename)
-        val delete = context.getString(R.string.folder_delete)
+        val delete = context.getString(if (armed) R.string.folder_delete_armed else R.string.folder_delete)
         dialogs.showSingleChoiceDialog(
             context = context,
             options = arrayOf(rename, delete),
             titleResId = R.string.folder,
             onItemSelected = { choice ->
-                if (choice == delete) {
+                if (choice == delete && !armed) {
+                    view.post { showFolder(context, view, dialogs, folder, armed = true) }
+                } else if (choice == delete) {
                     Folders.delete(prefs, folder.id)
                     view.post { showList(context, view, dialogs) }
                 } else {

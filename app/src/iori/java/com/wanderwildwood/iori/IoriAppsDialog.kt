@@ -32,6 +32,7 @@ import com.github.gezimos.inkos.R
 import com.github.gezimos.inkos.ui.compose.SettingsComposable.SettingsHomeItem
 import com.wanderwildwood.iori.ui.EInkDialog
 import com.wanderwildwood.iori.ui.PagedColumn
+import com.wanderwildwood.iori.ui.houseTypography
 import com.wanderwildwood.iori.ui.monochrome
 
 /**
@@ -66,7 +67,7 @@ fun AppsDialog(onDismiss: () -> Unit) {
     }
     OnResume { IoriApps.resumed(context) }
 
-    MaterialTheme(colorScheme = monochrome) {
+    MaterialTheme(colorScheme = monochrome, typography = houseTypography) {
         EInkDialog(onDismiss = onDismiss) {
             Text(
                 text = stringResource(R.string.iori_apps_title),
@@ -132,7 +133,7 @@ private fun AppRow(app: IoriApps.App, state: IoriApps.State) {
     ) {
         Text(
             text = app.name,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
@@ -140,7 +141,7 @@ private fun AppRow(app: IoriApps.App, state: IoriApps.State) {
         Spacer(Modifier.width(12.dp))
         Text(
             text = status,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.labelSmall,
             fontWeight = if (state.installed == null || state.canUpdate) FontWeight.Bold else FontWeight.Normal,
             maxLines = 1,
         )

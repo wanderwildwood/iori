@@ -1389,17 +1389,20 @@ class AppsFragment : Fragment() {
     }
 
     /** Hold on a folder: rename it, or delete it (its apps go back to the list). */
-    private fun showFolderMenu(folderRow: AppListItem) {
+    private fun showFolderMenu(folderRow: AppListItem, armed: Boolean = false) {
         val id = Folders.idOf(folderRow.activityPackage)
         val folder = Folders.find(prefs, id) ?: return
         val rename = getString(R.string.rename)
-        val delete = getString(R.string.folder_delete)
+        // Delete asks in its own row: pressed once it reads "tap again"; anything else leaves the folder be.
+        val delete = getString(if (armed) R.string.folder_delete_armed else R.string.folder_delete)
         dialogManager.showSingleChoiceDialog(
             context = requireContext(),
             options = arrayOf(rename, delete),
             titleResId = R.string.folder,
             onItemSelected = { choice ->
-                if (choice == delete) {
+                if (choice == delete && !armed) {
+                    view?.post { showFolderMenu(folderRow, armed = true) }
+                } else if (choice == delete) {
                     Folders.delete(prefs, id)
                     foldersVersion++
                 } else {

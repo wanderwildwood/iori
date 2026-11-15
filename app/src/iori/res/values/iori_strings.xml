@@ -20,7 +20,7 @@
     <string name="what_is_inkos_wallpaper">What is Home Wallpaper?</string>
     <string name="inkos_wallpaper_explanation">Home wallpaper is a \"faux\" wallpaper, it\'s an image that appears over the actual android wallpaper layer.\n\nIt\'s function it\'s meant to circumvent Android cropping and zooming in your wallpaper which might break the the 1:1 pixel scaling which can cause defect to your image especially if you\'re using an e-ink device.\n\nMake sure to use correct aspect ratio, or have the exact resolution as your display.\n\nSetting an Android wallpaper will automatically clear the Home wallpaper.</string>
     <string name="privacy_no_data_body">Home does not track you. It does not collect, store, or share your data.</string>
-    <string name="privacy_no_server_body">Home has no server of its own. It uses the network for one thing: when you open Your apps or ask for an app there, it reaches GitHub to see the latest version and to download it. Nothing about you or your phone is sent.</string>
+    <string name="privacy_no_server_body">Home has no server of its own. It uses the network for one thing: when you open Ecosystem apps or ask for an app there, it reaches GitHub to see the latest version and to download it. Nothing about you or your phone is sent.</string>
     <string name="privacy_local_body">Home only previews and displays data that already exists on your phone. All app information, notifications, and settings are processed locally and stay on your device.</string>
     <string name="privacy_open_source_body">Home is open source. You can review the source code on GitHub to verify these claims.</string>
     <!-- Crash reports go to Home, not to inkOS's maintainer. -->
@@ -69,8 +69,8 @@
     <string name="iori_handoff_get">Get %1$s</string>
     <string name="iori_handoff_phones_own">Use the phone\'s own</string>
 
-    <!-- Your apps -->
-    <string name="iori_apps_title">Your apps</string>
+    <!-- Ecosystem apps -->
+    <string name="iori_apps_title">Ecosystem apps</string>
     <string name="iori_apps_row_desc">Installed or missing, get and update</string>
     <string name="iori_apps_core">Core</string>
     <string name="iori_apps_outdoors">Outdoors</string>
@@ -94,7 +94,7 @@
     <string name="iori_apps_failed_key">Not signed by its maker</string>
     <string name="iori_apps_failed_refused">Not installed. Try again</string>
     <!-- First run: Pick your apps -->
-    <string name="iori_pick_body">These apps are made to work together. Tick the ones you want and press GET. Android asks once for each. The rest can be got later in Settings, under Your apps.</string>
+    <string name="iori_pick_body">These apps are made to work together. Tick the ones you want and press GET. Android asks once for each. The rest can be got later in Settings, under Ecosystem apps.</string>
     <string name="iori_first_ecosystem">ECOSYSTEM</string>
     <string name="iori_first_setup">SETUP</string>
     <string name="iori_first_look">THEME AND HOME APPS</string>
@@ -115,13 +115,25 @@
     <string name="iori_pick_waiting">Waiting</string>
 
     <!-- About -->
-    <string name="iori_about_row">About Home</string>
-    <string name="iori_about_row_desc">Version, licence and source</string>
-    <string name="iori_about_version">Home %1$s</string>
+    <string name="iori_about_row">About Home 庵 iori</string>
+    <string name="iori_about_row_desc">Version, privacy, license and source</string>
+    <string name="iori_about_version">Home 庵 iori %1$s</string>
     <string name="iori_about_based">Based on inkOS by gezimos, GPL-3.0.</string>
-    <string name="iori_about_licence">GNU General Public License v3.0 only</string>
+    <string name="iori_about_licence">GNU General Public License v3.0 only.</string>
     <string name="iori_about_bundled">Lock-screen music from Katapult by gezimos, GPL-3.0.</string>
-    <string name="iori_about_feed_llamas">feed the llamas</string>
+    <string name="iori_about_what">A plain, quiet home screen for E Ink phones, and the front door to a family of apps made to work together: it hands off to them, carries a few of their lines, and can get and update them. A fork of inkOS by gezimos.</string>
+    <string name="iori_about_mmd">The scrollbar of the lists Home adds is drawn after MMD by Mudita, Apache-2.0.</string>
+    <string name="iori_about_sends_title">What it sends</string>
+    <string name="iori_about_license_title">License</string>
+    <string name="iori_about_upstream">inkOS\'s own About</string>
+    <string name="about_no_mail_app">No email app is installed. The address is %1$s.</string>
+    <string name="privacy_who_title">Who we are</string>
+    <string name="privacy_who">This app is made by wander wildwood, an independent developer: one person, not a company. That makes wander wildwood the data controller for anything the app itself handles, and that is very little: your layout and settings stay on this phone unless you send a backup somewhere yourself, and nothing comes to the developer.</string>
+    <string name="privacy_contact_title">How to contact us</string>
+    <string name="privacy_contact">Write to email@wanderthe.dev, about your data or anything else.</string>
+    <string name="privacy_rights_title">Your rights</string>
+    <string name="privacy_rights">Under the GDPR you can ask to see the data held about you, to have it corrected or deleted, to limit or object to its use, to take a copy with you, to withdraw consent, and to complain to a data protection authority. Since the app keeps what it stores only on your phone, you can do most of this yourself: clear the app\'s data in Android\'s settings, or uninstall the app. What GitHub receives when you get or update an app is covered by its own privacy policy.</string>
+    <string name="folder_delete_armed">Delete folder — tap again</string>
     <string name="iori_support_coffee">Buy the author of inkOS a coffee</string>
     <string name="iori_support_llama">Feed the llamas</string>
     <string name="iori_about_no_browser">There is no browser on this phone to open that with.</string>

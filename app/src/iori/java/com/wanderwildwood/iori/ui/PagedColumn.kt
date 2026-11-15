@@ -1,65 +1,102 @@
 package com.wanderwildwood.iori.ui
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListItemInfo
+import androidx.compose.foundation.lazy.LazyListLayoutInfo
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-
-// The same file in every app of this shop, apart from its package line.
+import kotlin.math.max
 
 /**
- * A list that turns a page to a swipe, and turns it on whole rows. It takes the place of MMD's
- * `LazyColumnMMD` and is called the same way.
+ * The list every screen uses: Mudita's list look, with its scrollbar (a chevron at each end that
+ * turns a page, a track that jumps to the place pressed, a thumb that shows where the page is), but
+ * a page turns on WHOLE ROWS. MMD's own `LazyColumnMMD` moves four rows a turn whatever their
+ * heights, so tall rows ran off the foot of a page (Sky's Today lost its credits that way). Here
+ * (3 Nov 2026: pages end on whole rows; the scrollbar stays):
  *
- * MMD's list steps four items to a swipe and lets the list clamp at its end, so its last page
- * lines up with the bottom and the row at the top sits half under the bar; four tall rows can
- * also step past one that was never fully seen. Here a swipe up brings the first row that did
- * not fit to the top, a swipe down is the same backwards, and a row that does not fit at the
- * foot is not drawn until it is the next page's first. The last page keeps its rows whole and
- * leaves the space under them blank. A row taller than the screen is read a screen at a time.
+ * - a turn forward brings the first row that did not fit to the top of the page;
+ * - a row that does not fit at the foot is not drawn (nor pressable) until the next page;
+ * - a blank tail after the last row lets that row come to the top, so the last page also starts on
+ *   a row and is never shifted back to end flush, mid-row at its top;
+ * - a turn back goes one page back and lands on a row.
  *
- * [contentPadding]'s top and bottom are a margin on every page, not only at the ends of the
- * list: no row is drawn in them. [isScrollbarVisible] is taken so a call written for MMD's
- * list still reads the same, and does nothing: no list in the house apps draws a scrollbar.
+ * A row taller than the whole page is read a page at a time within it.
  *
- * Inside a [ListJumpBox] the letters and page dots move the same [state], and the next swipe
- * goes on from wherever they left it.
+ * [showCutRow] is for lists of tall rows (an inbox, conversations, articles, notes, books; decided
+ * 5 Nov 2026): the row the foot cuts through is drawn and can be pressed, so a page has no blank
+ * band at its foot, and a turn forward still brings that row to the top, whole, so nothing is
+ * skipped. There is no blank tail: the last page ends flush and may open part-way down a row the
+ * page before already showed. A turn back goes one page back and lands on a row, as it does
+ * without it. Off by default; every other list keeps whole-row pages.
  *
- * [onPullAtTop] is for a list fed from somewhere else: a swipe down while the first page is
- * already showing, its first row at the very top, calls it once for that swipe, so the list can
- * ask for its rows again. Left null, as in a list that lives only on the phone, that swipe does
- * nothing, as it always did. Saying what the pull set going is the caller's, in words.
+ * The bar is drawn as MMD's `VerticalScrollbar` draws it (MMD 1.0.2, `LazyMMD.kt`, Apache-2.0,
+ * Copyright 2025 The Android Open Source Project, modified by Mudita Sp. z o.o.), with its own
+ * chevron drawables; only where a turn lands is ours.
+ *
+ * Called as `LazyColumnMMD` was. [isScrollbarVisible] is on by default; a list that must not show
+ * one passes false. [folio] and [rowStep] are kept so every existing call compiles.
+ *
+ * [barClearBelow] is for a screen with a floating button in the corner under the bar (11 Nov 2026):
+ * the bar ends that far above the foot of the list, so the button keeps its corner and the lower
+ * chevron stands over it instead of under it, where a press meant for the next page pressed the
+ * button. One 56 dp button on its 16 dp margin is 72 dp. The rows are not moved.
+ *
+ * [onPullAtTop], when given, is called when a swipe down starts on the first page of the rows: the
+ * list asks for them again. It asks for nothing otherwise, and does not take the swipe from the
+ * list. Saying what the pull set going is the caller's, in words.
+ *
+ * Do not read state derived from the list's layout inside [content]: every layout then rebuilds
+ * the items and asks for another, a loop that keeps a core busy while idle. (The list itself reads
+ * it only while drawing and in the bar, outside the items.)
  */
 @Composable
 fun PagedColumn(
@@ -68,85 +105,306 @@ fun PagedColumn(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     horizontalAlignment: Alignment.Horizontal = Alignment.Start,
-    @Suppress("UNUSED_PARAMETER") isScrollbarVisible: Boolean = false,
+    isScrollbarVisible: Boolean = true,
     onPullAtTop: (() -> Unit)? = null,
+    @Suppress("UNUSED_PARAMETER") rowStep: (() -> Float?)? = null,
+    @Suppress("UNUSED_PARAMETER") folio: Boolean = false,
+    showCutRow: Boolean = false,
+    barClearBelow: Dp = 0.dp,
     content: LazyListScope.() -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
     // The gesture below is set up once for the list; read the caller's latest action, not the
     // one it was handed first.
     val pull by rememberUpdatedState(onPullAtTop)
-    val surface = MaterialTheme.colorScheme.surface
+    val scope = rememberCoroutineScope()
+    // In a dialog the list sits inside the dialog's own padding, which leaves the scrollbar floating
+    // well in from the rim. The dialog says how much room it has ([LocalListBleed]); the list runs out
+    // into it, so the bar sits at the edge, and takes the same amount off its own end so the rows
+    // stay exactly where they were.
     val direction = LocalLayoutDirection.current
-    val mark = with(LocalDensity.current) { TAIL_MARK_PX.toDp() }
-    // Only a list longer than its screen pages, and only that one gets the blank tail: a list
-    // that fits keeps its arrangement, centred or at the foot as it was asked.
-    val pages by remember(state) { derivedStateOf { state.overflows() } }
-
-    LaunchedEffect(state) {
-        // The tail at the top is a blank page: the rows under it were taken away, or something
-        // scrolled past the end. Go back to the last page of rows.
-        snapshotFlow { state.layoutInfo.visibleItemsInfo.firstOrNull()?.key == TAIL }
-            .collect { blank ->
-                if (blank) {
-                    state.scrollToItem(state.layoutInfo.totalItemsCount - 1)
-                    state.pageBack()
-                }
-            }
+    val bleed = if (isScrollbarVisible) LocalListBleed.current else 0.dp
+    val padding = if (bleed > 0.dp) {
+        PaddingValues(
+            start = contentPadding.calculateStartPadding(direction),
+            top = contentPadding.calculateTopPadding(),
+            end = contentPadding.calculateEndPadding(direction) + bleed,
+            bottom = contentPadding.calculateBottomPadding(),
+        )
+    } else {
+        contentPadding
     }
-
-    BoxWithConstraints(
-        modifier.padding(top = contentPadding.calculateTopPadding(), bottom = contentPadding.calculateBottomPadding()),
+    val widen = if (bleed > 0.dp) {
+        Modifier.layout { measurable, constraints ->
+            val max = if (constraints.hasBoundedWidth) constraints.maxWidth + bleed.roundToPx() else constraints.maxWidth
+            val placeable = measurable.measure(
+                constraints.copy(minWidth = if (constraints.hasBoundedWidth) max else constraints.minWidth, maxWidth = max),
+            )
+            // The parent trims our width back to what it offered and centres what is left over, which would
+            // slide the whole list left by half the bleed; put it back so the rows stay and only the end moves.
+            layout(placeable.width, placeable.height) { placeable.place(bleed.roundToPx() / 2, 0) }
+        }
+    } else {
+        Modifier
+    }
+    val cutRow by rememberUpdatedState(showCutRow)
+    val shown by remember(state) { derivedStateOf { state.layoutInfo.totalItemsCount > if (cutRow) 0 else 1 } }
+    val pages by remember(state) { derivedStateOf { state.layoutInfo.view(cutRow).pages } }
+    Row(
+        modifier = (if (onPullAtTop == null) modifier else modifier.pullAtTop(state) { pull?.invoke(); Unit })
+            .then(widen)
+            // As MMD does: nothing is drawn until the rows are there, so the screen does not flash.
+            .alpha(if (shown) 1f else 0f),
     ) {
-        // Room after the last row for it to come to the top, so the list never has to line
-        // its end up with the bottom of the screen.
-        val tail = maxHeight
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(state) {
-                    var turned = false
-                    detectVerticalDragGestures(
-                        onDragStart = { turned = false },
-                        onDragEnd = { turned = false },
-                        onDragCancel = { turned = false },
-                    ) { _, drag ->
-                        if (turned || drag == 0f) return@detectVerticalDragGestures
-                        turned = true
-                        val atTop = state.firstVisibleItemIndex == 0 && state.firstVisibleItemScrollOffset == 0
-                        when (swipeTurn(drag, atTop, pull != null)) {
-                            SwipeTurn.Forward -> scope.launch { state.pageForward() }
-                            SwipeTurn.Back -> scope.launch { state.pageBack() }
-                            SwipeTurn.Pull -> pull?.invoke()
-                            SwipeTurn.None -> Unit
+        BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
+            val tail = maxHeight
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(state) {
+                        var turned = false
+                        detectVerticalDragGestures(onDragStart = { turned = false }) { _, drag ->
+                            if (!turned && drag != 0f) {
+                                turned = true
+                                scope.launch { if (drag < 0f) state.turnForward(cutRow) else state.turnBack(cutRow) }
+                            }
                         }
                     }
-                }
-                .drawWithContent {
-                    drawContent()
-                    state.cutAt()?.let { y ->
-                        drawRect(surface, topLeft = Offset(0f, y), size = Size(size.width, size.height - y))
+                    // A row hidden at the foot takes no press either: what cannot be seen is not there.
+                    .pointerInput(state) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                            val foot = state.layoutInfo.view(cutRow).foot
+                            if (foot != null && down.position.y >= foot) down.consume()
+                        }
                     }
-                },
-            state = state,
-            // One pixel after the tail tells ListJump the last item is room, not a row.
-            contentPadding = PaddingValues(
-                start = contentPadding.calculateStartPadding(direction),
-                end = contentPadding.calculateEndPadding(direction),
-                bottom = if (pages) mark else 0.dp,
-            ),
-            verticalArrangement = verticalArrangement,
-            horizontalAlignment = horizontalAlignment,
-            // The list turns its own pages.
-            userScrollEnabled = false,
-        ) {
-            content()
-            if (pages) item(key = TAIL, contentType = TAIL) { Spacer(Modifier.height(tail)) }
+                    .drawWithContent {
+                        // Read here, while drawing, so a page turn redraws without composing anything.
+                        val foot = state.layoutInfo.view(cutRow).foot
+                        if (foot == null) drawContent() else clipRect(bottom = foot.toFloat()) { this@drawWithContent.drawContent() }
+                    },
+                state = state,
+                contentPadding = padding,
+                verticalArrangement = verticalArrangement,
+                horizontalAlignment = horizontalAlignment,
+                // The list turns its own pages.
+                userScrollEnabled = false,
+            ) {
+                content()
+                // With the cut row shown there is no tail: the last page ends flush.
+                // The tail has no key of its own (8 Nov 2026): a list keeps its place on the key of its
+                // first row, so a list that opened empty (its rows still loading) and so on the tail alone
+                // would stay on the tail when the rows came in above it, a blank page. Known by its type.
+                if (!showCutRow) item(contentType = TAIL) { Spacer(Modifier.height(tail)) }
+            }
+        }
+        if (pages && isScrollbarVisible) {
+            PageBar(
+                state = state,
+                cutRow = showCutRow,
+                clearBelow = barClearBelow,
+                onBack = { scope.launch { state.turnBack(showCutRow) } },
+                onForward = { scope.launch { state.turnForward(showCutRow) } },
+                onFirst = { scope.launch { state.scrollToItem(0) } },
+                onLast = { scope.launch { state.scrollToItem(state.lastPageStart(showCutRow)) } },
+                onJump = { index -> scope.launch { state.scrollToItem(index) } },
+            )
         }
     }
 }
 
+/**
+ * How far a list inside a dialog may run out into the dialog's own padding. The dialog sets it
+ * (see its `EInkDialog`); everywhere else it is zero and a list is just its own width.
+ */
+val LocalListBleed = compositionLocalOf { 0.dp }
+
 private const val TAIL = "paged-column-tail"
+
+/** One laid-out row: its index, and its top and bottom in pixels down the list's viewport. */
+internal data class RowSpan(val index: Int, val top: Int, val bottom: Int)
+
+/**
+ * A page as laid out: its [rows] (the tail left out), the [height] rows may fill, and how many
+ * rows the list has, [count]. [showsCut]: the row cut at the foot is drawn (see [PagedColumn]).
+ */
+internal data class PageView(val rows: List<RowSpan>, val height: Int, val count: Int, val showsCut: Boolean = false) {
+    /** The first row that runs past the foot, if any (a row taller than the page included). */
+    private val cut: RowSpan? get() = rows.firstOrNull { it.bottom > height }
+
+    /** Where drawing stops: the top of a row cut at the foot, or null to draw it all. */
+    val foot: Int?
+        get() {
+            if (showsCut) return null
+            val c = cut ?: return null
+            // A row taller than the page, alone on it, is shown as far as it goes.
+            return if (c == rows.first() || c.top <= 0) null else c.top
+        }
+
+    /** Whether the rows take more than one page. */
+    val pages: Boolean
+        get() = rows.isNotEmpty() && (rows.first().index > 0 || rows.first().top < 0 || cut != null || rows.last().index < count - 1)
+
+    /** Whether this is the first page. */
+    val atStart: Boolean get() = rows.isEmpty() || (rows.first().index == 0 && rows.first().top >= 0)
+
+    /** Whether this is the last page: the last row is on it, whole. */
+    val atEnd: Boolean get() = rows.isEmpty() || (cut == null && rows.last().index >= count - 1)
+
+    /** The rows shown whole. */
+    val whole: List<RowSpan> get() = rows.filter { it.top >= 0 && it.bottom <= height }
+}
+
+/** What a turn forward does. */
+internal sealed interface Turn {
+    /** Bring this row to the top. */
+    data class To(val index: Int) : Turn
+    /** Move this many pixels, within a row taller than the page. */
+    data class By(val px: Int) : Turn
+    data object None : Turn
+}
+
+/** Where a turn forward from [page] lands. */
+internal fun forward(page: PageView): Turn {
+    if (page.rows.isEmpty() || page.atEnd) return Turn.None
+    val cut = page.rows.firstOrNull { it.bottom > page.height }
+        ?: return Turn.To(page.rows.last().index + 1)
+    // The row that does not fit is the one the page opens with: it is taller than a page, so the
+    // next page is the next part of it. "Opens with", not "starts at the top": a list with
+    // padding above its first row has that row start below 0, and it still must be read through.
+    if (cut.index == page.rows.first().index) return Turn.By(minOf(page.height, cut.bottom - page.height).coerceAtLeast(1))
+    return Turn.To(cut.index)
+}
+
+/**
+ * After a turn back of one page height, [page] may open part-way into a row; that row was shown
+ * whole on the page before, so start on the next one. Null to stay: a row taller than a page, or
+ * the very top.
+ */
+internal fun backSnap(page: PageView): Int? {
+    val first = page.rows.firstOrNull() ?: return null
+    if (first.top >= 0) return null
+    if (first.bottom - first.top > page.height) return null
+    return page.rows.getOrNull(1)?.index
+}
+
+private fun LazyListLayoutInfo.view(cutRow: Boolean = false): PageView {
+    val items = visibleItemsInfo.filter { it.contentType != TAIL }
+    val rows = items.map { RowSpan(it.index, it.offset - viewportStartOffset, it.offset - viewportStartOffset + it.size) }
+    // Without the cut row the list ends in the tail, which is not a row.
+    val count = (totalItemsCount - if (cutRow) 0 else 1).coerceAtLeast(0)
+    return PageView(rows, viewportSize.height - afterContentPadding, count, cutRow)
+}
+
+private suspend fun LazyListState.turnForward(cutRow: Boolean = false) {
+    when (val t = forward(layoutInfo.view(cutRow))) {
+        is Turn.To -> scrollToItem(t.index)
+        is Turn.By -> scrollBy(t.px.toFloat())
+        Turn.None -> Unit
+    }
+}
+
+private suspend fun LazyListState.turnBack(cutRow: Boolean = false) {
+    val page = layoutInfo.view(cutRow)
+    if (page.atStart) return
+    scrollBy(-page.height.toFloat())
+    backSnap(layoutInfo.view(cutRow))?.let { scrollToItem(it) }
+}
+
+/**
+ * The last row, which opens the last page: the tail under it leaves it at the top. With the cut
+ * row shown there is no tail, and the list stops the last row flush with the foot.
+ */
+private fun LazyListState.lastPageStart(cutRow: Boolean = false): Int =
+    (layoutInfo.totalItemsCount - if (cutRow) 1 else 2).coerceAtLeast(0)
+
+/** MMD's scrollbar, as it draws it; see [PagedColumn]. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun PageBar(
+    state: LazyListState,
+    cutRow: Boolean,
+    clearBelow: Dp,
+    onBack: () -> Unit,
+    onForward: () -> Unit,
+    onFirst: () -> Unit,
+    onLast: () -> Unit,
+    onJump: (Int) -> Unit,
+) {
+    val page = state.layoutInfo.view(cutRow)
+    if (page.count == 0) return
+    val containerColor = MaterialTheme.colorScheme.onPrimary
+    val sliderColor = MaterialTheme.colorScheme.primary
+    Column(
+        modifier = Modifier.fillMaxHeight().padding(start = 8.dp, end = 8.dp, bottom = clearBelow),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Icon(
+            painter = painterResource(if (page.atStart) com.github.gezimos.inkos.R.drawable.iori_chevron_dotted_up else com.github.gezimos.inkos.R.drawable.iori_chevron_filled_up),
+            contentDescription = null,
+            modifier = Modifier
+                .padding(vertical = 16.dp)
+                .size(24.dp)
+                .combinedClickable(onClick = onBack, onLongClick = onFirst),
+        )
+        val whole = page.whole
+        val visible = whole.size.coerceAtLeast(1)
+        val first = whole.firstOrNull()?.index ?: page.rows.firstOrNull()?.index ?: 0
+        Canvas(
+            modifier = Modifier
+                .width(8.dp)
+                .weight(1f)
+                .border(width = 1.dp, color = sliderColor, shape = RoundedCornerShape(4.dp))
+                .pointerInput(page.count) {
+                    detectTapGestures { offset ->
+                        val slider = size.height * visible / page.count
+                        val target = ((offset.y - slider / 2) / size.height * page.count).toInt().coerceIn(0, page.count - 1)
+                        onJump(target)
+                    }
+                },
+        ) {
+            val sliderHeight = (size.height * visible / page.count).coerceAtLeast(max(size.height * 0.05f, 16f))
+            val maxOffset = (size.height - sliderHeight).coerceAtLeast(0f)
+            val denominator = (page.count - visible).coerceAtLeast(1)
+            val sliderOffset = (first.toFloat() / denominator * maxOffset).coerceIn(0f, maxOffset)
+            val corner = CornerRadius(size.width / 2, size.width / 2)
+            drawRoundRect(color = containerColor, topLeft = Offset.Zero, size = Size(size.width, size.height), cornerRadius = corner)
+            drawRoundRect(
+                color = if (visible >= page.count) containerColor else sliderColor,
+                topLeft = Offset(0f, sliderOffset),
+                size = Size(size.width, sliderHeight),
+                cornerRadius = corner,
+            )
+        }
+        Icon(
+            painter = painterResource(if (page.atEnd) com.github.gezimos.inkos.R.drawable.iori_chevron_dotted_down else com.github.gezimos.inkos.R.drawable.iori_chevron_filled_down),
+            contentDescription = null,
+            modifier = Modifier
+                .padding(vertical = 16.dp)
+                .size(24.dp)
+                .combinedClickable(onClick = onForward, onLongClick = onLast),
+        )
+    }
+}
+
+/**
+ * Calls [onPull] when a swipe that began with the list on its first page ends further down than
+ * it began. It watches the touches before the list sees them and takes none of them, so the list
+ * scrolls as it would anyway.
+ */
+private fun Modifier.pullAtTop(state: LazyListState, onPull: () -> Unit): Modifier = pointerInput(state) {
+    awaitEachGesture {
+        val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        val atTop = state.firstVisibleItemIndex == 0 && state.firstVisibleItemScrollOffset == 0
+        var last = down.position.y
+        while (true) {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+            val change = event.changes.firstOrNull { it.id == down.id } ?: break
+            last = change.position.y
+            if (!change.pressed) break
+        }
+        if (swipeTurn(last - down.position.y, atTop, canPull = true) == SwipeTurn.Pull) onPull()
+    }
+}
 
 /** What one swipe does to the list. */
 internal enum class SwipeTurn { Forward, Back, Pull, None }
@@ -161,71 +419,4 @@ internal fun swipeTurn(drag: Float, atTop: Boolean, canPull: Boolean): SwipeTurn
     !atTop -> SwipeTurn.Back
     canPull -> SwipeTurn.Pull
     else -> SwipeTurn.None
-}
-
-/** The padding after the tail, in pixels; ListJump knows a paged list by it. */
-private const val TAIL_MARK_PX = 1
-
-private fun LazyListState.hasTail(): Boolean = layoutInfo.afterContentPadding == TAIL_MARK_PX
-
-/** How many rows the list holds, without the blank room after the last. */
-private fun LazyListState.rowCount(): Int = layoutInfo.totalItemsCount - if (hasTail()) 1 else 0
-
-/** The rows on screen, without the blank room after the last. */
-private fun LazyListState.rows(): List<LazyListItemInfo> =
-    layoutInfo.visibleItemsInfo.filter { it.key != TAIL }
-
-/** Whether the rows run past one screen, before it or after it. */
-private fun LazyListState.overflows(): Boolean {
-    val rows = rows()
-    if (rows.isEmpty()) return false
-    val first = rows.first()
-    val last = rows.last()
-    return first.index > 0 || first.offset < 0 || last.index < rowCount() - 1 ||
-        last.offset + last.size > layoutInfo.viewportSize.height
-}
-
-/** Where the first row that runs off the foot starts, while a whole row sits above it. */
-private fun LazyListState.cutAt(): Float? {
-    val bottom = layoutInfo.viewportSize.height
-    val cut = rows().firstOrNull { it.offset + it.size > bottom } ?: return null
-    return if (cut.offset > 0) cut.offset.toFloat() else null
-}
-
-/** The first row that did not fit, brought to the top. */
-private suspend fun LazyListState.pageForward() {
-    val bottom = layoutInfo.viewportSize.height
-    val rows = rows()
-    if (rows.isEmpty()) return
-    val cut = rows.firstOrNull { it.offset + it.size > bottom }
-    when {
-        // The rows on screen fill it exactly: the next page opens on the row after them, if
-        // there is one; if not, this is the last page.
-        cut == null -> {
-            val next = rows.last().index + 1
-            if (next < rowCount()) scrollToItem(next)
-        }
-        // One row taller than the screen: through it a screen at a time.
-        cut.offset <= 0 -> scrollBy(bottom.toFloat())
-        else -> scrollToItem(cut.index)
-    }
-}
-
-/**
- * Back a page: the row before the top one comes to rest whole at the foot, with as many whole
- * rows above it as fit.
- */
-private suspend fun LazyListState.pageBack() {
-    if (firstVisibleItemIndex == 0 && firstVisibleItemScrollOffset == 0) return
-    val from = firstVisibleItemIndex
-    scrollBy(-layoutInfo.viewportSize.height.toFloat())
-    // A row cut by the top edge waits for the page before; unless it is the one row being
-    // gone back to, taller than the screen, or it is cut by no more than the room left under
-    // that row. A spaced list leaves its gap there, and the row still fits whole.
-    val cut = firstVisibleItemScrollOffset
-    if (cut > 0 && firstVisibleItemIndex + 1 < from) {
-        val before = layoutInfo.visibleItemsInfo.firstOrNull { it.index == from - 1 }
-        val room = before?.let { layoutInfo.viewportSize.height - (it.offset + it.size) } ?: 0
-        scrollToItem(if (cut <= room) firstVisibleItemIndex else firstVisibleItemIndex + 1)
-    }
 }

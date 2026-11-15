@@ -100,7 +100,7 @@ certificate its releases are signed with.
 
 ## What it sends
 
-Nothing about you. Unlike inkOS, Home has the internet permission, for one thing: **Your apps**
+Nothing about you. Unlike inkOS, Home has the internet permission, for one thing: **Ecosystem apps**
 (in Settings, and as the last page of a first run). When you open the page in Settings it asks
 GitHub for the latest release of each of the apps you have, and when you press Get or Update,
 or GET on the first run's page, it downloads that app from its GitHub release. The first run's
@@ -111,7 +111,7 @@ server of its own. Settings, usage counts and everything shown on home stay on t
 only if you choose to send it, as an email from your own mail app, to this app's address and
 not to gezimos.
 
-The permissions are inkOS's, plus three for Your apps (internet, asking Android to install an
+The permissions are inkOS's, plus three for Ecosystem apps (internet, asking Android to install an
 app, and updating an app Home installed without asking again). Each belongs to a feature you
 can leave off:
 

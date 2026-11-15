@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,7 +41,9 @@ import com.github.gezimos.inkos.style.Theme
 import com.github.gezimos.inkos.style.rememberScreenScale
 import com.github.gezimos.inkos.style.scaled
 import com.github.gezimos.inkos.ui.compose.inkOsSafeDrawingPadding
+import com.wanderwildwood.iori.ui.LocalListBleed
 import com.wanderwildwood.iori.ui.PagedColumn
+import com.wanderwildwood.iori.ui.monochrome
 
 /**
  * The Ecosystem page of a first run ([IoriFirstRun]): the apps Home is made to work with, under
@@ -126,31 +130,36 @@ object IoriPickApps {
                         lineHeight = (sizes.body.value * 1.4f).sp,
                     )
                     Spacer(Modifier.height(8.dp.scaled(screenScale)))
-                    PagedColumn(Modifier.fillMaxWidth().weight(1f)) {
-                        IoriApps.sections(apps).forEach { (head, inSection) ->
-                            item(key = "head:$head") {
-                                Text(
-                                    text = stringResource(head),
-                                    style = SettingsTheme.typography.title,
-                                    fontSize = sizes.title,
-                                    fontWeight = FontWeight.Bold,
-                                    color = textColor,
-                                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp),
-                                )
-                            }
-                            inSection.forEach { app ->
-                                item(key = app.pkg) {
-                                    PickRow(
-                                        app = app,
-                                        state = states[app.pkg] ?: IoriApps.State(),
-                                        ticked = app.pkg in ticked,
-                                        waiting = app.pkg in queue,
-                                        fontSize = sizes.body,
-                                        textColor = textColor,
-                                        onToggle = {
-                                            if (!running) ticked = if (app.pkg in ticked) ticked - app.pkg else ticked + app.pkg
-                                        },
-                                    )
+                    // The house scrollbar, in this page's own two colors, run out to the screen's edge.
+                    MaterialTheme(colorScheme = monochrome.copy(primary = textColor, onPrimary = bgColor)) {
+                        CompositionLocalProvider(LocalListBleed provides 26.dp.scaled(screenScale)) {
+                            PagedColumn(Modifier.fillMaxWidth().weight(1f)) {
+                                IoriApps.sections(apps).forEach { (head, inSection) ->
+                                    item(key = "head:$head") {
+                                        Text(
+                                            text = stringResource(head),
+                                            style = SettingsTheme.typography.title,
+                                            fontSize = sizes.title,
+                                            fontWeight = FontWeight.Bold,
+                                            color = textColor,
+                                            modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp),
+                                        )
+                                    }
+                                    inSection.forEach { app ->
+                                        item(key = app.pkg) {
+                                            PickRow(
+                                                app = app,
+                                                state = states[app.pkg] ?: IoriApps.State(),
+                                                ticked = app.pkg in ticked,
+                                                waiting = app.pkg in queue,
+                                                fontSize = sizes.body,
+                                                textColor = textColor,
+                                                onToggle = {
+                                                    if (!running) ticked = if (app.pkg in ticked) ticked - app.pkg else ticked + app.pkg
+                                                },
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }

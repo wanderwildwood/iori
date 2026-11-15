@@ -618,6 +618,7 @@ class SettingsFragment : Fragment() {
                 titleFontSize = titleFontSize,
                 onClick = { navigateTo(SettingsRoute.Extras) },
             )
+            if (false) // iori: inkOS's About row is not drawn; its page opens from About Home
             SettingsHomeItem(
                 title = stringResource(R.string.about),
                 imageVector = Icons.Rounded.Info,
@@ -626,9 +627,9 @@ class SettingsFragment : Fragment() {
                 onClick = { navigateTo(SettingsRoute.Support) },
             )
             com.wanderwildwood.iori.IoriDark.SettingsRow(titleFontSize) { viewModel.setAppTheme(it) } // iori: dark mode, every app
-            com.wanderwildwood.iori.IoriAppsRow.SettingsRow(titleFontSize) // iori: Your apps
+            com.wanderwildwood.iori.IoriAppsRow.SettingsRow(titleFontSize) // iori: Ecosystem apps
             com.wanderwildwood.iori.IoriFolders.SettingsRow(titleFontSize, dialogBuilder) // iori: the drawer's folders
-            com.wanderwildwood.iori.IoriAbout.SettingsRow(titleFontSize) // iori: About Home
+            com.wanderwildwood.iori.IoriAbout.SettingsRow(titleFontSize) { navigateTo(SettingsRoute.Support) } // iori: Home lines, and the one About
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
