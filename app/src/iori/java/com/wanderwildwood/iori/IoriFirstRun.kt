@@ -83,24 +83,26 @@ import com.github.gezimos.inkos.ui.dialogs.ComposeDialogManager
 import kotlinx.coroutines.delay
 
 /**
- * Home's first run, five pages in place of inkOS's seven, drawn the way inkOS draws its own:
+ * Home's first run, six pages in place of inkOS's seven, drawn the way inkOS draws its own:
  *
  *  1. Welcome: what Home is, what it sends, and the privacy tick.
  *  2. Setup: notification access, the home app, and where Settings is (with its tick).
  *  3. Ecosystem: the apps Home works with, to tick and get ([IoriPickApps]).
  *  4. Default apps: which app Android opens for alarms, pictures, maps and the like ([IoriDefaults]).
- *  5. Theme and home apps, last, so the apps just got can be put on the home screen.
+ *  5. Nextcloud: the one account the apps can share ([IoriNextcloudUi]); NEXT passes it by.
+ *  6. Theme and home apps, last, so the apps just got can be put on the home screen.
  *
  * inkOS's own `OnboardingScreen.Show` is left as upstream wrote it and is not called.
  */
 object IoriFirstRun {
 
-    const val PAGES = 5
+    const val PAGES = 6
     private const val WELCOME = 0
     private const val SETUP = 1
     private const val ECOSYSTEM = 2
     private const val DEFAULTS = 3
-    private const val LOOK = 4
+    private const val NEXTCLOUD = 4
+    private const val LOOK = 5
 
     /** The sizes inkOS's first-run pages work out for themselves. */
     internal class Sizes(val title: TextUnit, val body: TextUnit, val big: TextUnit)
@@ -183,6 +185,15 @@ object IoriFirstRun {
                 pageLabel = "${DEFAULTS + 1}/$PAGES",
                 isDark = isDark,
                 onBack = { page = ECOSYSTEM },
+                onNext = { page = NEXTCLOUD },
+            )
+            return
+        }
+        if (page == NEXTCLOUD) {
+            IoriNextcloudUi.Page(
+                pageLabel = "${NEXTCLOUD + 1}/$PAGES",
+                isDark = isDark,
+                onBack = { page = DEFAULTS },
                 onNext = { page = LOOK },
             )
             return

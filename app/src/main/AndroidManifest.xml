@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
-    <!-- iori: "Your apps" fetches an app from its GitHub release and hands it to Android to install -->
+    <!-- iori: "Your apps" fetches an app from its GitHub release and hands it to Android to install;
+         the Nextcloud sign-in talks to the person's own server -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- iori: to raise Android's "which clock app" question from Default apps -->
@@ -170,6 +171,13 @@
         <provider
             android:name="com.wanderwildwood.iori.IoriDarkProvider"
             android:authorities="${applicationId}.dark"
+            android:exported="true"
+            android:writePermission="android.permission.MANAGE_DOCUMENTS" />
+        <!-- iori: the phone's one Nextcloud account, handed only to the apps whose package and signing
+             certificate are pinned in IoriAccount.kt; the provider checks the caller itself -->
+        <provider
+            android:name="com.wanderwildwood.iori.IoriAccountProvider"
+            android:authorities="${applicationId}.accounts"
             android:exported="true"
             android:writePermission="android.permission.MANAGE_DOCUMENTS" />
         <!-- iori: Android's answer to an install asked for from "Your apps" -->

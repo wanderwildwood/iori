@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- iori, debug builds only: plain http is let through so the Nextcloud sign-in can be tried
+     against a stand-in server on the build box (IoriLogin.usable still limits it to hosts on
+     the phone's own network). A release has no such line and sends nothing in the clear. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:usesCleartextTraffic="true" />
+</manifest>
