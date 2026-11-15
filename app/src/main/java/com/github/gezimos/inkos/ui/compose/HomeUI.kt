@@ -331,12 +331,15 @@ fun HomeUI(
             )
         }
 
+        com.wanderwildwood.iori.IoriLinesAtTop(state, showEditMode, Modifier.align(Alignment.TopCenter).offset(y = topOffset + headerHeightDp).padding(horizontal = 32.dp.scaled(screenScale))) // iori: home lines under the date line, when they are set to the top
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 32.dp.scaled(screenScale))
+                .then(com.wanderwildwood.iori.IoriLinesPlace.appsRoom()) // iori: with the lines at the top the apps stand on what is at the foot
                 .align(Alignment.Center),
-            contentAlignment = Alignment.Center
+            contentAlignment = com.wanderwildwood.iori.IoriLinesPlace.appsAlignment() // iori: and their last row sits at the bottom
         ) {
             HomeAppsPager(
                 state = state,
@@ -380,7 +383,8 @@ fun HomeUI(
                 .padding(horizontal = 32.dp.scaled(screenScale))
                 .align(Alignment.BottomCenter)
                 .padding(bottom = maxOf(state.bottomWidgetMargin.dp, navBarPadding))
-                .onGloballyPositioned { onBottomWidgetHeightChanged(it.size.height) },
+                .onGloballyPositioned { onBottomWidgetHeightChanged(it.size.height) }
+                .then(com.wanderwildwood.iori.IoriLinesPlace.footMeasured), // iori: how tall the foot is, for the apps standing on it
             horizontalAlignment = alignment,
             verticalArrangement = Arrangement.Bottom
         ) {

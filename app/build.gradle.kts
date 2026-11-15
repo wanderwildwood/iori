@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("kotlin-android")
+    id("com.mikepenz.aboutlibraries.plugin") // iori: writes res/raw/aboutlibraries.json, read by About Home
 }
 
 android {

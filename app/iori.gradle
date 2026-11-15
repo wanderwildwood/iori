@@ -43,3 +43,20 @@ android {
 dependencies {
     testImplementation "junit:junit:4.13.2"
 }
+
+// About Home's Licenses drawer lists what the build actually packs: this plugin walks each
+// variant's runtime dependencies and writes res/raw/aboutlibraries.json, one entry per artifact
+// with its POM's license. What Gradle cannot see is in config/libraries. Offline: the build
+// fetches nothing; the full texts are the family texts in src/iori/res/raw. The app reads the
+// file with the shop's LicencesJson.kt (no AboutLibraries library at run time).
+// The plugin is 12.2.4, not the 15.3.0 the other apps use: 15.x refuses an Android Gradle
+// Plugin older than 8.13 and upstream builds with 8.10. Nothing is fetched: remote license and
+// funding lookups are off unless asked for.
+// (Set through the getters: inside a Groovy closure `collect { }` is Groovy's own collect.)
+def licensesList = extensions.getByName("aboutLibraries")
+licensesList.offlineMode.set(true)
+licensesList.getCollect().configPath.set(rootProject.file("config"))
+licensesList.getCollect().fetchRemoteLicense.set(false)
+licensesList.getCollect().fetchRemoteFunding.set(false)
+licensesList.getCollect().includePlatform.set(false)
+licensesList.getExport().excludeFields.addAll("funding")

@@ -74,6 +74,21 @@ fun LinesDialog(tripped: Boolean, onTurnBackOn: () -> Unit, onDismiss: () -> Uni
             }
         }
     }
+    // Where the lines are drawn on home; a press moves them.
+    rows.row("place") {
+        val top = IoriLinesPlace.top(context)
+        Row(
+            modifier = Modifier.fillMaxWidth().clickable { IoriLinesPlace.set(context, !top) }.padding(vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.iori_lines_place), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+            Text(
+                stringResource(if (top) R.string.iori_lines_place_top else R.string.iori_lines_place_bottom),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+    }
     when (snapshot.glance) {
         GlanceState.NOT_INSTALLED -> rows.row("glance") {
             GetLine(stringResource(R.string.iori_glance_not_installed), IoriLinesRepository.GLANCE, installs)

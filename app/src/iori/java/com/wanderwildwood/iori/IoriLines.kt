@@ -37,6 +37,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.github.gezimos.inkos.BuildConfig
 import com.github.gezimos.inkos.R
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import com.github.gezimos.inkos.style.Theme
 import com.github.gezimos.inkos.style.rememberScreenScale
 import com.github.gezimos.inkos.style.scaled
@@ -54,9 +56,57 @@ import com.github.gezimos.inkos.ui.compose.HomeUiRenderState
  * After a crash in iori's own code it draws one row saying lines were turned off, and a long
  * press there turns them back on.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun IoriLines(state: HomeUiRenderState, showEditMode: Boolean) {
+    if (!IoriLinesPlace.top(LocalContext.current)) Lines(state, showEditMode)
+}
+
+/** The same lines under the date line instead, when they are set to the top (Home lines, "Place"). */
+@Composable
+fun IoriLinesAtTop(state: HomeUiRenderState, showEditMode: Boolean, modifier: Modifier) {
+    if (!IoriLinesPlace.top(LocalContext.current)) return
+    Column(modifier = modifier.fillMaxWidth()) { Lines(state, showEditMode) }
+}
+
+/**
+ * Where the home lines are drawn: at the foot, above inkOS's bottom widget (as they come), or
+ * at the top under the date line. At the top the home apps move down, so their last row sits at
+ * the bottom of the screen, on whatever is still at the foot.
+ */
+object IoriLinesPlace {
+    private const val KEY = "lines_at_top"
+    private var atTop by mutableStateOf<Boolean?>(null)
+
+    fun top(context: Context): Boolean =
+        atTop ?: Iori.prefs(context).getBoolean(KEY, false).also { atTop = it }
+
+    fun set(context: Context, top: Boolean) {
+        Iori.prefs(context).edit().putBoolean(KEY, top).apply()
+        atTop = top
+    }
+
+    @Composable
+    fun appsAlignment(): Alignment = if (top(LocalContext.current)) Alignment.BottomCenter else Alignment.Center
+
+    private var footPx by mutableStateOf(0)
+
+    /** On the column inkOS draws at the foot of home (media, bottom widget, its margin): its height. */
+    val footMeasured: Modifier = Modifier.onGloballyPositioned {
+        // From its top edge to the bottom of the screen, so the margin under it is counted too.
+        val screen = it.parentLayoutCoordinates?.size?.height ?: return@onGloballyPositioned
+        footPx = (screen - it.positionInParent().y).toInt().coerceAtLeast(0)
+    }
+
+    /** Room left under the apps for what is at the foot. */
+    @Composable
+    fun appsRoom(): Modifier =
+        if (!top(LocalContext.current)) Modifier
+        else Modifier.padding(bottom = with(androidx.compose.ui.platform.LocalDensity.current) { footPx.toDp() })
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun Lines(state: HomeUiRenderState, showEditMode: Boolean) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     var tripped by remember { mutableStateOf(Iori.tripped(context)) }

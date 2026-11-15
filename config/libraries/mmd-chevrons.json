@@ -1,0 +1,8 @@
+{
+  "uniqueId": "mudita:mmd-chevrons",
+  "name": "MMD scrollbar chevrons",
+  "description": "The four chevrons of the scrollbar on the lists Home adds, from Mudita Mindful Design 1.0.2.",
+  "website": "https://github.com/mudita/MMD",
+  "organization": { "name": "Mudita Sp. z o.o." },
+  "licenses": ["Apache-2.0"]
+}

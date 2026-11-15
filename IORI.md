@@ -63,17 +63,22 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!*.md'` must list exactly these, 26 in all.
+'!app/src/iori/**' --glob '!*.md'` must list exactly these, 32 in all.
 
 | File:line | Purpose |
 |---|---|
-| `app/build.gradle.kts:185` | `apply(from = "iori.gradle")`: identity, iori sources and strings |
+| `build.gradle.kts:6` | the AboutLibraries plugin, 12.2.4, `apply false` (15.x, which the other apps use, refuses upstream's Android Gradle Plugin 8.10) |
+| `app/build.gradle.kts:8` | the same plugin applied: it writes `res/raw/aboutlibraries.json`, the list behind About Home's Licenses drawer; set up in `app/iori.gradle` |
+| `app/build.gradle.kts:186` | `apply(from = "iori.gradle")`: identity, iori sources and strings |
 | `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt:8` | migrations run on `UPSTREAM_VERSION_CODE`, so upstream's thresholds still fire; line 258 writes back the same value |
 | `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt:152` | migrated internal slots point at `BuildConfig.APPLICATION_ID`, not `app.inkos` |
 | `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt:714` | imports pass through `IoriBackup.rewrite`, so an inkOS backup restores into iori |
 | `app/src/main/java/com/github/gezimos/inkos/ui/RecentsFragment.kt:672` | iori is left out of its own Recents |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:400` | `IoriLines(state, showEditMode)`, after the media widget, before the bottom widget |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:3601` | the placeholder icon uses iori's own package |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:334` | `IoriLinesAtTop(...)`: the home lines under the date line, when Home lines > Place on home is Top |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:340` | `IoriLinesPlace.appsRoom()` on the home apps' box, and line 342 its `contentAlignment` through `IoriLinesPlace.appsAlignment()`: with the lines at the top the apps' last row sits at the bottom, above what is at the foot |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:387` | `IoriLinesPlace.footMeasured` on the foot column, so the apps know how much room it takes |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:404` | `IoriLines(state, showEditMode)`, after the media widget, before the bottom widget |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:3605` | the placeholder icon uses iori's own package |
 | `app/src/main/java/com/github/gezimos/inkos/helper/IconUtility.kt:280` | `isSyntheticPackage` accepts iori's package, and `app.inkos` only when this build is inkOS, so the real inkOS beside it is an ordinary app |
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:467` | `Iori.guardCrashes(this)`, right after onCreate puts CrashHandler back |
 | `app/src/main/java/com/github/gezimos/inkos/helper/SearchHelper.kt:585` | a contact opens in enishi first, inkOS's chooser if that fails |
@@ -114,8 +119,14 @@ Not hooks, but carried on top of v0.6:
   MMD) and the house list with its scrollbar (`ui/PagedColumn.kt` and `ui/EInkDialog.kt` are the
   shop's shared files; the four chevrons are MMD's, Apache-2.0, as `iori_chevron_*.xml`).
   Deleting a folder asks in its own row ("Delete folder — tap again"), in Settings and in the
-  drawer. Not done: a Licenses drawer listing every library (the other apps build theirs with
-  the AboutLibraries plugin).
+  drawer. About Home's Licenses drawer is made by the build: Home's own lines, the full GPL, then
+  one small drawer per library from `res/raw/aboutlibraries.json` (`ui/LicencesJson.kt`, the
+  shop's reader), with its license, address and full text (`src/iori/res/raw`: Apache-2.0, and
+  Glide's and protobuf's own BSD files; `IoriAbout.textsFor`). What Gradle cannot see is in
+  `config/libraries` (MMD's chevrons). inkOS's bundled fonts are not listed there yet.
+- **Home lines, Place on home** (14 Nov): Bottom (as before) or Top, under the date line; at the
+  top the home apps' last row sits at the bottom of the screen (`IoriLinesPlace`, kept in iori's
+  own settings, not in a Backup export).
 
 - `upstream-fixes`: "Honour canShowBadge() so service notifications stop badging" and
   "Events widget: all-day events by their date". Each is its own commit so it can be offered

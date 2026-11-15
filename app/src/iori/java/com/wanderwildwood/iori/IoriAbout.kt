@@ -12,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Spacer
@@ -59,6 +60,8 @@ import com.github.gezimos.inkos.ui.compose.SettingsComposable.SettingsHomeItem
 import com.wanderwildwood.iori.ui.EInkDialog
 import com.wanderwildwood.iori.ui.PagedColumn
 import com.wanderwildwood.iori.ui.houseTypography
+import com.wanderwildwood.iori.ui.licenceComponentsFromJson
+import com.wanderwildwood.iori.ui.licenceParagraphs
 import com.wanderwildwood.iori.ui.monochrome
 
 /**
@@ -171,22 +174,57 @@ object IoriAbout {
         Drawer(R.string.privacy_who_title, listOf(R.string.privacy_who)),
         Drawer(R.string.privacy_contact_title, listOf(R.string.privacy_contact), contact = true),
         Drawer(R.string.privacy_rights_title, listOf(R.string.privacy_rights)),
-        Drawer(
-            R.string.iori_about_license_title,
-            listOf(R.string.iori_about_licence, R.string.iori_about_based, R.string.iori_about_bundled, R.string.iori_about_mmd),
-        ),
     )
+
+    /** Home's own lines at the head of the Licenses drawer. */
+    private val OWN_LICENSE = listOf(
+        R.string.iori_about_licence, R.string.iori_about_based, R.string.iori_about_bundled, R.string.iori_about_mmd,
+    )
+
+    private class Entry(val key: String, val content: @Composable () -> Unit)
+
+    /**
+     * The full texts a library's license line calls for. Apache-2.0 is one text for all; the two
+     * BSD texts are the libraries' own files (Glide's, protobuf's), since a BSD license names its
+     * holder. A license with no text here shows its name and the library's address only.
+     */
+    internal fun textsFor(licence: String): List<Int> = buildList {
+        if ("BSD-2-Clause" in licence) add(R.raw.glide_license)
+        if ("BSD-3-Clause" in licence) add(R.raw.protobuf_license)
+        if ("Apache" in licence) add(R.raw.apache_2_0)
+    }
+
+    private fun paragraphs(context: Context, raw: Int): List<String> = try {
+        licenceParagraphs(context.resources.openRawResource(raw).bufferedReader().use { it.readText() })
+    } catch (_: Exception) {
+        emptyList()
+    }
 
     /**
      * In the house order: name and version, what it is, the source, the llama, then drawers that
-     * start closed (what it sends, who we are, how to contact us, your rights, the license), and
-     * last the way to inkOS's own About. Every line is a row of the list, so pages turn on whole rows.
+     * start closed (what it sends, who we are, how to contact us, your rights), the way to inkOS's
+     * own About, and last Licenses: Home's own lines and the full GPL, then one small drawer for
+     * every library the build packed (the list is made by the build, `aboutlibraries.json`), each
+     * with its license, its address and the full text. Every line is a row of the list, so pages
+     * turn on whole rows.
      */
     @Composable
     fun AboutDialog(onUpstreamAbout: () -> Unit, onDismiss: () -> Unit) {
         val context = LocalContext.current
-        var opened by remember { mutableStateOf(emptySet<Int>()) }
+        var opened by remember { mutableStateOf(emptySet<String>()) }
         val list = rememberLazyListState()
+        val libraries = remember {
+            try {
+                licenceComponentsFromJson(
+                    context.resources.openRawResource(R.raw.aboutlibraries).bufferedReader().use { it.readText() }
+                ).sortedBy { it.name.lowercase() }
+            } catch (_: Exception) {
+                emptyList()
+            }
+        }
+        val texts = remember { HashMap<Int, List<String>>() }
+        fun text(raw: Int) = texts.getOrPut(raw) { paragraphs(context, raw) }
+
         // The row of the drawer pressed last. Opened where its first line does not fit at the foot,
         // it comes to the top, so the press is answered on the page it was made on.
         var pressed by remember { mutableStateOf(-1) }
@@ -198,6 +236,68 @@ object IoriAbout {
             if (first == null || first.offset + first.size > info.viewportEndOffset) list.scrollToItem(pressed)
             pressed = -1
         }
+
+        val entries = ArrayList<Entry>()
+        fun toggle(key: String, at: Int) {
+            val wasOpen = key in opened
+            opened = if (wasOpen) opened - key else opened + key
+            if (!wasOpen) pressed = at
+        }
+        /** A drawer's heading row; returns whether the drawer is open. */
+        fun drawer(key: String, title: @Composable () -> Unit): Boolean {
+            val at = entries.size
+            entries += Entry(key) { Heading(onClick = { toggle(key, at) }, content = title) }
+            return key in opened
+        }
+        fun fullText(key: String, raw: Int) {
+            text(raw).forEachIndexed { i, paragraph -> entries += Entry("$key:$raw:$i") { Line(paragraph) } }
+        }
+
+        entries += Entry("what") { Line(stringResource(R.string.iori_about_what)) }
+        entries += Entry("source") { Line(SOURCE.removePrefix("https://"), Modifier.clickable { open(context, SOURCE) }) }
+        entries += Entry("llama") {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().clickable { open(context, DONATE) }.padding(vertical = 8.dp),
+            ) {
+                Image(painter = painterResource(R.drawable.iori_llama), contentDescription = null, modifier = Modifier.size(22.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.iori_support_llama), style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        DRAWERS.forEach { d ->
+            val key = "drawer:${d.title}"
+            if (drawer(key) { Bold(stringResource(d.title)) }) d.lines.forEach { line ->
+                // The sentence that gives the address is the contact row: pressed, it writes.
+                entries += Entry("$key:$line") {
+                    Line(stringResource(line), if (d.contact) Modifier.clickable { write(context) } else Modifier)
+                }
+            }
+        }
+        entries += Entry("upstream") { Heading(onClick = onUpstreamAbout) { Bold(stringResource(R.string.iori_about_upstream)) } }
+        if (drawer("licenses") { Bold(stringResource(R.string.iori_about_license_title)) }) {
+            OWN_LICENSE.forEach { line -> entries += Entry("licenses:$line") { Line(stringResource(line)) } }
+            if (drawer("gpl") { Line(stringResource(R.string.iori_about_gpl_text)) }) fullText("gpl", R.raw.gpl_3_0)
+            libraries.forEach { lib ->
+                val key = "lib:${lib.name}"
+                val isOpen = drawer(key) {
+                    Column {
+                        Text(lib.name, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                        Text(lib.author, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                if (isOpen) {
+                    entries += Entry("$key:licence") { Line(lib.licence) }
+                    if (lib.url.isNotBlank()) {
+                        entries += Entry("$key:url") {
+                            Line(lib.url.removePrefix("https://"), Modifier.clickable { open(context, lib.url) })
+                        }
+                    }
+                    textsFor(lib.licence).forEach { fullText(key, it) }
+                }
+            }
+        }
+
         MaterialTheme(colorScheme = monochrome, typography = houseTypography) {
             EInkDialog(onDismiss = onDismiss) {
                 Text(
@@ -207,46 +307,7 @@ object IoriAbout {
                 )
                 Spacer(Modifier.height(10.dp))
                 PagedColumn(Modifier.fillMaxWidth().weight(1f), state = list) {
-                    item(key = "what") { Line(stringResource(R.string.iori_about_what)) }
-                    item(key = "source") {
-                        Line(SOURCE.removePrefix("https://"), Modifier.clickable { open(context, SOURCE) })
-                    }
-                    item(key = "llama") {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth().clickable { open(context, DONATE) }.padding(vertical = 8.dp),
-                        ) {
-                            Image(
-                                painter = painterResource(R.drawable.iori_llama),
-                                contentDescription = null,
-                                modifier = Modifier.size(22.dp),
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(stringResource(R.string.iori_support_llama), style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                    var row = 3 // the description, the source and the llama come first
-                    DRAWERS.forEach { drawer ->
-                        val isOpen = drawer.title in opened
-                        val at = row
-                        row += 1 + if (isOpen) drawer.lines.size else 0
-                        item(key = "drawer:${drawer.title}") {
-                            Heading(stringResource(drawer.title)) {
-                                opened = if (isOpen) opened - drawer.title else opened + drawer.title
-                                if (!isOpen) pressed = at
-                            }
-                        }
-                        if (isOpen) drawer.lines.forEach { line ->
-                            item(key = "line:$line") {
-                                // The sentence that gives the address is the contact row: pressed, it writes.
-                                Line(
-                                    stringResource(line),
-                                    if (drawer.contact) Modifier.clickable { write(context) } else Modifier,
-                                )
-                            }
-                        }
-                    }
-                    item(key = "upstream") { Heading(stringResource(R.string.iori_about_upstream), onUpstreamAbout) }
+                    entries.forEach { entry -> item(key = entry.key) { entry.content() } }
                 }
                 Spacer(Modifier.height(16.dp))
                 Text(
@@ -263,18 +324,21 @@ object IoriAbout {
         }
     }
 
-    /** A full-width row at least 48 dp tall, its words in bold and no mark beside them. */
     @Composable
-    private fun Heading(text: String, onClick: () -> Unit) {
+    private fun Bold(text: String) {
+        Text(text = text, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+    }
+
+    /** A full-width row at least 48 dp tall, no mark beside its words; a press opens or closes what is under it. */
+    @Composable
+    private fun Heading(onClick: () -> Unit, content: @Composable () -> Unit) {
         Box(
             contentAlignment = Alignment.CenterStart,
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 48.dp)
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onClick),
-        ) {
-            Text(text = text, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-        }
+        ) { content() }
     }
 
     @Composable

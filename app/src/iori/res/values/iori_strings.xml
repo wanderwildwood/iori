@@ -36,6 +36,9 @@
     <string name="iori_lines_row_desc">Lines from Glance, and each source\'s status</string>
     <string name="iori_lines_tripped">Home lines turned off after a crash</string>
     <string name="iori_lines_tripped_dialog">Turned off after a crash. Press here to turn them back on.</string>
+    <string name="iori_lines_place">Place on home</string>
+    <string name="iori_lines_place_top">Top, under the date</string>
+    <string name="iori_lines_place_bottom">Bottom</string>
     <string name="iori_lines_none">Glance has no sources to hand over.</string>
     <string name="iori_glance_not_installed">Glance not installed</string>
     <string name="iori_glance_needs">Glance needs %1$s</string>
@@ -116,7 +119,7 @@
 
     <!-- About -->
     <string name="iori_about_row">About Home 庵 iori</string>
-    <string name="iori_about_row_desc">Version, privacy, license and source</string>
+    <string name="iori_about_row_desc">Version, privacy, licenses and source</string>
     <string name="iori_about_version">Home 庵 iori %1$s</string>
     <string name="iori_about_based">Based on inkOS by gezimos, GPL-3.0.</string>
     <string name="iori_about_licence">GNU General Public License v3.0 only.</string>
@@ -124,7 +127,8 @@
     <string name="iori_about_what">A plain, quiet home screen for E Ink phones, and the front door to a family of apps made to work together: it hands off to them, carries a few of their lines, and can get and update them. A fork of inkOS by gezimos.</string>
     <string name="iori_about_mmd">The scrollbar of the lists Home adds is drawn after MMD by Mudita, Apache-2.0.</string>
     <string name="iori_about_sends_title">What it sends</string>
-    <string name="iori_about_license_title">License</string>
+    <string name="iori_about_license_title">Licenses</string>
+    <string name="iori_about_gpl_text">The full text of the GNU General Public License, version 3</string>
     <string name="iori_about_upstream">inkOS\'s own About</string>
     <string name="about_no_mail_app">No email app is installed. The address is %1$s.</string>
     <string name="privacy_who_title">Who we are</string>
