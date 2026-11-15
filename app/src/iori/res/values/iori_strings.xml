@@ -37,7 +37,7 @@
     <string name="iori_lines_tripped">Home lines turned off after a crash</string>
     <string name="iori_lines_tripped_dialog">Turned off after a crash. Press here to turn them back on.</string>
     <string name="iori_lines_place">Place on home</string>
-    <string name="iori_lines_place_top">Top, under the date</string>
+    <string name="iori_lines_place_top">Top</string>
     <string name="iori_lines_place_bottom">Bottom</string>
     <string name="iori_lines_none">Glance has no sources to hand over.</string>
     <string name="iori_glance_not_installed">Glance not installed</string>
