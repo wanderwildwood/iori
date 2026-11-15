@@ -17,4 +17,13 @@ class IoriDarkTest {
         assertEquals(0, IoriDark.answer(switchOn = true, systemHasSetting = true))
         assertEquals(0, IoriDark.answer(switchOn = false, systemHasSetting = true))
     }
+
+    @Test
+    fun android12NeverCountsAsHavingADarkSettingWhateverSettingsAnswers() {
+        // MuditaOS is Android 12 (API 31): Home's switch must stay there.
+        assertEquals(false, IoriDark.hasDarkSetting(31) { true })
+        assertEquals(false, IoriDark.hasDarkSetting(32) { true })
+        assertEquals(true, IoriDark.hasDarkSetting(36) { true })
+        assertEquals(false, IoriDark.hasDarkSetting(36) { false })
+    }
 }

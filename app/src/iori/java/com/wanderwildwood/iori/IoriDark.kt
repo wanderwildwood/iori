@@ -9,6 +9,7 @@ import android.content.res.Configuration
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
+import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Contrast
@@ -55,14 +56,21 @@ object IoriDark {
     private const val DARK_THEME_SETTINGS = "android.settings.DARK_THEME_SETTINGS"
 
     /**
-     * Whether the phone's system has a dark setting of its own: its Settings app answers
-     * Android's "dark theme settings" screen. The one place this is decided.
+     * Whether the phone's system has a dark setting of its own: it is newer than Android 12, and
+     * its Settings app answers Android's "dark theme settings" screen. The one place this is
+     * decided. The screen alone is not enough: stock Android 12 answers it too, and MuditaOS is
+     * Android 12 with no dark setting a person can reach, so there Home's switch must stay.
      */
-    fun systemHasDarkSetting(context: Context): Boolean = try {
-        context.packageManager.resolveActivity(Intent(DARK_THEME_SETTINGS), 0) != null
-    } catch (_: Exception) {
-        false
+    fun systemHasDarkSetting(context: Context): Boolean = hasDarkSetting(Build.VERSION.SDK_INT) {
+        try {
+            context.packageManager.resolveActivity(Intent(DARK_THEME_SETTINGS), 0) != null
+        } catch (_: Exception) {
+            false
+        }
     }
+
+    /** The rule itself, apart from the phone: never on Android 12 or older, whatever Settings answers. */
+    fun hasDarkSetting(sdk: Int, settingsAnswers: () -> Boolean): Boolean = sdk >= 33 && settingsAnswers()
 
     /** What the provider says for `dark`: Home's switch, and never dark where the system has its own setting. */
     fun answer(switchOn: Boolean, systemHasSetting: Boolean): Int = if (switchOn && !systemHasSetting) 1 else 0
