@@ -97,6 +97,18 @@ object IoriLinesPlace {
         footPx = (screen - it.positionInParent().y).toInt().coerceAtLeast(0)
     }
 
+    /**
+     * With the lines at the top and the media widget switched on, the room the player takes at
+     * the foot while nothing is playing: the apps stand on the foot, and would drop by this much
+     * each time the player went away. The height is inkOS's own for the player in HomeUI.kt: a
+     * 16 dp gap (scaled) above a row of 36 dp buttons with 5 dp over and under.
+     */
+    @Composable
+    fun PlayerRoom(playerAway: Boolean) {
+        if (!playerAway || !top(LocalContext.current)) return
+        Spacer(Modifier.height(16.dp.scaled(rememberScreenScale()) + 46.dp))
+    }
+
     /** Room left under the apps for what is at the foot. */
     @Composable
     fun appsRoom(): Modifier =

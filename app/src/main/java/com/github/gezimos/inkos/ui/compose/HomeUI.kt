@@ -400,6 +400,7 @@ fun HomeUI(
                     showEditMode = showEditMode
                 )
             }
+            com.wanderwildwood.iori.IoriLinesPlace.PlayerRoom(state.showMediaWidget && state.mediaInfo == null) // iori: the player's room stays when nothing plays, so the apps standing on the foot do not drop
 
             com.wanderwildwood.iori.IoriLines(state, showEditMode) // iori: home lines from Glance
 
