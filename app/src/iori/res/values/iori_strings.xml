@@ -66,6 +66,8 @@
     <string name="iori_dark_title">Dark mode</string>
     <string name="iori_dark_on">On. Press for black on white.</string>
     <string name="iori_dark_off">Off. Press for white on black.</string>
+    <string name="iori_dark_system_on">On, set by the phone for every app. Press to change it.</string>
+    <string name="iori_dark_system_off">Off, set by the phone for every app. Press to change it.</string>
 
     <!-- The Settings home page: Home's headings and its Run setup again row -->
     <string name="iori_settings_phone">Phone</string>

@@ -32,11 +32,15 @@ only. Source: https://github.com/wanderwildwood/iori
   (`IoriDarkProvider`, two numbers: dark or not, and when the switch was last pressed) when it
   comes to the front (`IoriDark.kt`; the apps' side is `/opt/projects/shared-dark`). Home's own
   dialogs are drawn through an inverting filter while Home is dark (`ui/DarkWindow.kt`).
-  Where the phone's system has a dark setting of its own (its Settings app answers
-  `android.settings.DARK_THEME_SETTINGS`; `IoriDark.systemHasDarkSetting`, the one place this
-  is decided), that setting is the switch: Home's row and the first run's light/dark button are
-  not drawn, Home's theme follows the system's night setting, and the provider answers "not
-  dark", since each app follows the system by itself there.
+  The switch is only on MuditaOS, which has no dark setting a person can reach (it keeps
+  Android's dark-theme screen installed, so asking Settings for it cannot tell). MuditaOS is
+  told by Mudita's Settings app (`com.mudita.settings`) on a system that is not LineageOS
+  (`Build.DISPLAY` or `ro.lineage.*`), which keeps KompaktOS apart; `IoriDark.systemHasDarkSetting`
+  is the one place this is decided. Anywhere else from Android 10 on, the system's setting is
+  the switch: Home's row opens the system's dark-theme screen (or display settings), the first
+  run's light/dark button is not drawn, Home's theme follows the system's night setting, and
+  the provider answers "not dark" whatever the switch was left at, so a switch left on under
+  MuditaOS cannot hold the apps dark after a move to KompaktOS.
 - **One Nextcloud login.** Home signs in to the person's Nextcloud once (first run, page 5, or
   Settings → Nextcloud account): Login Flow v2 in the browser, or an app password typed in
   where there is no browser. It keeps ONE app password (Nextcloud will not make an app password

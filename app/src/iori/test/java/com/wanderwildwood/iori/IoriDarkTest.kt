@@ -19,11 +19,22 @@ class IoriDarkTest {
     }
 
     @Test
-    fun android12NeverCountsAsHavingADarkSettingWhateverSettingsAnswers() {
-        // MuditaOS is Android 12 (API 31): Home's switch must stay there.
-        assertEquals(false, IoriDark.hasDarkSetting(31) { true })
-        assertEquals(false, IoriDark.hasDarkSetting(32) { true })
-        assertEquals(true, IoriDark.hasDarkSetting(36) { true })
-        assertEquals(false, IoriDark.hasDarkSetting(36) { false })
+    fun theSwitchIsOnlyOnMuditaOs() {
+        // MuditaOS has Android's dark screen installed but out of reach: Home's switch stays.
+        assertEquals(false, IoriDark.hasDarkSetting(31, muditaOs = true))
+        // Any other Android 10 or newer, stock Android 12 and KompaktOS (Android 16) among them.
+        assertEquals(true, IoriDark.hasDarkSetting(31, muditaOs = false))
+        assertEquals(true, IoriDark.hasDarkSetting(36, muditaOs = false))
+        // Before Android 10 there is no system dark setting at all.
+        assertEquals(false, IoriDark.hasDarkSetting(28, muditaOs = false))
+    }
+
+    @Test
+    fun muditaOsIsMuditasSettingsOnASystemThatIsNotLineage() {
+        assertEquals(true, IoriDark.muditaOs(muditaSettings = true, lineage = false))
+        // KompaktOS is LineageOS on the same phone.
+        assertEquals(false, IoriDark.muditaOs(muditaSettings = true, lineage = true))
+        assertEquals(false, IoriDark.muditaOs(muditaSettings = false, lineage = true))
+        assertEquals(false, IoriDark.muditaOs(muditaSettings = false, lineage = false))
     }
 }

@@ -10,6 +10,7 @@ import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Contrast
@@ -39,11 +40,13 @@ import com.github.gezimos.inkos.ui.compose.SettingsComposable.SettingsHomeItem
  * The provider gives out two numbers and nothing else: dark or not, and when the switch was
  * last pressed. Any app may read them; none can write.
  *
- * Where the phone's system has a dark setting of its own ([systemHasDarkSetting]: KompaktOS,
- * not MuditaOS), that setting is the one switch instead. Home's row is not shown, Home's own
- * theme follows the system's ([atStart], [systemChanged]), and the provider answers "not dark"
- * whatever the switch was left at ([answer]), since each app follows the system by itself and
- * a switch left on here would otherwise hold them all dark.
+ * The switch is only on MuditaOS, which has no dark setting a person can reach. Anywhere else
+ * ([systemHasDarkSetting]: KompaktOS, any other Android from 10 on) the system's own dark setting
+ * is the one switch: Home's row only opens it, Home's own theme follows it ([atStart],
+ * [systemChanged]), and the provider answers "not dark" whatever the switch was left at
+ * ([answer]). Each app follows the system by itself, and a switch left on under MuditaOS before
+ * the phone moved to KompaktOS would otherwise hold them all dark; each app clears what it last
+ * heard from Home the next time it comes to the front and asks.
  */
 object IoriDark {
 
@@ -55,22 +58,64 @@ object IoriDark {
     /** Android's "dark theme settings" screen; the platform keeps the name of this action to itself. */
     private const val DARK_THEME_SETTINGS = "android.settings.DARK_THEME_SETTINGS"
 
+    /** Mudita's own Settings app, which MuditaOS has in place of Android's Settings screens. */
+    private const val MUDITA_SETTINGS = "com.mudita.settings"
+
     /**
-     * Whether the phone's system has a dark setting of its own: it is newer than Android 12, and
-     * its Settings app answers Android's "dark theme settings" screen. The one place this is
-     * decided. The screen alone is not enough: stock Android 12 answers it too, and MuditaOS is
-     * Android 12 with no dark setting a person can reach, so there Home's switch must stay.
+     * Whether the phone's system has a dark setting a person can reach: anything but MuditaOS,
+     * from Android 10 on. The one place this is decided.
+     *
+     * Asking Settings for its dark-theme screen cannot tell: MuditaOS keeps Android's screen
+     * installed, so the question is answered there too, but its own Settings never leads to it.
+     * So it goes by which system this is ([isMuditaOs]).
      */
-    fun systemHasDarkSetting(context: Context): Boolean = hasDarkSetting(Build.VERSION.SDK_INT) {
-        try {
-            context.packageManager.resolveActivity(Intent(DARK_THEME_SETTINGS), 0) != null
-        } catch (_: Exception) {
-            false
-        }
+    fun systemHasDarkSetting(context: Context): Boolean = hasDarkSetting(Build.VERSION.SDK_INT, isMuditaOs(context))
+
+    /** The rule itself, apart from the phone: Android 10 brought the system's dark setting; MuditaOS hides it. */
+    fun hasDarkSetting(sdk: Int, muditaOs: Boolean): Boolean = sdk >= 29 && !muditaOs
+
+    /**
+     * MuditaOS: Mudita's Settings app is on the phone, and the system is not LineageOS.
+     * KompaktOS is LineageOS on the same phone, so the maker's name says nothing; it is told
+     * apart by Lineage's own marks, in case Mudita's Settings is ever found there too.
+     */
+    fun isMuditaOs(context: Context): Boolean = muditaOs(installed(context, MUDITA_SETTINGS), lineage)
+
+    fun muditaOs(muditaSettings: Boolean, lineage: Boolean): Boolean = muditaSettings && !lineage
+
+    private fun installed(context: Context, pkg: String): Boolean = try {
+        context.packageManager.getPackageInfo(pkg, 0)
+        true
+    } catch (_: Exception) {
+        false
     }
 
-    /** The rule itself, apart from the phone: never on Android 12 or older, whatever Settings answers. */
-    fun hasDarkSetting(sdk: Int, settingsAnswers: () -> Boolean): Boolean = sdk >= 33 && settingsAnswers()
+    /** LineageOS names itself in the build's display id and in its own system properties. Read once. */
+    private val lineage: Boolean by lazy {
+        Build.DISPLAY.contains("lineage", ignoreCase = true) ||
+            prop("ro.lineage.version").isNotEmpty() ||
+            prop("ro.lineage.build.version").isNotEmpty()
+    }
+
+    private fun prop(name: String): String = try {
+        val p = ProcessBuilder("getprop", name).redirectErrorStream(true).start()
+        p.inputStream.bufferedReader().use { it.readText() }.trim().also { p.waitFor() }
+    } catch (_: Exception) {
+        ""
+    }
+
+    /** Opens the system's dark setting: its own screen, or the display settings, or Settings. */
+    fun openSystemDarkSetting(context: Context) {
+        val tries = listOf(DARK_THEME_SETTINGS, Settings.ACTION_DISPLAY_SETTINGS, Settings.ACTION_SETTINGS)
+        for (action in tries) {
+            val intent = Intent(action).apply { if (context !is Activity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
+            try {
+                context.startActivity(intent)
+                return
+            } catch (_: Exception) {
+            }
+        }
+    }
 
     /** What the provider says for `dark`: Home's switch, and never dark where the system has its own setting. */
     fun answer(switchOn: Boolean, systemHasSetting: Boolean): Int = if (switchOn && !systemHasSetting) 1 else 0
@@ -118,8 +163,17 @@ object IoriDark {
     @Composable
     fun SettingsRow(titleFontSize: TextUnit, setHomeTheme: (Constants.Theme) -> Unit) {
         val context = LocalContext.current
-        // The system's own dark setting is the switch, where it has one.
-        if (remember { systemHasDarkSetting(context) }) return
+        // The system's own dark setting is the switch, where it has one: the row only opens it.
+        if (remember { systemHasDarkSetting(context) }) {
+            SettingsHomeItem(
+                title = stringResource(R.string.iori_dark_title),
+                imageVector = Icons.Rounded.Contrast,
+                description = stringResource(if (systemNight(context)) R.string.iori_dark_system_on else R.string.iori_dark_system_off),
+                titleFontSize = titleFontSize,
+                onClick = { openSystemDarkSetting(context) },
+            )
+            return
+        }
         var dark by remember { mutableStateOf(on(context)) }
         SettingsHomeItem(
             title = stringResource(R.string.iori_dark_title),
