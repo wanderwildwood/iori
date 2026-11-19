@@ -86,7 +86,7 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!*.md'` must list exactly these, 32 in all.
+'!app/src/iori/**' --glob '!*.md'` must list exactly these: 52 lines (11-19; SettingsComposable's 16 are one row below, and the older rows were last counted at 32, so recheck them at the next merge).
 
 | File:line | Purpose |
 |---|---|
@@ -97,6 +97,7 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt:152` | migrated internal slots point at `BuildConfig.APPLICATION_ID`, not `app.inkos` |
 | `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt:714` | imports pass through `IoriBackup.rewrite`, so an inkOS backup restores into iori |
 | `app/src/main/java/com/github/gezimos/inkos/ui/RecentsFragment.kt:672` | iori is left out of its own Recents |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` (16 lines) | the house look on every Settings page, through `IoriSettingsLook`: no row icons, value under the label, plain bold headings with no line, house sizes that follow inkOS's Settings text size, the house switch |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:334` | `IoriLinesAtTop(...)`: the home lines under the date line, when Home lines > Place on home is Top |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:340` | `IoriLinesPlace.appsRoom()` on the home apps' box, and line 342 its `contentAlignment` through `IoriLinesPlace.appsAlignment()`: with the lines at the top the apps' last row sits at the bottom, above what is at the foot |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:387` | `IoriLinesPlace.footMeasured` on the foot column, so the apps know how much room it takes |

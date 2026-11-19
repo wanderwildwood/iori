@@ -52,6 +52,7 @@ import com.github.gezimos.inkos.style.SettingsTheme
 import com.github.gezimos.inkos.style.Theme
 import com.github.gezimos.inkos.style.rememberScreenScale
 import com.github.gezimos.inkos.style.scaled
+import com.wanderwildwood.iori.ui.IoriSettingsLook // iori: the house look on Settings pages
 
 object SettingsComposable {
 
@@ -229,7 +230,7 @@ object SettingsComposable {
             verticalAlignment = Alignment.CenterVertically
         ) {
             val iconBoxSize = 24.dp.scaled(screenScale)
-            if (imageVector != null) {
+            if (IoriSettingsLook.ROW_ICONS && imageVector != null) { // iori: no icon on a row (house look)
                 Image(
                     imageVector,
                     contentDescription = title,
@@ -242,7 +243,7 @@ object SettingsComposable {
                     modifier = Modifier
                         .width(16.dp.scaled(screenScale))
                 )
-            } else if (iconRes != null) {
+            } else if (IoriSettingsLook.ROW_ICONS && iconRes != null) { // iori: no icon on a row (house look)
                 Image(
                     painter = painterResource(id = iconRes),
                     contentDescription = title,
@@ -257,11 +258,11 @@ object SettingsComposable {
                 Text(
                     text = title,
                     style = SettingsTheme.typography.title,
-                    fontSize = titleFontSize,
+                    fontSize = IoriSettingsLook.label(titleFontSize), // iori: house sizes
                     color = if (isHighlighted) prefBackgroundColor else SettingsTheme.typography.title.color
                 )
                 if (description != null) {
-                    val descFontSize = if (titleFontSize.isSpecified) (titleFontSize.value * 0.65f).sp else (SettingsTheme.typography.title.fontSize.value * 0.65f).sp
+                    val descFontSize = IoriSettingsLook.value(titleFontSize) // iori: house sizes
                     Text(
                         text = description,
                         style = SettingsTheme.typography.title,
@@ -292,17 +293,15 @@ object SettingsComposable {
                 .padding(vertical = verticalPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // iori: a plain bold heading, no bullet, no capitals, no line (house look)
             Text(
-                text = "• ${text.uppercase()}",
+                text = text,
                 style = SettingsTheme.typography.header,
-                fontSize = effectiveFontSize,
+                fontSize = IoriSettingsLook.heading(fontSize),
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = horizontalPadding)
+                fontFamily = IoriSettingsLook.boldFamily(),
+                modifier = Modifier.padding(start = horizontalPadding, top = 8.dp)
             )
-
-            Box(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
-                DashedSeparator()
-            }
         }
     }
 
@@ -325,10 +324,11 @@ object SettingsComposable {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = text.uppercase(),
+                text = text, // iori: no capitals, house page-title size
                 style = SettingsTheme.typography.header,
-                fontSize = effectiveFontSize,
+                fontSize = IoriSettingsLook.pageTitle(fontSize),
                 fontWeight = FontWeight.Bold,
+                fontFamily = IoriSettingsLook.boldFamily(),
             )
         }
     }
@@ -453,13 +453,11 @@ object SettingsComposable {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = text,
-                        style = if (fontSize.isSpecified) {
-                            SettingsTheme.typography.title.copy(fontSize = fontSize)
-                        } else SettingsTheme.typography.title,
+                        style = SettingsTheme.typography.title.copy(fontSize = IoriSettingsLook.label(fontSize)), // iori: house sizes
                         color = if (!enabled) prefTextColor.copy(alpha = 0.4f) else if (isHighlighted) prefBackgroundColor else SettingsTheme.typography.title.color
                     )
                     if (description != null) {
-                        val descFontSize = if (fontSize.isSpecified) (fontSize.value * 0.65f).sp else (SettingsTheme.typography.title.fontSize.value * 0.65f).sp
+                        val descFontSize = IoriSettingsLook.value(fontSize) // iori: house sizes
                         Text(
                             text = description,
                             style = SettingsTheme.typography.title,
@@ -468,10 +466,12 @@ object SettingsComposable {
                         )
                     }
                 }
-                CustomToggleSwitch(
+                // iori: the house switch; the whole row is the press, as before
+                IoriSettingsLook.HouseSwitch(
                     checked = defaultState,
-                    onCheckedChange = { if (enabled) onCheckedChange(it) },
-                    tint = if (!enabled) prefTextColor.copy(alpha = 0.4f) else if (isHighlighted) prefBackgroundColor else SettingsTheme.typography.title.color
+                    ink = if (!enabled) prefTextColor.copy(alpha = 0.4f) else if (isHighlighted) prefBackgroundColor else SettingsTheme.typography.title.color,
+                    paper = if (isHighlighted) prefTextColor else prefBackgroundColor,
+                    modifier = Modifier.padding(start = 12.dp)
                 )
             }
         }
@@ -520,11 +520,20 @@ object SettingsComposable {
                     Text(
                         text = title,
                         style = SettingsTheme.typography.title,
-                        fontSize = fontSize,
+                        fontSize = IoriSettingsLook.label(fontSize), // iori: house sizes
                         color = textColor
                     )
+                    // iori: the value goes under the label, as on the other apps' Settings rows
+                    if (optionAlignment == null && option.isNotEmpty()) {
+                        Text(
+                            text = option,
+                            style = SettingsTheme.typography.item,
+                            fontSize = IoriSettingsLook.value(fontSize),
+                            color = if (!enabled) prefTextColor.copy(alpha = 0.4f) else if (isHighlighted) prefBackgroundColor else fontColor
+                        )
+                    }
                     if (description != null) {
-                        val descFontSize = if (fontSize.isSpecified) (fontSize.value * 0.65f).sp else (SettingsTheme.typography.title.fontSize.value * 0.65f).sp
+                        val descFontSize = IoriSettingsLook.value(fontSize) // iori: house sizes
                         Text(
                             text = description,
                             style = SettingsTheme.typography.title,
@@ -539,14 +548,7 @@ object SettingsComposable {
                         alignment = optionAlignment,
                         tint = if (!enabled) prefTextColor.copy(alpha = 0.4f) else if (isHighlighted) prefBackgroundColor else prefTextColor
                     )
-                } else {
-                    Text(
-                        text = option,
-                        style = SettingsTheme.typography.item,
-                        fontSize = fontSize,
-                        color = if (!enabled) prefTextColor.copy(alpha = 0.4f) else if (isHighlighted) prefBackgroundColor else fontColor
-                    )
-                }
+                } // iori: the option text moved under the label
             }
         }
     }
@@ -592,11 +594,11 @@ object SettingsComposable {
                     Text(
                         text = title,
                         style = SettingsTheme.typography.title,
-                        fontSize = fontSize,
+                        fontSize = IoriSettingsLook.label(fontSize), // iori: house sizes
                         color = if (!enabled) prefTextColor.copy(alpha = 0.4f) else if (isHighlighted) prefBackgroundColor else SettingsTheme.typography.title.color
                     )
                     if (description != null) {
-                        val descFontSize = if (fontSize.isSpecified) (fontSize.value * 0.65f).sp else (SettingsTheme.typography.title.fontSize.value * 0.65f).sp
+                        val descFontSize = IoriSettingsLook.value(fontSize) // iori: house sizes
                         Text(
                             text = description,
                             style = SettingsTheme.typography.title,
