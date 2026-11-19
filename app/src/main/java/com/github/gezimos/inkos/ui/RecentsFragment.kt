@@ -668,7 +668,7 @@ class RecentsFragment : Fragment() {
                 .filterNot { app ->
                     // Exclude inkOS and inkOS debug from recents
                     app.activityPackage == "app.inkos" ||
-                    app.activityPackage == "app.inkos.debug" ||
+                    app.activityPackage == "app.inkos.debug" || // iori: one more package below
                     app.activityPackage == com.github.gezimos.inkos.BuildConfig.APPLICATION_ID // iori: not in its own Recents
                 }
                 .mapNotNull { app ->

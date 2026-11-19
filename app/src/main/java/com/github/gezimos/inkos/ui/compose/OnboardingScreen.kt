@@ -76,7 +76,7 @@ class OnboardingFragment : Fragment() {
                 val context = LocalContext.current
                 val prefs = remember { Prefs(context) }
                 val viewModel = ViewModelProvider(requireActivity())[MainViewModel::class.java]
-                com.wanderwildwood.iori.IoriFirstRun.Show( // iori: Home's own four first-run pages, in place of OnboardingScreen.Show
+                com.wanderwildwood.iori.IoriFirstRun.Show( // iori: Home's own first-run pages, in place of OnboardingScreen.Show
                     onFinish = {
                         prefs.commitFirstOpen(false)
                         prefs.onboardingPage = 0

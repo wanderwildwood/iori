@@ -383,7 +383,7 @@ fun HomeUI(
                 .padding(horizontal = 32.dp.scaled(screenScale))
                 .align(Alignment.BottomCenter)
                 .padding(bottom = maxOf(state.bottomWidgetMargin.dp, navBarPadding))
-                .onGloballyPositioned { onBottomWidgetHeightChanged(it.size.height) }
+                .onGloballyPositioned { onBottomWidgetHeightChanged(it.size.height) } // iori: continues below
                 .then(com.wanderwildwood.iori.IoriLinesPlace.footMeasured), // iori: how tall the foot is, for the apps standing on it
             horizontalAlignment = alignment,
             verticalArrangement = Arrangement.Bottom
@@ -3180,13 +3180,14 @@ private fun HomeMediaWidget(
                                 topLeft = Offset(-4.dp.toPx(), -4.dp.toPx())
                             )
                         } else {
-                            // iori: the highlight follows the tile's own shape
+                            // iori: begin: the highlight follows the tile's own shape
                             drawRoundRect(
                                 color = highlightColor,
                                 size = Size(36.dp.toPx() + 8.dp.toPx(), 36.dp.toPx() + 8.dp.toPx()),
                                 cornerRadius = CornerRadius(12.dp.toPx(), 12.dp.toPx()),
                                 topLeft = Offset(-4.dp.toPx(), -4.dp.toPx())
                             )
+                            // iori: end
                         }
                     }
                 }

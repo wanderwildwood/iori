@@ -86,12 +86,12 @@ only. Source: https://github.com/wanderwildwood/iori
   installed, and inkOS's own chooser otherwise.
 - **Lock-screen music** for any player, and an Events widget that shows all-day events on
   their own date.
-- **Two buttons in the Settings header** where inkOS has Buy Me a Coffee: a coffee cup that still
-  opens gezimos's Buy Me a Coffee ("Buy the author of inkOS a coffee"), and a llama ("Feed the
+- **Two rows in About Home** for what inkOS has as a Buy Me a Coffee button in the Settings
+  header (since the 11-19 house pass the header has no buttons): a coffee cup that still opens
+  gezimos's Buy Me a Coffee ("Buy the author of inkOS a coffee"), and a llama ("Feed the
   llamas") for Home's own. The cup is a line drawing at 2.0 on a 24 grid
-  (`iori_support_coffee.xml`); the llama is the same solid one as in About (`iori_llama.xml`). Both
-  are sized to the words they replace. gezimos's Support page under About
-  is unchanged.
+  (`iori_support_coffee.xml`); the llama is `iori_llama.xml`. gezimos's Support page under
+  inkOS's About is unchanged.
 - **Backups.** A backup exported from inkOS restores into Home with its internal slots
   (app drawer, notifications and the rest) and hidden entries still working.
 
@@ -107,71 +107,143 @@ restricted settings**, and try again.
 
 ## Hook ledger
 
-Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
-in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!*.md'` must list exactly these: 181 lines (19 Nov, first-run fixes: one more in MainActivity, line 517; decisions: 165 before, and 15 for what came from inkOS without a licence, below; 11-19, after the Settings restructure, the words moved from code to strings, after the Settings house pass, the house dialogs, the phone-test fixes, the e-ink mode row, Theme mode hidden, the pinch menu without About, the dark fixes and imports that keep the system's theme; the rows below give each file's lines; the older rows were last counted at 32, so recheck them at the next merge).
+Upstream base: `v0.6` (inkOS 0.6, versionCode 101013).
 
-| File:line | Purpose |
-|---|---|
-| `build.gradle.kts:6` | the AboutLibraries plugin, 12.2.4, `apply false` (15.x, which the other apps use, refuses upstream's Android Gradle Plugin 8.10) |
-| `app/build.gradle.kts:8` | the same plugin applied: it writes `res/raw/aboutlibraries.json`, the list behind About Home's Licenses drawer; set up in `app/iori.gradle` |
-| `app/build.gradle.kts:186` | `apply(from = "iori.gradle")`: identity, iori sources and strings |
-| `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt:8` | migrations run on `UPSTREAM_VERSION_CODE`, so upstream's thresholds still fire; line 258 writes back the same value |
-| `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt:152` | migrated internal slots point at `BuildConfig.APPLICATION_ID`, not `app.inkos` |
-| `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt:371` | a theme import leaves Theme mode (`APP_THEME`) alone where the system has a dark setting (`IoriDark.systemHasDarkSetting`): Home's theme follows the system's there; line 718 does the same for a full backup restore. Since 19 Nov the same line also leaves out a theme's `INKOS_WALLPAPER_RESOURCE_ID` when it is a picture (a positive resource number: `IoriRemoved.removedWallpaper`), which in this build would name another resource |
-| `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt:714` | imports pass through `IoriBackup.rewrite`, so an inkOS backup restores into iori |
-| `app/src/main/java/com/github/gezimos/inkos/ui/RecentsFragment.kt:672` | iori is left out of its own Recents |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` (16 lines) | the house look on every Settings page, through `IoriSettingsLook`: no row icons, value under the label, plain bold headings with no line, house sizes that follow inkOS's Settings text size, the house switch, an emptied note takes no line. inkOS's English Settings strings are overridden in `app/src/iori/res/values/iori_upstream_settings.xml` (sentence case; notes that only restate their label emptied) |
-| `SettingsFragment.kt`, `SettingsTheme.kt` (11-19 house pass) | Settings fully in the house look: Back in the top bar with no buttons (coffee + llama are rows in About Home); whole-row pages through `IoriSettingsPages` (rows report their place via `settingsRow`, a heading with nothing under it folds, a row taller than the page is read a page at a time and never skipped); 20 dp side margin, 12 dp rows; rows that cannot be used are left out; no gesture-number marks or stars (not-default said in words); dp units on margins and gaps; alignment in words; "Reset all" at the house floor; inkOS's Onboarding row hidden (Run setup again does it) |
-| `SettingsFragment.kt` (11-19 phone-test fixes, 26 lines) | Back returns to the page a sub-page was opened from (`IoriSettingsPages.PageMemory`: three lines in the back stack); text sizes carry "sp" and the widget height a spaced "dp"; allowlists read "All apps" or "12 apps" (inkOS lets every app through while a list is empty) and the character limit "20 characters" (`IoriSettingsLook.apps/characters/sp`); fonts by the font list's own name, not cut at 12; rows no longer repeat their heading (Fonts › One font everywhere, Font for everything; Letters window › Window title, Show the window); Clear when app opens and Letters apps are hidden while the Letters window is off |
-| `AppsUI.kt` (11-19 MuditaOS 2.0, 3 lines) | the app drawer's long-press menu gains "E-ink mode" above App info, only where `IoriEinkModes` can read the phone's per-app modes (MuditaOS 2.0's meink calls 6 and 7; not on KompaktOS, plain Android or MuditaOS before 2.0); a pick writes the same table Mudita's own E-ink Modes screen uses |
-| `SettingsFragment.kt`, `HomeUI.kt` (11-19, 2 lines) | `if (false)` before inkOS's Theme mode row in Look & feel (the one dark switch is Dark mode at the top of Settings, which sets Home's theme too) and before the home-screen pinch menu's About (About Home is in Settings; inkOS's own page stays a row of it) |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:334` | `IoriLinesAtTop(...)`: the home lines under the date line, when Home lines > Place on home is Top |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:340` | `IoriLinesPlace.appsRoom()` on the home apps' box, and line 342 its `contentAlignment` through `IoriLinesPlace.appsAlignment()`: with the lines at the top the apps' last row sits at the bottom, above what is at the foot |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:387` | `IoriLinesPlace.footMeasured` on the foot column, so the apps know how much room it takes |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:403` | `IoriLinesPlace.PlayerRoom(...)`, right after the media widget: with the lines at the top and the media widget on, the player's room stays at the foot while nothing plays |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:405` | `IoriLines(state, showEditMode)`, after the media widget, before the bottom widget |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:3162` | the player's icon tile is a square with 8 dp round corners, the Kompakt app icon's shape, whatever the islands shape is; line 3187 its highlight follows it |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:3146` | the home player has no outline round it (inkOS drew a 2 dp border when text islands are off) |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:3605` | the placeholder icon uses iori's own package |
-| `app/src/main/java/com/github/gezimos/inkos/helper/IconUtility.kt:280` | `isSyntheticPackage` accepts iori's package, and `app.inkos` only when this build is inkOS, so the real inkOS beside it is an ordinary app |
-| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:467` | `Iori.guardCrashes(this)`, right after onCreate puts CrashHandler back |
-| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:468` | `IoriDark.atStart(...)`, before onCreate reads the theme: where the system has a dark setting of its own, Home's theme is the system's |
-| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:517` | the first run is opened only when it is not already in the restored back stack (`IoriFirstRun.notShown`): a font, size or language change, or the process ended while away in Android's settings, put a second copy on top, and FINISH then landed on page 1 of the one underneath |
-| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:518` | on a first run, inkOS's e-ink Light theme is not set where the system has a dark setting (`IoriDark.systemHasDarkSetting`): Home took the system's at line 468, and Light would leave a light home in a night-mode window |
-| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:644` | `IoriDark.systemChanged(...)` in `onConfigurationChanged`: the system's dark setting changed while Home was up, and Home turns with it |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/ThemePresetsUI.kt` (3 lines: 666, 705, 768) | Settings → Themes: the light/dark/system button in the header is not drawn, nor reached by the D-pad, where the system has a dark setting; Home's theme follows the system's there, which would undo the button |
-| `app/src/main/java/com/github/gezimos/inkos/helper/EditModeHelper.kt:992` | Edit mode → Background → Theme Mode is hidden where the system has a dark setting, for the same reason |
-| `app/src/main/java/com/github/gezimos/inkos/helper/SearchHelper.kt:585` | a contact opens in enishi first, inkOS's chooser if that fails |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:389` | the Settings header's Buy Me a Coffee button becomes `IoriAbout.HeaderButtons`: a cup that opens gezimos's Buy Me a Coffee, and a llama that opens this app's donation page (upstream's 27 lines of the button are gone from here) |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` (7 lines: 156, 169, 464, 481, 505, 513, 556) | the Settings restructure: a route `IoriHomeScreen` (156), its title (169) and its page (464), which is inkOS's own `SettingsHomeContent`; on the Home route that function returns `IoriSettings.Top(...)` at its first line (481: Phone-wide, Apps, Home, Setup and about; the not-default note on Advanced is said there), so inkOS's rows are drawn only on the Home screen sub-page, where `if (false)` hides Look & feel, Gestures and Advanced (505, 513, 556), which are rows of the top page. The Advanced row's own two iori lines went back to upstream's |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:572` | `if (false)` in front of inkOS's own About row: it is not drawn, and its page (gezimos's credits and links, untouched) opens from a row of About Home |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:580` | `IoriSettings.Foot(...)`, one line at the foot of the Home screen sub-page: Folders and Home lines close inkOS's rows (Run setup again and About Home are on the top page now) |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/GestureHelper.kt:270` | a press on the clock with no app picked goes to Time, or to the offer to get it (`IoriHandOff.clock`); inkOS's own alarm intent when that is declined |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/GestureHelper.kt:291` | the same for the date and Datebook (`IoriHandOff.date`) |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` (9 lines: 167, 168, 773, 791, 797, 803, 1502, 1939, 1942) | inkOS's words written in code, now read from iori strings (`iori_upstream_about_title`, `extra_features`, `iori_desc_*`, `iori_gesture_conflict`): the About and Extras page titles; the notes on Change default launcher, Guide, Restart (this app's name; it went through `IoriNames.named`), Exit, UI scale; and the gesture-vs-page row's label and note. Values written in code ("None", "12 apps") are not moved yet |
-| `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt:79` | the first run is `IoriFirstRun.Show`, Home's own six pages (Welcome with privacy, Setup, Ecosystem, Default apps, Nextcloud, Theme and home apps); upstream's `OnboardingScreen.Show` below it is untouched and not called |
-| `app/src/main/java/com/github/gezimos/inkos/helper/utils/BrightnessHelper.kt:17` | the brightness-gesture toast, written in code, through `IoriNames.named` |
-| `app/src/main/java/com/github/gezimos/inkos/ui/notifications/NotificationsUI.kt:400` | the notification-access message reads `perm_notification_body` (upstream's same words), which iori overrides |
-| `app/src/main/java/com/github/gezimos/inkos/ui/notifications/LettersFragment.kt:305` | the same, in Letters |
-| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt:23` | `val iori = IoriDialogs(...)`: Home's house dialogs (`IoriDialogs.kt`) beside inkOS's sheet host; the manager's after-close step (Edit mode reopening its sheet) runs once, whichever closes |
-| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt:109` | `showSliderDialog` → `iori.number`: the house number dialog (value large, big − and +, Cancel / Save; Close when inkOS writes live); inkOS's sheet below is the fallback |
-| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt:140` | `showSingleChoiceDialog` → `iori.choose`: a house list, the current one ticked; inkOS's sheet only for a caller that deletes rows (none today) |
-| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt:175` | `showTabbedFontPicker` → `iori.fonts`: one list of fonts in their own faces, added fonts with Remove, "Add a font file" last; no tabs, no ⓘ |
-| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt:223` | `showGestureActionPicker` → `iori.gesture`: one list (Off, Home's actions, System, Apps) in place of three tabs |
-| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt:425` | `dismissAll` also closes a house dialog |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` (15 lines: 670, 893, 907, 927, 955, 965, 977, 983, 1137, 1336, 1349, 1494, 1647, 1667, 2074) | rows that cycled through their choices in place open `iori.choose` (e-ink mode, the four alignments, clock format, clock style, date format, notification count, sort order, icon shape, button corners, app name type), and UI scale opens `iori.uiScale` instead of its own sheet; each writes what the cycle or sheet wrote |
-| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt:1080` | the gesture sheet's "inkOS" tab title through `IoriNames.named` |
-| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt:1618` | the shortcut sheet's "inkOS" tab title through `IoriNames.named` |
-| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt:2292` | "What is inkOS Wallpaper?" reads `what_is_inkos_wallpaper` (upstream's same words), which iori overrides |
-| `app/src/main/java/com/github/gezimos/inkos/data/Constants.kt` (4 lines: 377, 408, 424, 452) | 19 Nov: no Hoog font. The `FontFamily.Hoog` entry and its three `when` branches are each replaced by a marker comment; a stored `Hoog` (inkOS reads an unknown name as the system font, so nothing crashes) is made Public Sans at each start by `IoriRemoved.migrate`, called from `Iori.guardCrashes` |
-| `app/src/main/java/com/github/gezimos/inkos/widget/QuoteWidget.kt:95` | 19 Nov: the quote widget's `"Hoog" -> Monospace` mapping, replaced by a marker comment |
-| `app/src/main/res/values/strings.xml:274` | 19 Nov: `settings_font_hoog` removed; the XML comment in its place carries the marker |
-| `app/src/main/java/com/github/gezimos/inkos/helper/WallpaperUtility.kt:27` | 19 Nov: the fourteen picture wallpapers (Japan, Japan 2, NYC, SF, Trees, Bamboo, Blossom, Building, Forrest, Leaf, Liberty, Urban, Halfdots, Halfdots Two) are gone from `PRESET_WALLPAPERS`; one marker comment stands for the fourteen lines. White, Black and the generated patterns stay |
-| `app/src/main/java/com/github/gezimos/inkos/data/ThemePresets.kt` (8 lines: 184, 185, 207, 208, 346, 347, 369, 370) | 19 Nov: the four themes that set a picture (SF, Leaf, NYC, Forrest) set none (`wallpaperResourceId = null`, which clears Home's wallpaper when the theme is applied) and a solid background (`backgroundOpacity = 255`, inkOS's 175, 160, 10, 160 in the comments). A stored picture is taken away at the next start by `IoriRemoved.migrate` (its saved copy deleted, background solid) |
-| `app/src/main/java/com/github/gezimos/common/CrashHandler.kt` (2 lines: 30, 157) | 19 Nov audit: `logUserAction` keeps nothing, and the crash report has no "Recent User Actions" section. inkOS's callers log each app and shortcut opened from home (package, shortcut id, time), which went into the report emailed to the developer; the callers are left as they are |
-| `app/src/main/res/xml/backup_rules.xml:2` | 19 Nov audit: Android's own backup (up to Android 11) takes nothing of Home's (inkOS included all prefs, databases and files: kept notification text, crash reports, app lists, search history); the whole file is replaced, marked in its XML comment |
-| `app/src/main/res/xml/data_extraction_rules.xml:2` | 19 Nov audit: the same for cloud backup and phone-to-phone transfer (Android 12 and later); Home's own Back up and restore is the way to move |
+Upstream files change only at the lines below, each marked with `iori:` in a comment. Everything
+else iori adds is in its own files: `app/iori.gradle`, `app/src/iori/`, `app/src/debug/`
+(debug's manifest overlay), and the new files of the carried commits. A run of changed lines is
+held between `iori: begin` and `iori: end` (written `6-15` below; both ends are markers, and every
+line between them counts as marked). The tree has **202** marker lines.
+
+What Home adds to the merged manifest is the two `AndroidManifest.xml` blocks below (four
+permissions; two exported providers and a receiver) and, in debug builds only,
+`usesCleartextTraffic` from `app/src/debug/AndroidManifest.xml` (checked in the build's
+manifest-merger report, 19 Nov: every other permission, provider and receiver is upstream's
+or a library's).
+
+`tools/iori-hooks.py` checks all of it and exits 1 on any difference: every marker at the line
+the table gives, the total, the rows in file and line order, and that every line added to an
+upstream file since the base is marked, inside a block, or in a carried file below with the
+count of unmarked lines the table gives. So a hook half lost in a merge shows even when the
+number of markers is still right. `tools/iori-hooks.py --list` prints every marker; use it to
+write the new line numbers into the table after a merge.
+
+| File | Lines | Purpose |
+|---|---|---|
+| `app/build.gradle.kts` | 8 | the AboutLibraries plugin applied: it writes `res/raw/aboutlibraries.json`, the list behind About Home's Licenses drawer; set up in `app/iori.gradle` |
+| `app/build.gradle.kts` | 186 | `apply(from = "iori.gradle")`: identity, iori sources and strings |
+| `app/src/main/AndroidManifest.xml` | 6-15 | four permissions: `INTERNET` and `REQUEST_INSTALL_PACKAGES` (Your apps fetches an app and hands it to Android; the Nextcloud sign-in), `SET_ALARM` (Default apps asks Android which clock app), `UPDATE_PACKAGES_WITHOUT_USER_ACTION` (Android 12+ updates an app Home installed with no question) |
+| `app/src/main/AndroidManifest.xml` | 173-191 | at the end of `<application>`: `IoriDarkProvider` (`${applicationId}.dark`, exported, read-only: the other apps' dark switch), `IoriAccountProvider` (`${applicationId}.accounts`, exported; it checks each caller's package and certificate itself: the phone's one Nextcloud account), `IoriInstallReceiver` (not exported: the installer's answers). If a merge drops this block the build still passes and the apps quietly lose dark mode and the account; the hook check above is what catches it |
+| `app/src/main/java/com/github/gezimos/common/CrashHandler.kt` | 30, 33, 34, 157 | 19 Nov audit: `logUserAction` keeps nothing, and the crash report has no "Recent User Actions" section. inkOS's callers log each app and shortcut opened from home (package, shortcut id, time), which went into the report emailed to the developer; the callers are left as they are |
+| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 467 | `Iori.guardCrashes(this)`, right after onCreate puts CrashHandler back |
+| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 468 | `IoriDark.atStart(...)`, before onCreate reads the theme: where the system has a dark setting of its own, Home's theme is the system's |
+| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 517 | the first run is opened only when it is not already in the restored back stack (`IoriFirstRun.notShown`): a font, size or language change, or the process ended while away in Android's settings, put a second copy on top, and FINISH then landed on page 1 of the one underneath |
+| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 518 | on a first run, inkOS's e-ink Light theme is not set where the system has a dark setting (`IoriDark.systemHasDarkSetting`): Home took the system's at line 468 |
+| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 644 | `IoriDark.systemChanged(...)` in `onConfigurationChanged`: the system's dark setting changed while Home was up, and Home turns with it |
+| `app/src/main/java/com/github/gezimos/inkos/data/Constants.kt` | 377, 408, 424, 452 | 19 Nov: no Hoog font. The `FontFamily.Hoog` entry and its three `when` branches are each replaced by a marker comment; a stored `Hoog` is made Public Sans at each start by `IoriRemoved.migrate`, called from `Iori.guardCrashes` |
+| `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt` | 8 | migrations run on `UPSTREAM_VERSION_CODE`, so upstream's thresholds still fire; the write-back at the end of the same function stores that value |
+| `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt` | 152 | migrated internal slots point at `BuildConfig.APPLICATION_ID`, not `app.inkos` |
+| `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt` | 371 | a theme import leaves Theme mode (`APP_THEME`) alone where the system has a dark setting, and leaves out a theme's `INKOS_WALLPAPER_RESOURCE_ID` when it is a picture (`IoriRemoved.removedWallpaper`), which in this build would name another resource |
+| `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt` | 714 | imports pass through `IoriBackup.rewrite`, so an inkOS backup restores into Home |
+| `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt` | 718 | a full backup restore leaves Theme mode alone where the system has a dark setting |
+| `app/src/main/java/com/github/gezimos/inkos/data/ThemePresets.kt` | 184, 185, 207, 208, 346, 347, 369, 370 | 19 Nov: the four themes that set a picture (SF, Leaf, NYC, Forrest) set none (`wallpaperResourceId = null`) and a solid background (`backgroundOpacity = 255`; inkOS's 175, 160, 10, 160 in the comments) |
+| `app/src/main/java/com/github/gezimos/inkos/helper/EditModeHelper.kt` | 992 | Edit mode → Background → Theme Mode is hidden where the system has a dark setting |
+| `app/src/main/java/com/github/gezimos/inkos/helper/IconUtility.kt` | 280 | `isSyntheticPackage` accepts Home's package, and `app.inkos` only when this build is inkOS, so the real inkOS beside it is an ordinary app |
+| `app/src/main/java/com/github/gezimos/inkos/helper/SearchHelper.kt` | 585 | a contact opens in Contacts (enishi) first, inkOS's chooser if that fails |
+| `app/src/main/java/com/github/gezimos/inkos/helper/WallpaperUtility.kt` | 27 | 19 Nov: the fourteen picture wallpapers are gone from `PRESET_WALLPAPERS`; one marker comment stands for the fourteen lines. White, Black and the generated patterns stay |
+| `app/src/main/java/com/github/gezimos/inkos/helper/utils/BrightnessHelper.kt` | 17 | the brightness-gesture toast, written in code, through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/style/SettingsTheme.kt` | 94 | the house side margin on Settings pages (`IoriSettingsLook.ROW_SIDE`) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/RecentsFragment.kt` | 671, 672 | Home is left out of its own Recents (671 only gains the `||` for 672) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 156, 169, 464 | the Settings restructure: a route `IoriHomeScreen`, its title, and its page, which is inkOS's own `SettingsHomeContent` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 167, 168 | the About and Extras page titles read from strings (`iori_upstream_about_title`, `extra_features`) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 187, 269, 277 | Back returns to the page a sub-page was opened from (`IoriSettingsPages.PageMemory`) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 376, 394 | Back in the top bar, and no buttons there: the coffee cup and the llama are rows in About Home (upstream's Buy Me a Coffee button lines are gone from here) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 403, 424, 425, 426 | whole-row pages through `IoriSettingsPages.Pages` in place of inkOS's pager and page dots. Upstream's ~60-line pager is deleted here, not bypassed, so an upstream change to it conflicts |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 481, 505, 513, 556 | on the Home route, `SettingsHomeContent` returns `IoriSettings.Top(...)` at its first line (481: Phone-wide, Apps, Home, Setup and about); on the Home screen sub-page `if (false)` hides Look & feel, Gestures and Advanced, which are rows of the top page |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 572 | `if (false)` before inkOS's own About row; its page (gezimos's credits and links, untouched) opens from a row of About Home |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 580 | `IoriSettings.Foot(...)`: Folders and Home lines close the Home screen sub-page |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 679, 903, 917, 937, 965, 975, 987, 993, 1147, 1346, 1359, 1657, 1677, 2084 | rows that cycled through their choices in place open a house list (`iori.einkMode`, `iori.choose`): e-ink mode, the alignments, clock format, clock style, date format, notification count, sort order, icon shape, button corners, app name type; each writes what the cycle wrote |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 772, 773 | not being the default launcher is said in words (`iori_not_default`), not with a star |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 777 | `if (false)` before inkOS's Onboarding row: Run setup again on the top page does it |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 791, 797, 803, 1502, 1939, 1942 | inkOS's words written in code, read from iori strings: the notes on Guide, Restart (this app's name), Exit and UI scale, and the gesture-vs-page row's label and note |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 838, 846, 854, 862, 1334, 2067, 2075, 2078, 2089, 2096, 2103, 2113, 2126, 2136 | text sizes and gaps carry their unit ("sp", "dp"; `IoriSettingsLook.sp`) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 986 | a note that only repeated its label is left out |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 1200 | the widget height with a spaced "dp" |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 1504 | UI scale opens `iori.uiScale`, a house list, in place of inkOS's own sheet |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 1575 | `if (false)` before inkOS's Theme mode row in Look & feel: the one dark switch is Dark mode at the top of Settings |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 1868, 1878, 1890, 1902, 1927, 1946, 1958 | no gesture-number marks on the Gestures rows |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 1940 | no "Read more" on the gesture-vs-page row; the row opens the explanation |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 2010, 2027, 2117, 2381 | rows and headings that repeated each other are named apart (Fonts › One font everywhere; Letters window › Window title, Show the window) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 2014 | "Reset all" at the house floor size |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 2121, 2151, 2152 | fonts by the font list's own name, on their own line, not cut at 12 |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 2354, 2372, 2388, 2403 | allowlists read "All apps" or "12 apps" (inkOS lets every app through while a list is empty), the character limit "20 characters" |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 2386, 2387, 2389 | Clear when app opens and the Letters allowlist are hidden while the Letters window is off |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/AppsUI.kt` | 36, 1427, 1461 | 11-19 MuditaOS 2.0: the app drawer's long-press menu gains "E-ink mode" above App info, only where `IoriEinkModes` can read the phone's per-app modes; a pick writes the same table Mudita's own E-ink Modes screen uses |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/GestureHelper.kt` | 270 | a press on the clock with no app picked goes to Time, or to the offer to get it (`IoriHandOff.clock`) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/GestureHelper.kt` | 291 | the same for the date and Datebook (`IoriHandOff.date`) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt` | 334 | `IoriLinesAtTop(...)`: the home lines under the date line, when Home lines > Place on home is Top |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt` | 340, 342 | `IoriLinesPlace.appsRoom()` and `appsAlignment()` on the home apps' box: with the lines at the top the apps' last row sits at the bottom |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt` | 386, 387 | `IoriLinesPlace.footMeasured` on the foot column, so the apps know how much room it takes (386 only loses its comma) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt` | 403 | `IoriLinesPlace.PlayerRoom(...)`: with the lines at the top and the media widget on, the player's room stays at the foot while nothing plays |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt` | 405 | `IoriLines(state, showEditMode)`, after the media widget, before the bottom widget |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt` | 3146 | the home player has no outline round it |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt` | 3162 | the player's icon tile is a square with 8 dp round corners, the Kompakt app icon's shape |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt` | 3183-3190 | the player's highlight follows the tile's shape (`drawRoundRect` in place of `drawCircle`) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt` | 3604 | the placeholder icon uses Home's own package |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt` | 4698 | `if (false)` before the pinch menu's About: About Home is in Settings |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt` | 79 | the first run is `IoriFirstRun.Show`, Home's own pages; upstream's `OnboardingScreen.Show` is untouched and not called (see Shadowed upstream code) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` | 55, 56 | imports of `IoriSettingsLook` and `settingsRow` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` | 207, 428, 497, 575 | the house row spacing |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` | 219, 294, 439, 508, 586 | each row and heading reports its place (`settingsRow`) for the whole-row pages |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` | 235, 248 | no icon on a row |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` | 263, 267, 462, 466, 532, 546, 609, 613 | house text sizes, following inkOS's Settings text size |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` | 266, 465, 545, 612 | an emptied note takes no line |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` | 299-308 | a plain bold heading: no bullet, no capitals, no dashed line |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` | 331, 333, 335 | the page title: no capitals, house size, bold face |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` | 431, 500, 578 | a row that cannot be used is left out, not drawn in grey |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` | 475-482 | the house switch in place of `CustomToggleSwitch`; the whole row is still the press |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` | 535-544 | a row's value goes under its label |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` | 536 | (inside the block above) alignment values in words too |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` | 556, 561 | the alignment glyph is off (`ALIGN_GLYPH`) and the value is no longer drawn on the right |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/ThemePresetsUI.kt` | 666, 705, 768 | Settings → Themes: the light/dark/system button in the header is not drawn, nor reached by the D-pad, where the system has a dark setting |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt` | 1080 | the gesture sheet's "inkOS" tab title through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt` | 1618 | the shortcut sheet's "inkOS" tab title through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt` | 2292 | "What is inkOS Wallpaper?" reads `what_is_inkos_wallpaper` (upstream's same words), which iori overrides |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt` | 23 | `val iori = IoriDialogs(...)`: Home's house dialogs beside inkOS's sheet host; the manager's after-close step runs once, whichever closes |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt` | 109 | `showSliderDialog` → `iori.number`, the house number dialog; inkOS's sheet below is not reached (see Shadowed upstream code) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt` | 140 | `showSingleChoiceDialog` → `iori.choose`, a house list; inkOS's sheet only for a caller that deletes rows (none today) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt` | 175 | `showTabbedFontPicker` → `iori.fonts`: one list of fonts in their own faces |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt` | 223 | `showGestureActionPicker` → `iori.gesture`: one list in place of three tabs |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt` | 425 | `dismissAll` also closes a house dialog |
+| `app/src/main/java/com/github/gezimos/inkos/ui/notifications/LettersFragment.kt` | 305 | the notification-access message reads `perm_notification_body` (upstream's same words), which iori overrides |
+| `app/src/main/java/com/github/gezimos/inkos/ui/notifications/NotificationsUI.kt` | 400 | the same, in Notifications |
+| `app/src/main/java/com/github/gezimos/inkos/widget/QuoteWidget.kt` | 95 | 19 Nov: the quote widget's `"Hoog" -> Monospace` mapping, replaced by a marker comment |
+| `app/src/main/res/values/strings.xml` | 274 | 19 Nov: `settings_font_hoog` removed; the XML comment in its place carries the marker |
+| `app/src/main/res/xml/backup_rules.xml` | 2 | 19 Nov audit: Android's own backup (up to Android 11) takes nothing of Home's; the whole file is replaced (its other lines are in the carried table) |
+| `app/src/main/res/xml/data_extraction_rules.xml` | 2 | 19 Nov audit: the same for cloud backup and phone-to-phone transfer (Android 12 and later); the whole file is replaced |
+| `build.gradle.kts` | 6 | the AboutLibraries plugin, 12.2.4, `apply false` (15.x, which the other apps use, refuses upstream's Android Gradle Plugin 8.10) |
+
+Upstream files changed on purpose with no markers: the carried commits (listed under "Not hooks"
+below), and the two backup files replaced whole. The count is of non-blank added lines that are
+not marked, as `git diff <base>` shows them; a merge that changes it is looked at by hand.
+
+| File | Unmarked lines | What |
+|---|---|---|
+| `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt` | 4 | Folders (`main`): the folders pref |
+| `app/src/main/java/com/github/gezimos/inkos/data/repository/AppsRepository.kt` | 15 | Folders |
+| `app/src/main/java/com/github/gezimos/inkos/helper/CalendarEventsHelper.kt` | 12 | `upstream-fixes`: all-day events by their date |
+| `app/src/main/java/com/github/gezimos/inkos/services/ActionService.kt` | 15 | `main`: lock-screen music |
+| `app/src/main/java/com/github/gezimos/inkos/services/NotificationManager.kt` | 44 | `upstream-fixes`: honour `canShowBadge()` |
+| `app/src/main/java/com/github/gezimos/inkos/services/NotificationService.kt` | 2 | `upstream-fixes`: honour `canShowBadge()` |
+| `app/src/main/java/com/github/gezimos/inkos/ui/AppsDrawerState.kt` | 2 | Folders |
+| `app/src/main/java/com/github/gezimos/inkos/ui/AppsFragment.kt` | 141 | Folders (with its house-style delete) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/AppsUI.kt` | 15 | Folders (the E-ink mode lines are hooks above) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt` | 20 | `upstream-fixes`: all-day events by their date (`formatEventDate`) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt` | 3 | Folders (the house dialogs are hooks above) |
+| `app/src/main/res/values/strings.xml` | 16 | Folders' strings and plurals (lines 25-38: `folder` … `folder_with_count`) and the `upstream-fixes` `events_*` strings (2). The folder strings are part of Folders: a conflict here is resolved by keeping both sides |
+| `app/src/main/res/xml/accessibility_service_config.xml` | 7 | `main`: lock-screen music |
+| `app/src/main/res/xml/backup_rules.xml` | 8 | the whole file, replaced (hook at line 2) |
+| `app/src/main/res/xml/data_extraction_rules.xml` | 11 | the whole file, replaced (hook at line 2) |
 
 Upstream files removed whole on 19 Nov (decisions), so there is no line to mark: each came with
 inkOS with no licence (see `CREDITS.md`). At the next merge, a conflict on any of these is
@@ -195,8 +267,10 @@ Not hooks, but carried on top of v0.6:
 
 - **Folders in the app drawer** (`data/Folders.kt`, and changes inside `ui/AppsFragment.kt`,
   `ui/compose/AppsUI.kt`, `ui/AppsDrawerState.kt`, `ui/dialogs/ComposeDialogManager.kt`,
-  `data/Prefs.kt`, `data/repository/AppsRepository.kt`): these are edits to upstream's drawer,
-  not one-line hooks, and will need care at the next upstream merge.
+  `data/Prefs.kt`, `data/repository/AppsRepository.kt`, and the folder strings and plurals in
+  `res/values/strings.xml`, lines 25-38): these are edits to upstream's drawer, not one-line
+  hooks, and will need care at the next upstream merge. The carried table above counts their
+  lines; a conflict in `strings.xml` near `rename` is resolved by keeping both sides.
 - **Your apps** (one page since 19 Nov, "decisions": the earlier Ecosystem apps page and its
   GitHub-based installer are gone, merged into this one). Settings → Apps → Your apps
   (`IoriYourApps.kt` the page, `IoriAppInstaller.kt` the work, `IoriAppsManifest.kt` the list and
@@ -220,7 +294,8 @@ Not hooks, but carried on top of v0.6:
   This is Home's only installer: the first run, the hand-off offer (`IoriHandOff`) and the lines
   list's Get (`LinesDialog`) call `IoriAppInstaller.install(context, pkg)`, which reads the list
   first when it is not in hand and fails with "Not in the list" for an app it does not have.
-  No upstream file changes: the permissions and the receiver were already there;
+  Its only lines in upstream's files are the two manifest blocks in the ledger (the
+  permissions, and `IoriInstallReceiver`);
   `IoriInstallReceiver` (now in `IoriAppInstaller.kt`) hands every answer to `IoriAppInstaller`.
   The first run (`IoriFirstRun.kt`) has the same apps as its third page, Ecosystem, a page of
   tick boxes (`IoriPickApps.kt`, from Home's own list, so nothing is asked of the network until
@@ -259,9 +334,10 @@ Not hooks, but carried on top of v0.6:
   ours, not chosen yet, or another app. A press on "not chosen" raises Android's own "open with"
   question (pick the app, then Always); where another app holds it, the press opens the screen
   where that is changed. The state is read again every time the page comes back in front.
-  One line in `SettingsFragment.kt` (the row, among iori's rows there), the SET_ALARM permission
-  in the manifest (to ask the clock question), and `src/iori/res/xml/file_paths.xml`, which
-  stands in for main's and adds the folder of the sample text file handed to Android.
+  The Settings row is on Home's own top page (`IoriSettings.Top`), not in `SettingsFragment.kt`.
+  Upstream's files gain only the SET_ALARM permission (in the manifest block, to ask the clock
+  question), and `src/iori/res/xml/file_paths.xml` stands in for main's whole file and adds the
+  folder of the sample text file handed to Android (see "Shadowed upstream code and resources").
   Filling in passwords is a row too: which autofill service is chosen is read from Android's
   settings, and the press opens Android's autofill screen with Passwords named (seen on API 31).
 - **Launcher icon** (14 Nov): a small plain thatched hut, which is what iori means, in the
@@ -293,8 +369,10 @@ which also covers lock-screen music), `accessibility_permission_message`,
 `inkos_wallpaper_explanation`, `privacy_no_data_body`, `privacy_no_server_body`,
 `privacy_local_body`, `privacy_open_source_body`), and `acra_email` (crash reports from Home go to
 email@wanderthe.dev, never to gezimos). `lockscreen_music_nothing` is iori's own and lives there
-too, so main's `strings.xml` differs from upstream only by the `upstream-fixes` `events_*`
-strings. If upstream rewords one of these, carry the new wording over by hand. Upstream's words that are
+too. Main's `strings.xml` differs from upstream by the Folders strings and plurals (lines 25-38),
+the `upstream-fixes` `events_*` strings and the removed `settings_font_hoog` (all in the ledger).
+If upstream rewords, renames or re-placeholders one of the overridden strings,
+`tools/iori-shadows.py --to vX.Y` lists it, and the new wording is carried over by hand. Upstream's words that are
 written in code, not in strings.xml, go through `IoriNames.named`, which turns "inkOS" as a word on
 its own into "Home" and leaves links alone; it is used only where the words mean this app,
 never on a credit to inkOS or gezimos. Only the English
@@ -304,6 +382,46 @@ The real inkOS (`app.inkos`) installed beside iori stays out of iori's Recents a
 on purpose: upstream's own filter (RecentsFragment.kt:670-671, MainViewModel.kt:329) leaves it
 out, a launcher is not something to go back to from Recents, and keeping upstream's lines as
 they are keeps those files out of the carried diff. Everywhere else it is an ordinary app.
+
+## Shadowed upstream code and resources
+
+Some of upstream's code and resources Home hides without changing a line of them. A merge then
+brings upstream's changes there in with no conflict, and Home never runs or shows them.
+`tools/iori-shadows.py` lists and checks all of it (merge steps 2 and 7); run as it is, it must
+say "no problems".
+
+**Strings.** `app/src/iori/res` is added to the debug and release resources, which outrank
+main's, so a string, plurals or string-array of the same name there replaces upstream's English
+one: 270 in `iori_upstream_settings.xml` (inkOS's Settings words in the house voice: sentence
+case, notes that only restate their label emptied) and 22 in `iori_strings.xml` (listed under
+"String overrides" above). The script checks that each one's placeholders (`%s`, `%1$d` ...) match
+upstream's and that upstream still has the name; with `--to vX.Y` it lists the ones upstream
+reworded, renamed, dropped or gave new placeholders since the base. Another locale is upstream's
+as it is.
+
+**Whole files.** A file at the same path in `app/src/iori/res` replaces upstream's whole file,
+not entry by entry:
+
+| Upstream's file | Home's copy is |
+|---|---|
+| `app/src/main/res/xml/file_paths.xml` | the FileProvider's paths: upstream's `crash_logs/` and Home's `iori_samples/` (the sample text file `IoriDefaults` hands to Android). A path upstream adds must be copied in, or its `FileProvider.getUriForFile` fails at run time ("Failed to find configured root"); the script checks that every entry of upstream's is in Home's copy |
+| `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`, `ic_launcher_round.xml` | Home's launcher icon (see "Launcher icon" above) |
+
+**Code Home goes around.** A hook returns before these run, or calls Home's own in their place,
+so a fix upstream makes inside them never reaches Home. The sheets they open in
+`ComposeBottomSheet.kt` are reached only through them, so read those too when one is listed.
+
+| File | Function | Home's own |
+|---|---|---|
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/OnboardingScreen.kt` | `Show` | `IoriFirstRun.Show`, called at OnboardingScreen.kt:79 in its place. A page upstream adds, or a pref one of its pages sets that other code relies on (a new permission page, say), has to be added to Home's first run |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt` | `showSliderDialog` | `IoriDialogs.number` (hook at line 109) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt` | `showSingleChoiceDialog` | `IoriDialogs.choose` (line 140), unless the caller passes `onItemDeleted` (none does today) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt` | `showTabbedFontPicker` | `IoriDialogs.fonts` (line 175) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt` | `showGestureActionPicker` | `IoriDialogs.gesture` (line 223) |
+
+Upstream's Settings pager is not in this table: Home deleted its ~60 lines in place
+(`SettingsFragment.kt`, ledger rows 403-426) for `IoriSettingsPages`, so an upstream change to
+it conflicts in the merge; port it into `IoriSettingsPages` when it does.
 
 ## Identity
 
@@ -335,14 +453,24 @@ the gitignored `signing/`. Without them the release builds unsigned. There is no
 ## Merging upstream
 
 1. `git fetch upstream --tags`
-2. `git checkout upstream-fixes && git merge vX.Y` (rerere is on: `git config rerere.enabled true`)
-3. `git checkout main && git merge upstream-fixes`
-4. Re-place any hook the merge moved, then check the ledger: the `rg` above must match the
-   table, and `git diff --stat vX.Y..main -- ':!app/src/iori' ':!app/iori.gradle' ':!IORI.md'`
-   must list only the ledger's files and the carried commits' files.
-5. Check that `Iori.guardCrashes` still follows the line where MainActivity puts CrashHandler
+2. While the ledger still names the old base: `tools/iori-shadows.py --to vX.Y`. It lists what
+   upstream changed in what Home shadows: overridden strings reworded, renamed or with new
+   placeholders, whole files Home's copy stands in for, and the code Home goes around. Keep
+   the list for step 7.
+3. `git checkout upstream-fixes && git merge vX.Y` (rerere is on: `git config rerere.enabled true`)
+4. `git checkout main && git merge upstream-fixes`
+5. Re-place any hook the merge moved. A conflict on a marked line, or inside an
+   `iori: begin`/`iori: end` block, keeps Home's change, with upstream's change carried into it.
+6. Check that `Iori.guardCrashes` still follows the line where MainActivity puts CrashHandler
    back, and that `UPSTREAM_VERSION_CODE` in the built BuildConfig equals the new base's code.
-6. Update the line numbers in the table.
+7. Port what step 2 listed into Home's own (`IoriFirstRun`, `IoriDialogs`, `IoriSettingsPages`,
+   the iori strings, `src/iori/res/xml/file_paths.xml`), then run
+   `tools/iori-shadows.py --from vX.Y`: it must say "no problems".
+8. Set `Upstream base:` in the ledger to `vX.Y`, write the new line numbers into the table
+   (`tools/iori-hooks.py --list`) and the carried counts, and run `tools/iori-hooks.py`: it must
+   say "ledger matches the tree". `git diff --stat vX.Y..main -- ':!app/src/iori'
+   ':!app/iori.gradle' ':!IORI.md'` then lists only the ledger's files, the carried files and the
+   files the carried commits added.
 
 Never rebase a branch that has been pushed. The inherited `release.yml` and `build.yml` stay in
 the tree, switched off; deleting them would conflict on every merge.

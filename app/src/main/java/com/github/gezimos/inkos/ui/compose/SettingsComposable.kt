@@ -296,7 +296,7 @@ object SettingsComposable {
                 .padding(vertical = verticalPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // iori: a plain bold heading, no bullet, no capitals, no line (house look)
+            // iori: begin: a plain bold heading, no bullet, no capitals, no line (house look)
             Text(
                 text = text,
                 style = SettingsTheme.typography.header,
@@ -305,6 +305,7 @@ object SettingsComposable {
                 fontFamily = IoriSettingsLook.boldFamily(),
                 modifier = Modifier.padding(start = horizontalPadding, top = 8.dp)
             )
+            // iori: end
         }
     }
 
@@ -327,11 +328,11 @@ object SettingsComposable {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = text, // iori: no capitals, house page-title size
+                text = text, // iori: no capitals
                 style = SettingsTheme.typography.header,
-                fontSize = IoriSettingsLook.pageTitle(fontSize),
+                fontSize = IoriSettingsLook.pageTitle(fontSize), // iori: house page-title size
                 fontWeight = FontWeight.Bold,
-                fontFamily = IoriSettingsLook.boldFamily(),
+                fontFamily = IoriSettingsLook.boldFamily(), // iori: the house bold face
             )
         }
     }
@@ -471,13 +472,14 @@ object SettingsComposable {
                         )
                     }
                 }
-                // iori: the house switch; the whole row is the press, as before
+                // iori: begin: the house switch; the whole row is the press, as before
                 IoriSettingsLook.HouseSwitch(
                     checked = defaultState,
                     ink = if (!enabled) prefTextColor.copy(alpha = 0.4f) else if (isHighlighted) prefBackgroundColor else SettingsTheme.typography.title.color,
                     paper = if (isHighlighted) prefTextColor else prefBackgroundColor,
                     modifier = Modifier.padding(start = 12.dp)
                 )
+                // iori: end
             }
         }
     }
@@ -530,7 +532,7 @@ object SettingsComposable {
                         fontSize = IoriSettingsLook.label(fontSize), // iori: house sizes
                         color = textColor
                     )
-                    // iori: the value goes under the label, as on the other apps' Settings rows
+                    // iori: begin: the value goes under the label, as on the other apps' Settings rows
                     if (option.isNotEmpty()) { // iori: alignment in words too
                         Text(
                             text = option,
@@ -539,6 +541,7 @@ object SettingsComposable {
                             color = if (!enabled) prefTextColor.copy(alpha = 0.4f) else if (isHighlighted) prefBackgroundColor else fontColor
                         )
                     }
+                    // iori: end
                     if (!description.isNullOrEmpty()) { // iori: an emptied note takes no line
                         val descFontSize = IoriSettingsLook.value(fontSize) // iori: house sizes
                         Text(

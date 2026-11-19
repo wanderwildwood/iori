@@ -422,8 +422,8 @@ class SettingsFragment : Fragment() {
 
                 SettingsTheme(isDark) {
                     // iori: whole-row pages with the house scrollbar (IoriSettingsPages), not inkOS's page dots
-                    com.wanderwildwood.iori.ui.IoriSettingsPages.Pages(resetKey = scrollResetTrigger, memory = pageMemory) {
-                        SettingsRouteContent(settingsSize.sp)
+                    com.wanderwildwood.iori.ui.IoriSettingsPages.Pages(resetKey = scrollResetTrigger, memory = pageMemory) { // iori: Home's pager
+                        SettingsRouteContent(settingsSize.sp) // iori: inside Home's pager
                     }
                 }
             }
@@ -2384,7 +2384,7 @@ class SettingsFragment : Fragment() {
             SettingsSwitch(text = stringResource(R.string.clear_conversation_on_app_open), fontSize = titleFontSize,
                 description = stringResource(R.string.desc_clear_on_open),
                 defaultState = uiState.clearConversationOnAppOpen, enabled = pushNotificationsEnabled && uiState.notificationsEnabled, // iori: hidden with the window off
-                onCheckedChange = { viewModel.setClearConversationOnAppOpen(it) })
+                onCheckedChange = { viewModel.setClearConversationOnAppOpen(it) }) // iori: the row is moved with the line above
             SettingsSelect(title = stringResource(R.string.letters_allowlist), option = com.wanderwildwood.iori.ui.IoriSettingsLook.apps(uiState.allowedNotificationApps.size), // iori: in words; empty lets every app through
                 fontSize = titleFontSize, description = stringResource(R.string.desc_letters_filter), onClick = { showAllowlistDialog = true }, enabled = pushNotificationsEnabled && uiState.notificationsEnabled) // iori: hidden with the window off
             if (showAllowlistDialog) {

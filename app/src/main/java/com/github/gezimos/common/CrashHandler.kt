@@ -30,8 +30,8 @@ class CrashHandler(private val context: Context) : Thread.UncaughtExceptionHandl
         // iori: nothing of what the person did is kept. The callers log each app and shortcut
         // opened from home (package name, shortcut id, time), and that went into the crash report
         // emailed to the developer; the privacy text says app information stays on the phone.
-        @Suppress("UNUSED_PARAMETER")
-        fun logUserAction(action: String) = Unit
+        @Suppress("UNUSED_PARAMETER") // iori: the action is not kept
+        fun logUserAction(action: String) = Unit // iori: keeps nothing
 
         fun customReportSender(context: Context): Uri? {
             val logFile: File = try {
