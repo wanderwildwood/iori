@@ -294,6 +294,14 @@ they are keeps those files out of the carried diff. Everywhere else it is an ord
 
 - reads upstream's `defaultConfig.versionCode` first and keeps it as
   `BuildConfig.UPSTREAM_VERSION_CODE`, so the field always equals the base it was built on;
+  `app/build.gradle.kts` therefore keeps upstream's own `versionCode` and `versionName`
+  (101013, "0.6" at v0.6) and is never bumped for Home. An unmarked bump to 101014 / "0.6.1"
+  (bf44981, with a v0.6.1 entry in upstream's `CHANGELOG.md` and a fastlane changelog) was undone
+  on 19 Nov; `CHANGELOG.md` is upstream's again. No guard was needed for a phone that ran a
+  101014 build: the only reader is `Migration.migratePreferencesOnVersionUpdate`, run at each
+  start, whose cleanups fire only for versions in `saved + 1 .. current` (empty when 101014 goes
+  back to 101013) and whose first-open step only for a saved code up to 101004; it then writes
+  101013 back, so upstream's real next migrations fire as they should;
 - sets `applicationId` `com.wanderwildwood.iori` (debug keeps upstream's `.debug` suffix),
   `versionCode` 1, `versionName` 0.1.0, and `app_name` "Home" ("Home Debug");
 - adds `src/iori/java` to main, `src/iori/res` to the debug and release resources, and
