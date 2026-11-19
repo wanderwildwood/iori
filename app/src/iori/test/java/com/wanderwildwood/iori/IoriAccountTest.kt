@@ -269,6 +269,8 @@ class IoriAccountTest {
     fun onlyTheServersOwnWordsMakeA403AnAppPassword() {
         val already = """{"ocs":{"meta":{"status":"failure","statuscode":403,"message":"You cannot request an new apppassword with an apppassword"},"data":[]}}"""
         assertTrue(IoriLogin.isAppPasswordRefusal(already))
+        // Nextcloud 34's real answer to an app password: its password check comes first.
+        assertTrue(IoriLogin.isAppPasswordRefusal("""{"ocs":{"meta":{"status":"failure","statuscode":403,"message":"Password confirmation is required"},"data":[]}}"""))
         // No login password to read back (single sign-on), or a proxy in the way: not an app password.
         assertFalse(IoriLogin.isAppPasswordRefusal("""{"ocs":{"meta":{"status":"failure","statuscode":403,"message":""},"data":[]}}"""))
         assertFalse(IoriLogin.isAppPasswordRefusal("""{"ocs":{"meta":{"statuscode":403},"data":[]}}"""))

@@ -142,12 +142,19 @@ object IoriLogin {
 
     /**
      * Whether the server's 403 to `core/getapppassword` says what was typed already is an app
-     * password. Nextcloud also answers 403 when it cannot read a login password back (single
-     * sign-on, some external logins), and a proxy may block the address; neither says this.
+     * password. That address asks for a confirmed password first, and only a login with the
+     * login password counts as confirmed, so an app password is turned away there with "Password
+     * confirmation is required" (seen on Nextcloud 34). Where a login cannot be confirmed by
+     * design, the address itself answers "You cannot request an new apppassword with an
+     * apppassword". Nextcloud also answers 403 with no words when it cannot read a login password
+     * back (single sign-on, some external logins), and a proxy may block the address; neither of
+     * those says this.
      */
     fun isAppPasswordRefusal(body: String): Boolean = try {
-        JsonParser.parseString(body).asJsonObject.getAsJsonObject("ocs").getAsJsonObject("meta")
-            .get("message").asString.contains("apppassword with an apppassword", ignoreCase = true)
+        val message = JsonParser.parseString(body).asJsonObject.getAsJsonObject("ocs").getAsJsonObject("meta")
+            .get("message").asString
+        message.contains("apppassword with an apppassword", ignoreCase = true) ||
+            message.equals("Password confirmation is required", ignoreCase = true)
     } catch (_: Exception) {
         false
     }
