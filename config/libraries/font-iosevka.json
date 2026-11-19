@@ -1,0 +1,12 @@
+{
+  "uniqueId": "font:iosevka",
+  "name": "Iosevka font",
+  "description": "One of the fonts inkOS ships, version 1.7.1. Copyright (c) 2015-2016 Belleve Invis. Designed by Belleve Invis.",
+  "organization": {
+    "name": "Copyright (c) 2015-2016 Belleve Invis"
+  },
+  "website": "https://github.com/be5invis/Iosevka",
+  "licenses": [
+    "OFL-1.1"
+  ]
+}

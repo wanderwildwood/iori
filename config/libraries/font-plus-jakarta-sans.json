@@ -1,0 +1,12 @@
+{
+  "uniqueId": "font:plus-jakarta-sans",
+  "name": "Plus Jakarta Sans font",
+  "description": "One of the fonts inkOS ships, version 2.071. Copyright 2020 The Plus Jakarta Sans Project Authors. Designed by Gumpita Rahayu.",
+  "organization": {
+    "name": "Copyright 2020 The Plus Jakarta Sans Project Authors"
+  },
+  "website": "https://github.com/tokotype/PlusJakartaSans",
+  "licenses": [
+    "OFL-1.1"
+  ]
+}
