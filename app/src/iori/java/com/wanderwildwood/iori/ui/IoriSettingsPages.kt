@@ -43,6 +43,9 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
@@ -62,7 +65,8 @@ import kotlin.math.max
  * page follows the house list's rules (STYLE.md, Lists; [PagedColumn]):
  *
  * - a turn forward brings the first row that did not fit to the top of the page;
- * - a row that does not fit at the foot is neither drawn nor pressable until the next page;
+ * - a row that does not fit at the foot is neither drawn nor pressable until the next page, and
+ *   TalkBack does not find it either;
  * - a heading is never the last thing on a page: it goes over with the row under it;
  * - a turn back goes one page back and lands on a row;
  * - a row taller than the page is read a page at a time within it, as [PagedColumn] does, and
@@ -107,6 +111,10 @@ object IoriSettingsPages {
         if (before != null && before.heading && before.top > top) foot = before.top
         return foot - top
     }
+
+    /** The rows a page that shows the content from [top] to [shownEnd] does not show. */
+    fun hiddenRows(spans: List<Span>, top: Int, shownEnd: Int): Set<Any> =
+        spans.filter { it.top >= shownEnd || it.bottom <= top }.mapNotNull { it.key }.toSet()
 
     /**
      * Where the content ends: the foot of the last row. A page's content can close on a spacer
@@ -153,6 +161,8 @@ object IoriSettingsPages {
         val rows = HashMap<Any, Pair<LayoutCoordinates, Boolean>>()
         /** Headings folded because nothing follows them. */
         val folded = mutableStateMapOf<Any, Boolean>()
+        /** The rows the page does not show (cut at its foot, or above it). Set by [Pages]. */
+        var hidden by mutableStateOf(emptySet<Any>())
         /** Set by [Pages]: read the rows again (a row moved, came or went). */
         var onChange: () -> Unit = {}
         fun spans(): List<Span> {
@@ -177,8 +187,13 @@ object IoriSettingsPages {
             onDispose { registry.rows.remove(key); registry.folded.remove(key); registry.onChange() }
         }
         val fold = heading && registry.folded[key] == true
+        // Drawing is cut at the page's foot and pointer downs below it are taken, but neither
+        // touches TalkBack: a row the page does not show leaves the accessibility tree, as
+        // PagedColumn's cut row does (audit, 19 Nov 2026).
+        val hidden = key in registry.hidden
         this
             .onGloballyPositioned { registry.rows[key] = it to heading; registry.onChange() }
+            .then(if (hidden) Modifier.clearAndSetSemantics { } else Modifier)
             .then(if (fold) Modifier.layout { m, c -> val p = m.measure(c); layout(p.width, 0) {} } else Modifier)
     }
 
@@ -224,6 +239,11 @@ object IoriSettingsPages {
         val foot = foot(spans, top, height)
         val end = end(spans, contentHeight)
         val many = end > height && height > 0
+        androidx.compose.runtime.SideEffect {
+            val shownEnd = if (height <= 0) Int.MAX_VALUE else top + (foot ?: height)
+            val hidden = hiddenRows(spans, top, shownEnd)
+            if (hidden != registry.hidden) registry.hidden = hidden
+        }
 
         Row(Modifier.fillMaxSize()) {
             Box(
@@ -292,9 +312,10 @@ object IoriSettingsPages {
         ) {
             Icon(
                 painter = if (atStart) rememberVectorPainter(OutlineUp) else painterResource(R.drawable.iori_chevron_filled_up),
-                contentDescription = "Previous page",
+                contentDescription = stringResource(R.string.page_arrow_previous),
                 tint = ink,
-                modifier = Modifier.padding(vertical = 16.dp).size(24.dp).combinedClickable(onClick = onBack, onLongClick = onFirst),
+                modifier = Modifier.padding(vertical = 16.dp).size(24.dp)
+                    .combinedClickable(role = Role.Button, onClick = onBack, onLongClick = onFirst),
             )
             Canvas(
                 modifier = Modifier
@@ -312,9 +333,10 @@ object IoriSettingsPages {
             }
             Icon(
                 painter = if (atEnd) rememberVectorPainter(OutlineDown) else painterResource(R.drawable.iori_chevron_filled_down),
-                contentDescription = "Next page",
+                contentDescription = stringResource(R.string.page_arrow_next),
                 tint = ink,
-                modifier = Modifier.padding(vertical = 16.dp).size(24.dp).combinedClickable(onClick = onForward, onLongClick = onLast),
+                modifier = Modifier.padding(vertical = 16.dp).size(24.dp)
+                    .combinedClickable(role = Role.Button, onClick = onForward, onLongClick = onLast),
             )
         }
     }

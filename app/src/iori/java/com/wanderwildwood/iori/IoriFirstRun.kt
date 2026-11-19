@@ -321,7 +321,7 @@ object IoriFirstRun {
                                         Constants.Theme.Dark -> Icons.Rounded.DarkMode
                                         Constants.Theme.System -> Icons.Rounded.Android
                                     },
-                                    contentDescription = themeMode.name,
+                                    contentDescription = stringResource(R.string.iori_first_theme_toggle, stringResource(when (themeMode) { Constants.Theme.Light -> R.string.light; Constants.Theme.Dark -> R.string.dark; Constants.Theme.System -> R.string.system_default })),
                                     tint = textColor,
                                     modifier = Modifier.size(20.dp.s()),
                                 )

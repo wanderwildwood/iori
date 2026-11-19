@@ -228,7 +228,12 @@
     <!-- Settings dialogs in the house look (IoriDialogs.kt) -->
     <string name="iori_dialog_add_font">Add a font file</string>
     <string name="iori_dialog_remove">Remove</string>
+    <string name="iori_dialog_remove_named">Remove %1$s</string>
     <string name="iori_dialog_auto">automatic</string>
+    <!-- What TalkBack says for the arrows of a paged list (PagedColumn, the Settings pages) and the first run's theme button -->
+    <string name="page_arrow_previous">Previous page</string>
+    <string name="page_arrow_next">Next page</string>
+    <string name="iori_first_theme_toggle">Theme: %1$s</string>
     <!-- 11-19 phone test: values in words, and rows that no longer repeat their heading -->
     <string name="iori_all_apps">All apps</string>
     <plurals name="iori_apps">

@@ -118,4 +118,15 @@ class IoriSettingsPagesTest {
         val back = folded + Span(240, 340)
         assertEquals(setOf(c), IoriSettingsPages.emptyHeadings(back.map { if (it.key == c) Span(340, 340, true, c) else it }))
     }
+
+    @Test
+    fun rowsThePageDoesNotShowAreHidden() {
+        // Rows of 100 px; the page shows 0 to 250, so its foot is at 200 and the row at 200 is cut.
+        val spans = (0 until 5).map { Span(it * 100, it * 100 + 100, key = "r$it") }
+        val foot = IoriSettingsPages.foot(spans, 0, 250)
+        assertEquals(200, foot)
+        assertEquals(setOf("r2", "r3", "r4"), IoriSettingsPages.hiddenRows(spans, 0, 0 + foot!!))
+        // The next page opens at 200: the rows above it are hidden too.
+        assertEquals(setOf("r0", "r1", "r4"), IoriSettingsPages.hiddenRows(spans, 200, 200 + IoriSettingsPages.foot(spans, 200, 250)!!))
+    }
 }
