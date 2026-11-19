@@ -187,7 +187,8 @@ object IoriFirstRun {
             Constants.Theme.System -> systemDark
         }
         // A page number kept from inkOS's seven pages lands on the last of these.
-        var page by remember { SavedPage(prefs) }
+        val savedPage = remember { SavedPage(prefs) }
+        var page by savedPage
         // Run setup again in Settings: agreed to before, and left again by BACK on the first page.
         val rerun = remember { !prefs.firstOpen }
 
