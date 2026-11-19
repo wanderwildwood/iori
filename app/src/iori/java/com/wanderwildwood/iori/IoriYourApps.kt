@@ -41,7 +41,6 @@ import com.wanderwildwood.iori.IoriAppInstaller.Step
 import com.wanderwildwood.iori.IoriAppsManifest.Entry
 import com.wanderwildwood.iori.IoriAppsManifest.Status
 import com.wanderwildwood.iori.ui.EInkDialog
-import com.wanderwildwood.iori.ui.PagedColumn
 import com.wanderwildwood.iori.ui.houseTypography
 import com.wanderwildwood.iori.ui.monochrome
 
@@ -105,30 +104,29 @@ object IoriYourApps {
                         val installed = remember(now.apps, ended, looked) {
                             now.apps.associate { it.pkg to IoriAppInstaller.installed(context, it.pkg) }
                         }
-                        // A folder opens on its first page.
-                        androidx.compose.runtime.key(open) {
-                            PagedColumn(Modifier.fillMaxWidth().weight(1f, fill = false)) {
-                                if (inFolder != null) {
-                                    inFolder.second.forEach { entry ->
-                                        item(key = entry.pkg) {
-                                            AppRow(entry, installed[entry.pkg], jobs[entry.pkg] ?: Job())
-                                        }
-                                    }
-                                    return@PagedColumn
+                        // The rows, drawn through FittedPages so the dialog ends under its last
+                        // row instead of always filling the screen (PagedColumn alone takes all
+                        // the height it is offered).
+                        val rows = buildList<Pair<String, @Composable () -> Unit>> {
+                            if (inFolder != null) {
+                                inFolder.second.forEach { entry ->
+                                    add(entry.pkg to { AppRow(entry, installed[entry.pkg], jobs[entry.pkg] ?: Job()) })
                                 }
-                                if (now.problem != null) {
-                                    item(key = "problem") {
+                            } else {
+                                val problem = now.problem
+                                if (problem != null) {
+                                    add("problem" to {
                                         Column(Modifier.padding(bottom = 12.dp)) {
-                                            Words(stringResource(R.string.iori_your_apps_from_copy, now.problem))
+                                            Words(stringResource(R.string.iori_your_apps_from_copy, problem))
                                             Spacer(Modifier.height(8.dp))
                                             Press(stringResource(R.string.iori_your_apps_try_again), Modifier.fillMaxWidth()) {
                                                 IoriAppInstaller.refresh(context)
                                             }
                                         }
-                                    }
+                                    })
                                 }
                                 if (!allowed) {
-                                    item(key = "allow") {
+                                    add("allow" to {
                                         Column(Modifier.padding(bottom = 12.dp)) {
                                             Words(stringResource(R.string.iori_your_apps_allow_body))
                                             Spacer(Modifier.height(8.dp))
@@ -136,17 +134,19 @@ object IoriYourApps {
                                                 IoriAppInstaller.askToAllow(context)
                                             }
                                         }
-                                    }
+                                    })
                                 }
                                 if (now.apps.isEmpty()) {
-                                    item(key = "empty") { Words(stringResource(R.string.iori_your_apps_empty)) }
+                                    add("empty" to { Words(stringResource(R.string.iori_your_apps_empty)) })
                                 }
                                 sections.forEach { (head, inSection) ->
-                                    item(key = "folder:$head") {
-                                        FolderRow(head, inSection, installed, jobs) { open = head }
-                                    }
+                                    add("folder:$head" to { FolderRow(head, inSection, installed, jobs) { open = head } })
                                 }
                             }
+                        }
+                        // A folder opens on its first page.
+                        androidx.compose.runtime.key(open) {
+                            FittedPages(rows, Modifier.fillMaxWidth().weight(1f, fill = false))
                         }
                     }
                 }

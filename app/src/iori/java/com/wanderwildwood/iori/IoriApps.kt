@@ -8,7 +8,7 @@ import org.json.JSONObject
 /**
  * The house's apps as Home itself knows them: the list inside Home (assets/iori_apps.json,
  * written by tools/make-apps-list.py), with each app's name, package, the certificate its
- * releases are signed with, and the section it is listed under.
+ * releases are signed with, the section it is listed under, and the oldest release Home takes.
  *
  * This list is not where apps are installed from. It gives "Your apps" ([IoriYourApps]) its
  * section folders, the first run its page of tick boxes, and [IoriAppInstaller] the certificates
@@ -25,6 +25,11 @@ object IoriApps {
         val cert: String,
         /** The section it is listed under, as `tools/make-apps-list.py` wrote it: a key of [SECTIONS]. */
         val section: String,
+        /**
+         * The versionCode of the release out when this Home was built; Home installs nothing of
+         * this app older than that (IoriAppsManifest.Verdict.TOO_OLD). 0 when the list gives none.
+         */
+        val minVersionCode: Long = 0,
     ) {
         val core: Boolean get() = section == CORE
     }
@@ -77,6 +82,7 @@ object IoriApps {
                 pkg = o.getString("package"),
                 cert = o.getString("cert").lowercase(),
                 section = o.getString("section"),
+                minVersionCode = o.optLong("minVersionCode", 0L),
             )
         }
     }.getOrElse {

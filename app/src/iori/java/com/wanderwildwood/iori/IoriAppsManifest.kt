@@ -9,7 +9,8 @@ package com.wanderwildwood.iori
  * The file is made by tools/apps-manifest.py in the site's repository:
  *
  *   { "version": 1, "apps": [ { "package", "name", "summary", "core": bool, "versionName",
- *     "versionCode", "apk": https URL, "sha256", "certSha256", "minSdk", "size" } ] }
+ *     "versionCode", "apk": a GitHub release download of wanderwildwood, "sha256", "certSha256",
+ *     "minSdk", "size" } ] }
  *
  * Reading it never throws. An entry with something missing or wrong is left out, and the rest
  * are kept.
@@ -61,7 +62,7 @@ object IoriAppsManifest {
         if (!PACKAGE.matches(pkg)) return null
         val name = (o["name"] as? String)?.trim()?.takeIf { it.isNotEmpty() } ?: return null
         val apk = (o["apk"] as? String)?.trim() ?: return null
-        if (!isHttps(apk)) return null
+        if (!isReleaseDownload(apk)) return null
         val sha = (o["sha256"] as? String)?.trim()?.lowercase()?.takeIf { HEX64.matches(it) } ?: return null
         val cert = (o["certSha256"] as? String)?.trim()?.lowercase()?.replace(":", "")
             ?.takeIf { HEX64.matches(it) } ?: return null
@@ -96,6 +97,37 @@ object IoriAppsManifest {
         if (!url.startsWith("https://", ignoreCase = true)) return false
         val host = url.substring(8).substringBefore('/').substringBefore('?').substringBefore('#')
         return host.isNotEmpty() && host.none { it.isWhitespace() } && '@' !in host
+    }
+
+    /** The only owner whose GitHub releases Home downloads from. */
+    const val OWNER = "wanderwildwood"
+
+    /** Where GitHub hands a release download over to; a download may end on these and nowhere else. */
+    private val DOWNLOAD_HOSTS = setOf("github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com")
+
+    /**
+     * True only for a release download of one of [OWNER]'s repositories:
+     * `https://github.com/wanderwildwood/<repo>/releases/download/<tag>/<file>`. A list that names
+     * any other address for an app is not followed, so getting an app only ever asks GitHub.
+     */
+    fun isReleaseDownload(url: String): Boolean {
+        if (!isHttps(url)) return false
+        val uri = runCatching { java.net.URI(url) }.getOrNull() ?: return false
+        if (!uri.host.equals("github.com", ignoreCase = true) || uri.rawUserInfo != null) return false
+        if (uri.port != -1 && uri.port != 443) return false
+        if (uri.rawQuery != null || uri.rawFragment != null) return false
+        val parts = uri.rawPath.orEmpty().split('/')
+        // "", owner, repo, "releases", "download", tag, file
+        if (parts.size != 7 || parts[0].isNotEmpty()) return false
+        if (parts.drop(1).any { it.isEmpty() || it == "." || it == ".." || '%' in it }) return false
+        return parts[1] == OWNER && parts[3] == "releases" && parts[4] == "download"
+    }
+
+    /** True when a download, after GitHub's redirects, came from GitHub ([DOWNLOAD_HOSTS], https). */
+    fun isDownloadHost(url: String): Boolean {
+        if (!isHttps(url)) return false
+        val host = runCatching { java.net.URI(url).host }.getOrNull() ?: return false
+        return DOWNLOAD_HOSTS.any { it.equals(host, ignoreCase = true) }
     }
 
     // --- Which button ---------------------------------------------------------------------
@@ -159,6 +191,8 @@ object IoriAppsManifest {
         KEY_CHANGED,
         /** The file is not newer than the app on the phone. */
         NOT_NEWER,
+        /** The file is older than the release Home was built with ([Facts.floor]). */
+        TOO_OLD,
     }
 
     /** What was read from a downloaded file and from the phone. */
@@ -175,6 +209,11 @@ object IoriAppsManifest {
         val installedVersionCode: Long?,
         /** The certificate Home itself carries for this package; null when it carries none. */
         val pinned: String?,
+        /**
+         * The lowest versionCode Home takes for this package: the release out when Home was built
+         * (assets/iori_apps.json, "minVersionCode"); 0 when Home's list gives none.
+         */
+        val floor: Long = 0,
     )
 
     /** Whether the downloaded file, as [facts] describe it, may be installed as [entry]. */
@@ -185,6 +224,9 @@ object IoriAppsManifest {
         val pkg = facts.pkg ?: return Verdict.NOT_AN_APP
         if (pkg != entry.pkg) return Verdict.WRONG_APP
         if (facts.versionCode != entry.versionCode) return Verdict.WRONG_VERSION
+        // The list is not signed: without this, a list that is not ours could hand a new phone an
+        // older, genuinely signed release with a flaw fixed since.
+        if (facts.versionCode < facts.floor) return Verdict.TOO_OLD
         val signers = facts.signers.map { it.lowercase() }.toSet()
         if (signers != setOf(cert)) return Verdict.WRONG_KEY
         // Only an app whose key Home itself carries is installed: a list from the network alone

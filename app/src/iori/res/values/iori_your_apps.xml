@@ -12,6 +12,7 @@
     <string name="iori_your_apps_loading">Getting the list of apps…</string>
     <string name="iori_your_apps_try_again">Try again</string>
     <string name="iori_your_apps_list_offline">Could not reach wanderthe.dev for the list of apps. Check the connection.</string>
+    <string name="iori_your_apps_list_missing">wanderthe.dev did not hand over the list of apps just now. Try again later.</string>
     <string name="iori_your_apps_list_unreadable">The list of apps on wanderthe.dev could not be read. Try again later.</string>
     <string name="iori_your_apps_from_copy">This is the list from last time. %1$s</string>
     <string name="iori_your_apps_empty">The list has no apps in it.</string>
@@ -32,6 +33,7 @@
     <string name="iori_your_apps_why_key">the file is not signed by its maker. Nothing was installed.</string>
     <string name="iori_your_apps_why_key_changed">the app on the phone is signed with a different key. Remove it first if you want this one.</string>
     <string name="iori_your_apps_why_not_newer">the file is not newer than the app on the phone.</string>
+    <string name="iori_your_apps_why_old_release">the list offers an older version than this Home knows of. Nothing was installed.</string>
     <string name="iori_your_apps_why_aborted">the install was cancelled.</string>
     <string name="iori_your_apps_why_unanswered">Android\'s question was closed without an answer.</string>
     <string name="iori_your_apps_why_blocked">Android blocked the install.</string>

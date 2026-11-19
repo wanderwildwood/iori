@@ -1,8 +1,12 @@
 package com.wanderwildwood.iori
 
 import com.github.gezimos.inkos.R
+import com.google.gson.JsonParser
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 
 class IoriAppsTest {
 
@@ -43,5 +47,42 @@ class IoriAppsTest {
         assertEquals("ask", IoriDefaults.whose("android", ours))
         assertEquals("other", IoriDefaults.whose("com.android.deskclock", ours))
         assertEquals("none", IoriDefaults.whose(null, ours))
+    }
+
+    private val bundled by lazy {
+        JsonParser.parseString(File("src/iori/assets/iori_apps.json").readText()).asJsonObject.getAsJsonArray("apps").map { it.asJsonObject }
+    }
+
+    @Test
+    fun everyAppInHomesListCarriesTheOldestReleaseHomeTakes() {
+        bundled.forEach { o ->
+            val pkg = o.get("package").asString
+            assertTrue("$pkg has no minVersionCode", (o.get("minVersionCode")?.asLong ?: 0L) > 0L)
+        }
+    }
+
+    @Test
+    fun glancesPinnedCertificateIsTheOneInHomesList() {
+        val listed = bundled.single { it.get("package").asString == IoriLinesRepository.GLANCE }.get("cert").asString.lowercase()
+        assertEquals(listed, IoriLinesRepository.GLANCE_CERT)
+    }
+
+    @Test
+    fun linesAreReadOnlyFromGlanceSignedWithItsOwnKey() {
+        val glance = IoriLinesRepository.GLANCE
+        val cert = IoriLinesRepository.GLANCE_CERT
+        val debug = IoriAccount.DEBUG_CERTS.first()
+        assertTrue(isGlance(glance, listOf(cert), debugBuild = false))
+        assertTrue(isGlance(glance, listOf(cert.uppercase()), debugBuild = false))
+        // Another app holding the panel's authority, whatever it is signed with.
+        assertFalse(isGlance("com.evil.app", listOf(cert), debugBuild = false))
+        assertFalse(isGlance(null, listOf(cert), debugBuild = false))
+        // Glance's name with another key, a second key beside it, or no key read at all.
+        assertFalse(isGlance(glance, listOf("0".repeat(64)), debugBuild = false))
+        assertFalse(isGlance(glance, listOf(cert, "0".repeat(64)), debugBuild = false))
+        assertFalse(isGlance(glance, emptyList(), debugBuild = false))
+        // A debug key only for a debug Home.
+        assertFalse(isGlance(glance, listOf(debug), debugBuild = false))
+        assertTrue(isGlance(glance, listOf(debug), debugBuild = true))
     }
 }
