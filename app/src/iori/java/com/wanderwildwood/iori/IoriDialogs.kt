@@ -218,12 +218,17 @@ class IoriDialogs(private val activity: Activity, private val afterClose: () -> 
             system.forEach { a -> add(Choice.Pick("s:${a.name}", label(a), current == a) { onSelect(a, null) }) }
             if (Action.OpenApp in allowed) {
                 add(Choice.Head("h:apps", context.getString(R.string.open_app)))
+                // inkOS keeps the app's own label for a gesture, while the list shows the name the
+                // person gave it ("clock" for Clock), so either one marks it; the first match only.
+                val ticked = if (current != Action.OpenApp || currentAppLabel.isEmpty()) -1 else
+                    sorted.indexOfFirst { it.activityLabel == currentAppLabel }.takeIf { it >= 0 }
+                        ?: sorted.indexOfFirst { it.customLabel == currentAppLabel }
                 sorted.forEachIndexed { i, app ->
                     val name = app.customLabel.ifEmpty { app.activityLabel }
                     add(
                         Choice.Pick(
                             "p$i:${app.activityPackage}", name,
-                            current == Action.OpenApp && currentAppLabel == name,
+                            i == ticked,
                         ) { onSelect(Action.OpenApp, app) }
                     )
                 }
