@@ -444,7 +444,13 @@ class IoriInstallReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val pkg = intent.getStringExtra(EXTRA_PKG) ?: return
         val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)
-        IoriApps.answered(context, pkg, status, intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE))
+        val message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)
+        // "Your apps" (IoriYourApps) installs from the list on wanderthe.dev and keeps its own rows.
+        if (intent.getBooleanExtra(IoriAppInstaller.EXTRA_YOUR_APPS, false)) {
+            IoriAppInstaller.answered(context, pkg, status, message)
+        } else {
+            IoriApps.answered(context, pkg, status, message)
+        }
         if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
             // Android's own "install this app?" question; the answer comes back here again.
             @Suppress("DEPRECATION")
