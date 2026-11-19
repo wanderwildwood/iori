@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- "Your apps" (IoriYourApps.kt): the house's apps from the list on wanderthe.dev. -->
+    <string name="iori_your_apps_title">Your apps</string>
+    <string name="iori_your_apps_core">✓ Core app</string>
+    <string name="iori_your_apps_not_installed">Not installed</string>
+    <string name="iori_your_apps_installed_version">Installed: %1$s</string>
+    <string name="iori_your_apps_new_version">New: %1$s</string>
+    <string name="iori_your_apps_install">Install</string>
+    <string name="iori_your_apps_update">Update</string>
+    <string name="iori_your_apps_up_to_date">Up to date</string>
+    <string name="iori_your_apps_too_old">Needs a newer Android</string>
+    <string name="iori_your_apps_loading">Getting the list of apps…</string>
+    <string name="iori_your_apps_try_again">Try again</string>
+    <string name="iori_your_apps_list_offline">Could not reach wanderthe.dev for the list of apps. Check the connection.</string>
+    <string name="iori_your_apps_list_unreadable">The list of apps on wanderthe.dev could not be read. Try again later.</string>
+    <string name="iori_your_apps_from_copy">This is the list from last time. %1$s</string>
+    <string name="iori_your_apps_empty">The list has no apps in it.</string>
+    <string name="iori_your_apps_allow_body">To install apps, Home needs Android\'s \"Install unknown apps\" for Home. Android asks for it once, on its own screen: turn on \"Allow from this source\", then come back here.</string>
+    <string name="iori_your_apps_allow_button">Open that screen</string>
+    <!-- What a row says while an install runs, and how it ended. -->
+    <string name="iori_your_apps_downloading">Downloading, %1$d%%</string>
+    <string name="iori_your_apps_checking">Checking the file</string>
+    <string name="iori_your_apps_installing">Installing</string>
+    <string name="iori_your_apps_needs_tap">Needs your tap: press Install on Android\'s screen</string>
+    <string name="iori_your_apps_installed">Installed</string>
+    <string name="iori_your_apps_failed">Failed: %1$s</string>
+    <string name="iori_your_apps_why_allow">Home may not install apps yet. Turn it on, then press again.</string>
+    <string name="iori_your_apps_why_network">the download did not finish. Check the connection and try again.</string>
+    <string name="iori_your_apps_why_damaged">the file is not the one on the list. Nothing was installed. Try again.</string>
+    <string name="iori_your_apps_why_not_app">Android could not read the file as an app.</string>
+    <string name="iori_your_apps_why_wrong_app">the file is a different app or version from the one on the list.</string>
+    <string name="iori_your_apps_why_key">the file is not signed by its maker. Nothing was installed.</string>
+    <string name="iori_your_apps_why_key_changed">the app on the phone is signed with a different key. Remove it first if you want this one.</string>
+    <string name="iori_your_apps_why_not_newer">the file is not newer than the app on the phone.</string>
+    <string name="iori_your_apps_why_aborted">the install was cancelled.</string>
+    <string name="iori_your_apps_why_unanswered">Android\'s question was closed without an answer.</string>
+    <string name="iori_your_apps_why_blocked">Android blocked the install.</string>
+    <string name="iori_your_apps_why_conflict">it clashes with the app on the phone.</string>
+    <string name="iori_your_apps_why_incompatible">it does not work on this phone.</string>
+    <string name="iori_your_apps_why_storage">there is not enough room on the phone.</string>
+    <string name="iori_your_apps_why_android">Android did not install it.</string>
+</resources>

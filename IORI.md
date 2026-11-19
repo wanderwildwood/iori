@@ -172,6 +172,18 @@ Not hooks, but carried on top of v0.6:
   shop's reader), with its license, address and full text (`src/iori/res/raw`: Apache-2.0, and
   Glide's and protobuf's own BSD files; `IoriAbout.textsFor`). What Gradle cannot see is in
   `config/libraries` (MMD's chevrons). inkOS's bundled fonts are not listed there yet.
+- **Your apps** (19 Nov, makeover piece 4; `IoriYourApps.kt` the page, `IoriAppInstaller.kt` the
+  work, `IoriAppsManifest.kt` the list and the two decisions, pure Kotlin with its tests): the
+  house's apps from `https://wanderthe.dev/apps.json` (made by `tools/apps-manifest.py` in the
+  site's repository; a copy is kept in Home's files for when there is no connection), core apps
+  first, each with what it is, its version or "Not installed", and Install / Update / Up to date.
+  An app is downloaded to Home's cache and handed to Android's PackageInstaller only when its
+  size, SHA-256, package and version code are the list's, it is signed with the list's
+  certificate and no other, that certificate is the one `assets/iori_apps.json` pins for the
+  app where it names it (so the list on the site cannot swap a key), and an update is signed like
+  the app on the phone. Android 12+ updates apps Home installed with no question. The file is
+  deleted after. No upstream file changes: the permission and the receiver were already there;
+  `IoriInstallReceiver` hands answers marked `your_apps` to `IoriAppInstaller`.
 - **Default apps** (14 Nov, `IoriDefaults.kt`): a first-run page after Ecosystem (the first run
   is five pages now) and a Settings row. One row for each kind of thing one of Home's apps is
   meant to open (calls and texts, which are roles, and filling in passwords; contacts, calendar, email, alarms and timers,
