@@ -1,5 +1,6 @@
 package com.wanderwildwood.iori
 
+import android.graphics.Typeface
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -43,6 +44,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -55,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import com.github.gezimos.inkos.R
 import com.github.gezimos.inkos.data.Prefs
 import com.github.gezimos.inkos.helper.ShapeHelper
+import com.github.gezimos.inkos.helper.getTrueSystemFont
 import com.github.gezimos.inkos.style.SettingsTheme
 import com.github.gezimos.inkos.style.Theme
 import com.github.gezimos.inkos.style.rememberScreenScale
@@ -89,7 +92,16 @@ object IoriNextcloudUi {
         val shape: Shape,
         /** A dialog's buttons run its full width; a first-run page's are as wide as their words. */
         val wide: Boolean,
-    )
+        /**
+         * The bold of the page's own font. A font chosen in Home comes as one typeface, and Compose
+         * draws such a font at its own weight whatever weight is asked, so the first-run page passes
+         * the typeface made bold by Android. Null: ask for the weight (the dialog's system font has one).
+         */
+        val bold: FontFamily? = null,
+    ) {
+        fun strong(style: TextStyle): TextStyle =
+            if (bold != null) style.copy(fontFamily = bold) else style.copy(fontWeight = FontWeight.Bold)
+    }
 
     @Composable
     private fun Button(text: String, look: Look, enabled: Boolean = true, onClick: () -> Unit) {
@@ -205,7 +217,7 @@ object IoriNextcloudUi {
                 item(key = "who") {
                     Text(
                         stringResource(R.string.iori_nc_signed_in, shown.user, shown.host),
-                        style = look.label, color = look.ink, fontWeight = FontWeight.Bold,
+                        style = look.strong(look.label), color = look.ink,
                         modifier = Modifier.padding(vertical = 6.dp),
                     )
                 }
@@ -265,7 +277,7 @@ object IoriNextcloudUi {
                     // In bold, as the status is: what becomes of a login password typed here is said plainly.
                     Text(
                         stringResource(R.string.iori_nc_password_note),
-                        style = look.note, color = look.ink, fontWeight = FontWeight.Bold,
+                        style = look.strong(look.note), color = look.ink,
                         modifier = Modifier.padding(vertical = 6.dp),
                     )
                 }
@@ -278,7 +290,7 @@ object IoriNextcloudUi {
                 else -> null
             }
             if (status != null) item(key = "status") {
-                Text(stringResource(status), style = look.note, color = look.ink, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 6.dp))
+                Text(stringResource(status), style = look.strong(look.note), color = look.ink, modifier = Modifier.padding(vertical = 6.dp))
             }
             if (busy) {
                 item(key = "stop") { Button(stringResource(R.string.iori_nc_stop), look) { IoriNextcloud.stop() } }
@@ -310,7 +322,9 @@ object IoriNextcloudUi {
             val room = LocalConfiguration.current.screenHeightDp.dp - 200.dp
             FittedPages(rows, counted.heightIn(max = room.coerceAtLeast(200.dp)))
         } else {
-            PagedColumn(counted) { rows.forEach { (key, row) -> item(key = key) { row() } } }
+            // The list's own item, by its receiver: a bare item() here is the local one above, which
+            // added to the rows while they were being read (a crash on the first-run page).
+            PagedColumn(counted) { val list = this; rows.forEach { (key, row) -> list.item(key = key) { row() } } }
         }
     }
 
@@ -359,7 +373,11 @@ object IoriNextcloudUi {
                         Spacer(Modifier.height(8.dp.scaled(screenScale)))
                     }
                     val body = SettingsTheme.typography.body.copy(color = textColor)
-                    val look = Look(body.copy(fontSize = sizes.title), body.copy(fontSize = sizes.body), textColor, bgColor, shape, wide = false)
+                    val bold = remember(prefs.getFontForContext("settings"), prefs.getCustomFontPathForContext("settings")) {
+                        val face = prefs.getFontForContext("settings").getFont(context, prefs.getCustomFontPathForContext("settings")) ?: getTrueSystemFont()
+                        FontFamily(Typeface.create(face, Typeface.BOLD))
+                    }
+                    val look = Look(body.copy(fontSize = sizes.title), body.copy(fontSize = sizes.body), textColor, bgColor, shape, wide = false, bold = bold)
                     MaterialTheme(colorScheme = monochrome.copy(primary = textColor, onPrimary = bgColor)) {
                         CompositionLocalProvider(LocalListBleed provides 26.dp.scaled(screenScale), LocalContentColor provides textColor) {
                             Rows(look, Modifier.fillMaxWidth().weight(1f))

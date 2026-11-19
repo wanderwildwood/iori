@@ -426,12 +426,20 @@ private fun ChoiceDialog(title: String, rows: List<Choice>, close: () -> Unit) {
         val drawn = rows.map { row ->
             row.key to @Composable {
                 when (row) {
-                    is Choice.Head -> Text(
-                        row.text,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
-                    )
+                    // A heading is as tall as a pick row (48 dp), its words at the foot over the rows
+                    // it heads: with every row one height, every page holds the same number of rows,
+                    // so a page after the first does not end over a blank band (19 Nov 2026).
+                    is Choice.Head -> Box(
+                        Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                        contentAlignment = Alignment.BottomStart,
+                    ) {
+                        Text(
+                            row.text,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 4.dp),
+                        )
+                    }
                     is Choice.Pick -> PickRow(row, close)
                 }
             }
