@@ -242,4 +242,11 @@
     <string name="iori_eink_fast_dither">Fast dither</string>
     <string name="iori_eink_text">Text</string>
     <string name="iori_eink_quality">Quality</string>
+    <!-- 11-19: the Ecosystem apps list as folders -->
+    <string name="iori_back">Back</string>
+    <string name="iori_apps_folder_count">%1$d of %2$d</string>
+    <plurals name="iori_apps_folder_updates">
+        <item quantity="one">%d update</item>
+        <item quantity="other">%d updates</item>
+    </plurals>
 </resources>

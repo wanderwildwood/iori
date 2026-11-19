@@ -36,8 +36,8 @@ import com.wanderwildwood.iori.ui.houseTypography
 import com.wanderwildwood.iori.ui.monochrome
 
 /**
- * The Settings row for "Your apps", and the page it opens: the core set, then the extras, each
- * app with what it is doing. Pressing one that is missing gets it; pressing one with an update
+ * The Settings row for "Ecosystem apps", and the page it opens: a folder for each section (the
+ * core set first), and in each folder its apps with what each is doing. Pressing one that is missing gets it; pressing one with an update
  * updates it; pressing one that is up to date opens it.
  */
 object IoriAppsRow {
@@ -66,47 +66,82 @@ fun AppsDialog(onDismiss: () -> Unit) {
         IoriApps.checkLatest(context)
     }
     OnResume { IoriApps.resumed(context) }
+    // A folder of the list, opened from its row (11-19): null is the list of folders.
+    var open by remember { mutableStateOf<Int?>(null) }
+    val sections = IoriApps.sections(apps)
+    val inFolder = sections.firstOrNull { it.first == open }
+    val back = { if (open != null) open = null else onDismiss() }
 
     MaterialTheme(colorScheme = monochrome, typography = houseTypography) {
-        EInkDialog(onDismiss = onDismiss) {
+        EInkDialog(onDismiss = back) {
             Text(
-                text = stringResource(R.string.iori_apps_title),
+                text = stringResource(inFolder?.first ?: R.string.iori_apps_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(10.dp))
-            // The list takes the room the title and Close leave, and turns its pages on whole rows.
-            PagedColumn(Modifier.fillMaxWidth().weight(1f)) {
-                IoriApps.sections(apps).forEach { (head, inSection) ->
-                    item(key = "head:$head") { SectionHead(stringResource(head)) }
-                    inSection.forEach { app ->
-                        item(key = app.pkg) { AppRow(app, states[app.pkg] ?: IoriApps.State()) }
+            // The list takes the room the title and the foot leave, and turns its pages on whole rows;
+            // a folder opens on its first page.
+            androidx.compose.runtime.key(open) {
+                PagedColumn(Modifier.fillMaxWidth().weight(1f)) {
+                    if (inFolder == null) {
+                        sections.forEach { (head, inSection) ->
+                            item(key = "folder:$head") { FolderRow(head, inSection, states) { open = head } }
+                        }
+                    } else {
+                        inFolder.second.forEach { app ->
+                            item(key = app.pkg) { AppRow(app, states[app.pkg] ?: IoriApps.State()) }
+                        }
                     }
                 }
             }
             Spacer(Modifier.height(16.dp))
             Text(
-                text = stringResource(R.string.iori_close),
+                text = stringResource(if (inFolder != null) R.string.iori_back else R.string.iori_close),
                 style = MaterialTheme.typography.titleSmall,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
                     .border(1.dp, Color.Black)
-                    .clickable(onClick = onDismiss)
+                    .clickable(onClick = back)
                     .padding(vertical = 12.dp),
             )
         }
     }
 }
 
+/**
+ * One folder of the list: its name, and on the right how many of its apps are on the phone, or,
+ * in bold, how many can be updated or are being got right now.
+ */
 @Composable
-private fun SectionHead(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 4.dp),
-    )
+private fun FolderRow(head: Int, apps: List<IoriApps.App>, states: Map<String, IoriApps.State>, onOpen: () -> Unit) {
+    val context = LocalContext.current
+    val ofThem = apps.map { states[it.pkg] ?: IoriApps.State() }
+    val busy = ofThem.count { it.canUpdate || it.step != IoriApps.Step.IDLE }
+    val status = if (busy > 0) context.resources.getQuantityString(R.plurals.iori_apps_folder_updates, busy, busy)
+    else stringResource(R.string.iori_apps_folder_count, ofThem.count { it.installed != null }, apps.size)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onOpen)
+            .padding(vertical = 10.dp),
+    ) {
+        Text(
+            text = stringResource(head),
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        Spacer(Modifier.width(12.dp))
+        Text(
+            text = status,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = if (busy > 0) FontWeight.Bold else FontWeight.Normal,
+            maxLines = 1,
+        )
+    }
 }
 
 @Composable
