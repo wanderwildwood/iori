@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -42,11 +43,13 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -401,7 +404,8 @@ private fun NumberDialog(
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
-                modifier = Modifier.weight(1f),
+                // TalkBack says the new value after each − or +.
+                modifier = Modifier.weight(1f).semantics { liveRegion = LiveRegionMode.Polite },
             )
             StepPress("+", stringResource(R.string.cd_increase)) { change(1, it) }
         }
@@ -430,7 +434,7 @@ private fun ChoiceDialog(title: String, rows: List<Choice>, close: () -> Unit) {
                     // it heads: with every row one height, every page holds the same number of rows,
                     // so a page after the first does not end over a blank band (19 Nov 2026).
                     is Choice.Head -> Box(
-                        Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                        Modifier.fillMaxWidth().heightIn(min = 48.dp).semantics { heading() },
                         contentAlignment = Alignment.BottomStart,
                     ) {
                         Text(
@@ -474,15 +478,15 @@ private fun PickRow(row: Choice.Pick, close: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 48.dp)
-            .semantics { role = Role.RadioButton; selected = row.chosen },
+            .heightIn(min = 48.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .weight(1f)
                 .heightIn(min = 48.dp)
-                .clickable {
+                // The node TalkBack lands on: the label, and whether it is the one ticked.
+                .selectable(selected = row.chosen, role = Role.RadioButton) {
                     row.onPick()
                     if (row.closes) close()
                 },
@@ -502,11 +506,13 @@ private fun PickRow(row: Choice.Pick, close: () -> Unit) {
         }
         val remove = row.remove
         if (remove != null) {
+            val says = stringResource(R.string.iori_dialog_remove_named, row.label)
             Text(
                 text = stringResource(R.string.iori_dialog_remove),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier
                     .padding(start = 12.dp)
+                    .semantics { contentDescription = says }
                     .clickable(onClick = remove)
                     .padding(vertical = 12.dp, horizontal = 4.dp),
             )

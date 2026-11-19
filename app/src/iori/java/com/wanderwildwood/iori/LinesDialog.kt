@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
@@ -70,7 +71,7 @@ fun LinesDialog(tripped: Boolean, onTurnBackOn: () -> Unit, onDismiss: () -> Uni
     val rows = ArrayList<Pair<String, @Composable () -> Unit>>()
     if (tripped) {
         rows.row("tripped") {
-            Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onTurnBackOn).padding(top = 6.dp, bottom = 12.dp)) {
+            Row(modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = onTurnBackOn).padding(top = 6.dp, bottom = 12.dp)) {
                 Text(stringResource(R.string.iori_lines_tripped_dialog), style = MaterialTheme.typography.bodyMedium)
             }
         }
@@ -79,7 +80,7 @@ fun LinesDialog(tripped: Boolean, onTurnBackOn: () -> Unit, onDismiss: () -> Uni
     rows.row("place") {
         val top = IoriLinesPlace.top(context)
         Row(
-            modifier = Modifier.fillMaxWidth().clickable { IoriLinesPlace.set(context, !top) }.padding(vertical = 10.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { IoriLinesPlace.set(context, !top) }.padding(vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(stringResource(R.string.iori_lines_place), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
@@ -204,10 +205,13 @@ private fun SourceRow(source: IoriLinesRepository.Source, presses: Int, install:
     Column(Modifier.fillMaxWidth()) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val statusRoom = maxWidth * 0.6f
+            // Every press in this list is at least 48 dp tall: the rows touch, and a shorter one
+            // let a press a little high or low switch the source next to it (audit, 19 Nov 2026).
             Row(
-                verticalAlignment = Alignment.Top,
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .heightIn(min = 48.dp)
                     .clickable {
                         if (gettable != null) {
                             IoriAppInstaller.install(context, gettable.pkg)
@@ -253,7 +257,7 @@ private fun DebugPress(text: String, modifier: Modifier = Modifier, onClick: () 
     Text(
         text = text,
         style = MaterialTheme.typography.labelSmall,
-        modifier = modifier.clickable(onClick = onClick).padding(vertical = 4.dp),
+        modifier = modifier.heightIn(min = 48.dp).clickable(onClick = onClick).padding(vertical = 4.dp),
     )
 }
 
@@ -272,8 +276,10 @@ private fun GetLine(text: String, pkg: String, installs: Map<String, IoriAppInst
         return
     }
     Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = 48.dp)
             .clickable { IoriAppInstaller.install(context, app.pkg) }
             .padding(vertical = 5.dp),
     ) {
