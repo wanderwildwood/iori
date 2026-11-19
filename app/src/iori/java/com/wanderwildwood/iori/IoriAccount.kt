@@ -12,6 +12,7 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import com.github.gezimos.inkos.BuildConfig
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import java.io.File
@@ -42,11 +43,30 @@ import javax.crypto.spec.GCMParameterSpec
  */
 object IoriAccount {
 
-    data class Account(val server: String, val user: String, val password: String)
+    /**
+     * [user] is the login name: what is typed, or what Login Flow v2 gives back, and what basic
+     * auth takes with [password]. [uid] is the Nextcloud user id the server keeps the files
+     * under (`/remote.php/dav/files/<uid>/`), which can differ from the login name (an email
+     * address, another case); null until the server has been asked for it.
+     */
+    data class Account(val server: String, val user: String, val password: String, val uid: String? = null) {
+        /** The user id the apps build their paths with: [uid], or the login name until it is known. */
+        val userId: String get() = uid ?: user
+
+        /** Without the password, so it cannot end up in a log. */
+        override fun toString(): String = "Account(server=$server, user=$user, uid=$uid)"
+    }
+
+    /** A sign-out the server has not yet been told about: the old account, kept only to end it there. */
+    class Pending(val id: String, val account: Account)
 
     fun uri(context: Context): Uri = Uri.parse("content://${context.packageName}.accounts/nextcloud")
 
-    val COLUMNS = arrayOf("server", "user", "password", "stamp")
+    /** The provider's row. `uid` came fifth, so an app reads it only when it is there. */
+    val COLUMNS = arrayOf("server", "user", "password", "stamp", "uid")
+
+    /** At most this many old sign-ins wait to be ended on their server; the oldest goes first. */
+    const val MAX_PENDING = 5
 
     /**
      * The apps the account is handed to, each with the SHA-256 of the certificate its releases
@@ -129,8 +149,10 @@ object IoriAccount {
     }
 
     /**
-     * The account as kept: server, user, the sealed password, and a stamp that is new after
-     * every change, so an app can tell the account it holds from the one Home has now.
+     * The account as kept: server, user, user id, the sealed password, and a stamp that is new
+     * after every change, so an app can tell the account it holds from the one Home has now.
+     * Beside it, under `revoke`, the old accounts signed out of whose app passwords the server
+     * has not yet deleted: still sealed, never handed to an app, kept only to try again.
      */
     class Store(
         private val backing: Backing,
@@ -146,6 +168,20 @@ object IoriAccount {
         private fun JsonObject.text(key: String): String? =
             get(key)?.takeIf { it.isJsonPrimitive }?.asString?.takeIf { it.isNotEmpty() }
 
+        private fun JsonObject.revoking(): List<JsonObject> =
+            get("revoke")?.takeIf { it.isJsonArray }?.asJsonArray?.mapNotNull { it.takeIf { e -> e.isJsonObject }?.asJsonObject }.orEmpty()
+
+        private fun write(o: JsonObject): Boolean = try {
+            backing.write(o.toString())
+            true
+        } catch (_: Exception) {
+            false
+        }
+
+        private fun JsonObject.withRevoking(list: List<JsonObject>): JsonObject = apply {
+            if (list.isNotEmpty()) add("revoke", JsonArray().also { a -> list.takeLast(MAX_PENDING).forEach { a.add(it) } })
+        }
+
         /** The account, or nothing: none kept, the file unreadable, or the password not to be opened. */
         @Synchronized
         fun account(): Account? {
@@ -153,43 +189,93 @@ object IoriAccount {
             val server = o.text("server") ?: return null
             val user = o.text("user") ?: return null
             val password = o.text("sealed")?.let { sealer.open(it) }?.takeIf { it.isNotEmpty() } ?: return null
-            return Account(server, user, password)
+            return Account(server, user, password, o.text("uid"))
         }
 
         @Synchronized
         fun stamp(): String = kept()?.text("stamp").orEmpty()
 
-        /** Keeps [account] in place of any other. False, and nothing changed, when it cannot be sealed. */
+        /**
+         * Keeps [account] in place of any other, its server written one way ([IoriLogin.canonical]).
+         * False, and nothing changed, when it cannot be sealed. Old sign-outs still to be ended stay.
+         */
         @Synchronized
         fun signIn(account: Account): Boolean {
             if (account.server.isBlank() || account.user.isBlank() || account.password.isEmpty()) return false
             val sealed = sealer.seal(account.password) ?: return false
             val o = JsonObject()
-            o.addProperty("server", account.server.trimEnd('/'))
+            o.addProperty("server", IoriLogin.canonical(account.server))
             o.addProperty("user", account.user)
+            account.uid?.takeIf { it.isNotBlank() }?.let { o.addProperty("uid", it) }
             o.addProperty("sealed", sealed)
             o.addProperty("stamp", newStamp())
-            return try {
-                backing.write(o.toString())
-                true
-            } catch (_: Exception) {
-                false
-            }
+            return write(o.withRevoking(kept()?.revoking().orEmpty()))
         }
 
-        /** Forgets the account. False when there was none to forget, or it could not be written. */
+        /**
+         * Puts the user id the server gave in, if the account is still the one with [stamp] (not
+         * signed out or replaced while the server was asked). A new stamp, so the apps read again.
+         */
+        @Synchronized
+        fun fillUid(stamp: String, uid: String): Boolean {
+            if (uid.isBlank()) return false
+            val o = kept() ?: return false
+            if (o.text("server") == null || o.text("stamp") != stamp || o.text("uid") == uid) return false
+            o.addProperty("uid", uid)
+            o.addProperty("stamp", newStamp())
+            return write(o)
+        }
+
+        /**
+         * Forgets the account: the apps get it no more. Its sealed password goes under `revoke`,
+         * for the server to be asked to delete it until it has ([revoked]). False when there was
+         * none to forget, or it could not be written.
+         */
         @Synchronized
         fun signOut(): Boolean {
             val o = kept() ?: return false
             if (o.text("server") == null && o.text("sealed") == null) return false
+            val list = o.revoking().toMutableList()
+            val server = o.text("server")
+            val user = o.text("user")
+            val sealed = o.text("sealed")
+            if (server != null && user != null && sealed != null) {
+                list += JsonObject().apply {
+                    addProperty("id", o.text("stamp") ?: newStamp())
+                    addProperty("server", server)
+                    addProperty("user", user)
+                    addProperty("sealed", sealed)
+                }
+            }
             val left = JsonObject()
             left.addProperty("stamp", newStamp())
-            return try {
-                backing.write(left.toString())
-                true
-            } catch (_: Exception) {
-                false
+            return write(left.withRevoking(list))
+        }
+
+        /** The old sign-ins still to be ended on their server, oldest first; those not to be opened are left out. */
+        @Synchronized
+        fun pending(): List<Pending> = kept()?.revoking().orEmpty().mapNotNull { e ->
+            val id = e.text("id") ?: return@mapNotNull null
+            val server = e.text("server") ?: return@mapNotNull null
+            val user = e.text("user") ?: return@mapNotNull null
+            val password = e.text("sealed")?.let { sealer.open(it) }?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+            Pending(id, Account(server, user, password))
+        }
+
+        /**
+         * The server has ended the old sign-in [id] (or it can never be ended from here: the
+         * password no longer opens): it is forgotten for good. Entries that no longer open go too.
+         */
+        @Synchronized
+        fun revoked(id: String): Boolean {
+            val o = kept() ?: return false
+            val before = o.revoking()
+            val after = before.filter { e ->
+                e.text("id") != id && e.text("sealed")?.let { sealer.open(it) }?.isNotEmpty() == true
             }
+            if (after.size == before.size) return false
+            o.remove("revoke")
+            return write(o.withRevoking(after))
         }
     }
 
@@ -212,12 +298,23 @@ object IoriAccount {
         return kept
     }
 
-    /** Forgets the account and tells the apps; returns the one forgotten, for the server to be told. */
-    fun signOut(context: Context): Account? {
-        val was = account(context)
-        if (store(context).signOut()) changed(context)
-        return was
+    /** Forgets the account and tells the apps. True when one was forgotten; it waits in [pending] to be ended on the server. */
+    fun signOut(context: Context): Boolean {
+        val out = store(context).signOut()
+        if (out) changed(context)
+        return out
     }
+
+    /** Puts in the user id the server gave for the account with [stamp], and tells the apps. */
+    fun fillUid(context: Context, stamp: String, uid: String): Boolean {
+        val filled = store(context).fillUid(stamp, uid)
+        if (filled) changed(context)
+        return filled
+    }
+
+    fun pending(context: Context): List<Pending> = store(context).pending()
+
+    fun revoked(context: Context, id: String): Boolean = store(context).revoked(id)
 
     private fun changed(context: Context) {
         runCatching { context.contentResolver.notifyChange(uri(context), null) }
@@ -229,7 +326,7 @@ object IoriAccount {
         val cursor = MatrixCursor(COLUMNS)
         val identity = Binder.clearCallingIdentity()
         try {
-            account(context)?.let { cursor.addRow(arrayOf<Any>(it.server, it.user, it.password, stamp(context))) }
+            account(context)?.let { cursor.addRow(arrayOf<Any>(it.server, it.user, it.password, stamp(context), it.userId)) }
         } finally {
             Binder.restoreCallingIdentity(identity)
         }
@@ -299,12 +396,19 @@ object IoriAccount {
 
 /**
  * `content://<Home's package>.accounts/nextcloud`, read-only: one row (`server`, `user`,
- * `password`, `stamp`) for a caller [IoriAccount.allowed] passes while somebody is signed in, no
+ * `password`, `stamp`, `uid`) for a caller [IoriAccount.allowed] passes while somebody is signed in, no
  * row while nobody is, and no answer at all for anyone else. Exported, with no permission to
  * ask for: the caller's package and signing certificate are checked here.
  */
 class IoriAccountProvider : ContentProvider() {
-    override fun onCreate(): Boolean = true
+    /**
+     * Made as Home's process starts: the moment to finish what an earlier run left undone (an
+     * old sign-in to end on the server, a user id to ask for). Off the main thread.
+     */
+    override fun onCreate(): Boolean {
+        context?.let { runCatching { IoriNextcloud.tidy(it) } }
+        return true
+    }
 
     override fun query(uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?): Cursor? {
         val context = context ?: return null

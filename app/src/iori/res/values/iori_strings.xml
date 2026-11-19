@@ -116,6 +116,7 @@
     <string name="iori_nc_shared">Your Ecosystem apps can use this account. The password is locked on this phone and handed to them alone.</string>
     <string name="iori_nc_sign_out">Sign out</string>
     <string name="iori_nc_sign_out_armed">Sign out — the apps using this account lose it too; tap again</string>
+    <string name="iori_nc_unrevoked">Home could not reach your server to end its old sign-in. It tries again each time it starts. To end it now, remove the Home entry on the server: Settings, Security, Devices &amp; sessions.</string>
 
     <!-- A press that goes to one of Home's apps, when that app is not on the phone -->
     <string name="iori_handoff_missing">%1$s is not on the phone</string>

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -27,7 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -45,6 +45,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -104,13 +105,13 @@ object IoriNextcloudUi {
     }
 
     @Composable
-    private fun Button(text: String, look: Look, enabled: Boolean = true, onClick: () -> Unit) {
+    private fun Button(text: String, look: Look, enabled: Boolean = true, extra: Modifier = Modifier, onClick: () -> Unit) {
         Text(
             text = text,
             style = look.label,
             color = look.ink,
             textAlign = if (look.wide) TextAlign.Center else TextAlign.Start,
-            modifier = Modifier
+            modifier = extra
                 .padding(vertical = 5.dp)
                 .then(if (look.wide) Modifier.fillMaxWidth() else Modifier)
                 .border(1.5.dp, look.ink, look.shape)
@@ -153,8 +154,8 @@ object IoriNextcloudUi {
                             .border(1.5.dp, look.ink, look.shape)
                             .padding(horizontal = 12.dp, vertical = 10.dp),
                     ) {
-                        // The hint is an outline of what goes here, said in the same ink: no grey on this panel.
-                        if (value.isEmpty() && hint.isNotEmpty()) Text(hint, style = look.label, color = look.ink.copy(alpha = 0.45f))
+                        // The hint is an example of what goes here: in full ink (grey dithers on this panel), set apart by italics.
+                        if (value.isEmpty() && hint.isNotEmpty()) Text(hint, style = look.label.copy(fontStyle = FontStyle.Italic), color = look.ink)
                         inner()
                     }
                 },
@@ -194,25 +195,44 @@ object IoriNextcloudUi {
         // With no browser there is nothing to open the server's page with: the typed way is the way.
         LaunchedEffect(phase) { if (phase is Phase.Failed && phase.problem == Problem.NO_BROWSER) typing = true }
 
-        // Sign out asks in its own row: armed by one press, done by the next, and disarmed by a
-        // press anywhere else. Every press on these rows is counted, so "the next" can be told.
-        var presses by remember { mutableIntStateOf(0) }
-        var armedAt by remember { mutableIntStateOf(-1) }
-        val armed = armedAt == presses
+        // Sign out asks in its own row: armed by one click, done by the next, and disarmed by a
+        // touch anywhere else on these rows. A click with no touch (TalkBack, Switch Access, a
+        // keyboard) arms and confirms the same way. Signing in or out starts it over.
+        var armed by remember(shown != null) { mutableStateOf(false) }
+        // Whether the touch going on now began on Sign out: its row says so before the rows hear of it.
+        val onOut = remember { booleanArrayOf(false) }
 
         val busy = phase is Phase.Asking || phase is Phase.Waiting || phase is Phase.Checking
         val browser = remember { IoriNextcloud.hasBrowser(context) }
 
-        val counted = modifier.pointerInput(Unit) {
+        // Keyed as [armed] is, so a touch disarms the state now drawn and not one left from before.
+        val counted = modifier.pointerInput(shown != null) {
             awaitPointerEventScope {
                 while (true) {
-                    if (awaitPointerEvent(PointerEventPass.Initial).type == PointerEventType.Press) presses++
+                    // The Main pass reaches these rows after Sign out's own Initial pass has marked its touch.
+                    if (awaitPointerEvent(PointerEventPass.Main).type == PointerEventType.Press) {
+                        if (!onOut[0]) armed = false
+                        onOut[0] = false
+                    }
                 }
             }
         }
+        val outTouch = Modifier.pointerInput(Unit) {
+            awaitPointerEventScope {
+                while (true) {
+                    if (awaitPointerEvent(PointerEventPass.Initial).type == PointerEventType.Press) onOut[0] = true
+                }
+            }
+        }
+        // Signed in and signed out are different rows: each starts at the top, not where the other was left.
+        val listState = remember(shown != null) { LazyListState() }
         val rows = mutableListOf<Pair<String, @Composable () -> Unit>>()
         fun item(key: String, row: @Composable () -> Unit) { rows += key to row }
         run {
+            // An old sign-in the server has not yet been told to end: said first, until it has.
+            if (IoriNextcloud.unrevoked) item(key = "unrevoked") {
+                Text(stringResource(R.string.iori_nc_unrevoked), style = look.strong(look.note), color = look.ink, modifier = Modifier.padding(vertical = 6.dp))
+            }
             if (shown != null) {
                 item(key = "who") {
                     Text(
@@ -225,14 +245,13 @@ object IoriNextcloudUi {
                     Text(stringResource(R.string.iori_nc_shared), style = look.note, color = look.ink, modifier = Modifier.padding(vertical = 6.dp))
                 }
                 item(key = "out") {
-                    Button(stringResource(if (armed) R.string.iori_nc_sign_out_armed else R.string.iori_nc_sign_out), look) {
-                        // This press was counted too: armed one press ago means it is the second on this row.
-                        if (armedAt == presses - 1) {
-                            armedAt = -1
+                    Button(stringResource(if (armed) R.string.iori_nc_sign_out_armed else R.string.iori_nc_sign_out), look, extra = outTouch) {
+                        if (armed) {
+                            armed = false
                             password = ""
                             IoriNextcloud.signOut(context)
                         } else {
-                            armedAt = presses
+                            armed = true
                         }
                     }
                 }
@@ -320,11 +339,11 @@ object IoriNextcloudUi {
         if (fitted) {
             // At most the screen less a margin above and below, as the choice dialogs are.
             val room = LocalConfiguration.current.screenHeightDp.dp - 200.dp
-            FittedPages(rows, counted.heightIn(max = room.coerceAtLeast(200.dp)))
+            FittedPages(rows, counted.heightIn(max = room.coerceAtLeast(200.dp)), listState)
         } else {
             // The list's own item, by its receiver: a bare item() here is the local one above, which
             // added to the rows while they were being read (a crash on the first-run page).
-            PagedColumn(counted) { val list = this; rows.forEach { (key, row) -> list.item(key = key) { row() } } }
+            PagedColumn(counted, state = listState) { val list = this; rows.forEach { (key, row) -> list.item(key = key) { row() } } }
         }
     }
 
