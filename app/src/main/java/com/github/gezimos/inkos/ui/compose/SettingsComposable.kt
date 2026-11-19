@@ -53,6 +53,7 @@ import com.github.gezimos.inkos.style.Theme
 import com.github.gezimos.inkos.style.rememberScreenScale
 import com.github.gezimos.inkos.style.scaled
 import com.wanderwildwood.iori.ui.IoriSettingsLook // iori: the house look on Settings pages
+import com.wanderwildwood.iori.ui.IoriSettingsPages.settingsRow // iori: whole-row pages
 
 object SettingsComposable {
 
@@ -203,7 +204,7 @@ object SettingsComposable {
         onClick: () -> Unit = {},
         titleFontSize: TextUnit = TextUnit.Unspecified,
         horizontalPadding: Dp = SettingsTheme.color.horizontalPadding,
-        verticalPadding: Dp = 10.dp.scaled(rememberScreenScale()),
+        verticalPadding: Dp = IoriSettingsLook.ROW_GAP, // iori: the house row spacing
         focusVerticalPadding: Dp = 12.dp.scaled(rememberScreenScale()),
         iconPadding: Dp = 0.dp
     ) {
@@ -215,6 +216,7 @@ object SettingsComposable {
         val screenScale = rememberScreenScale()
         Row(
             modifier = Modifier
+                .settingsRow() // iori: whole-row pages
                 .fillMaxWidth()
                 .padding(horizontal = horizontalPadding)
                 .padding(vertical = verticalPadding)
@@ -289,6 +291,7 @@ object SettingsComposable {
         }
         Row(
             modifier = modifier
+                .settingsRow(heading = true) // iori: whole-row pages
                 .fillMaxWidth()
                 .padding(vertical = verticalPadding),
             verticalAlignment = Alignment.CenterVertically
@@ -421,9 +424,10 @@ object SettingsComposable {
         modifier: Modifier = Modifier,
         description: String? = null,
         horizontalPadding: Dp = SettingsTheme.color.horizontalPadding,
-        verticalPadding: Dp = 10.dp.scaled(rememberScreenScale()),
+        verticalPadding: Dp = IoriSettingsLook.ROW_GAP, // iori: the house row spacing
         onCheckedChange: (Boolean) -> Unit
     ) {
+        if (!enabled) return // iori: a row that cannot be used is left out, not drawn in grey
         val interactionSource = remember { MutableInteractionSource() }
         val isFocused = interactionSource.collectIsFocusedAsState().value
         val isHighlighted = isFocused
@@ -431,6 +435,7 @@ object SettingsComposable {
         val prefBackgroundColor = Theme.colors.background
         Column(
             modifier = modifier
+                .settingsRow() // iori: whole-row pages
                 .fillMaxWidth()
                 .padding(horizontal = horizontalPadding)
                 .padding(vertical = verticalPadding)
@@ -487,9 +492,10 @@ object SettingsComposable {
         description: String? = null,
         optionAlignment: Int? = null,
         horizontalPadding: Dp = SettingsTheme.color.horizontalPadding,
-        verticalPadding: Dp = 10.dp.scaled(rememberScreenScale()),
+        verticalPadding: Dp = IoriSettingsLook.ROW_GAP, // iori: the house row spacing
         onClick: () -> Unit = {},
     ) {
+        if (!enabled) return // iori: a row that cannot be used is left out, not drawn in grey
         val interactionSource = remember { MutableInteractionSource() }
         val isFocused = interactionSource.collectIsFocusedAsState().value
         val isHighlighted = isFocused
@@ -497,6 +503,7 @@ object SettingsComposable {
         val prefBackgroundColor = Theme.colors.background
         Column(
             modifier = Modifier
+                .settingsRow() // iori: whole-row pages
                 .fillMaxWidth()
                 .padding(horizontal = horizontalPadding)
                 .padding(vertical = verticalPadding)
@@ -524,7 +531,7 @@ object SettingsComposable {
                         color = textColor
                     )
                     // iori: the value goes under the label, as on the other apps' Settings rows
-                    if (optionAlignment == null && option.isNotEmpty()) {
+                    if (option.isNotEmpty()) { // iori: alignment in words too
                         Text(
                             text = option,
                             style = SettingsTheme.typography.item,
@@ -543,7 +550,7 @@ object SettingsComposable {
                     }
                 }
 
-                if (optionAlignment != null) {
+                if (IoriSettingsLook.ALIGN_GLYPH && optionAlignment != null) { // iori: the value is in words, under the label
                     AlignmentIcon(
                         alignment = optionAlignment,
                         tint = if (!enabled) prefTextColor.copy(alpha = 0.4f) else if (isHighlighted) prefBackgroundColor else prefTextColor
@@ -562,9 +569,10 @@ object SettingsComposable {
         enabled: Boolean = true,
         description: String? = null,
         horizontalPadding: Dp = SettingsTheme.color.horizontalPadding,
-        verticalPadding: Dp = 10.dp.scaled(rememberScreenScale()),
+        verticalPadding: Dp = IoriSettingsLook.ROW_GAP, // iori: the house row spacing
         onClick: () -> Unit = {},
     ) {
+        if (!enabled) return // iori: a row that cannot be used is left out, not drawn in grey
         val interactionSource = remember { MutableInteractionSource() }
         val isFocused = interactionSource.collectIsFocusedAsState().value
         val isHighlighted = isFocused
@@ -572,6 +580,7 @@ object SettingsComposable {
         val prefBackgroundColor = Theme.colors.background
         Column(
             modifier = Modifier
+                .settingsRow() // iori: whole-row pages
                 .fillMaxWidth()
                 .padding(horizontal = horizontalPadding)
                 .padding(vertical = verticalPadding)

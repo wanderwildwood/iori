@@ -228,11 +228,29 @@
     <string name="top_widget_margin">Top widget margin</string>
     <string name="ui_scale">UI scale</string>
     <string name="universal_custom_font">Universal font</string>
-    <string name="use_volume_keys_for_pages">VolumeKey navigation</string>
+    <string name="use_volume_keys_for_pages">Volume keys turn pages</string>
     <string name="vibration_feedback">Vibration feedback</string>
     <string name="vibration_strength">Vibration strength</string>
     <string name="visibility_display">Visibility &amp; display</string>
     <string name="wallpaper_visibility">Wallpaper visibility</string>
     <string name="work_profile">Work profile</string>
     <string name="write_settings_permission_title">Modify system settings</string>
+    <!-- 11-19: more notes that only restate their label; Simple Tray as two words -->
+    <string name="desc_volume_keys"></string>
+    <string name="desc_app_padding"></string>
+    <string name="desc_home_y_offset"></string>
+    <string name="desc_top_widget_margin"></string>
+    <string name="desc_dual_clocks"></string>
+    <string name="desc_notification_count"></string>
+    <string name="desc_all_apps"></string>
+    <string name="desc_auto_open_result"></string>
+    <string name="desc_search_files"></string>
+    <string name="desc_short_swipe"></string>
+    <string name="desc_long_swipe"></string>
+    <string name="desc_message_preview"></string>
+    <string name="desc_noti_char_limit"></string>
+    <string name="desc_extras_settings"></string>
+    <string name="option_simple_tray">Simple Tray</string>
+    <string name="desc_app_name_mode"></string>
+    <string name="desc_letters_title"></string>
 </resources>

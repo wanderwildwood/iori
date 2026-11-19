@@ -1,0 +1,281 @@
+package com.wanderwildwood.iori.ui
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.dp
+import com.github.gezimos.inkos.R
+import com.github.gezimos.inkos.style.Theme
+import kotlin.math.max
+
+/**
+ * Whole-row pages for inkOS's Settings pages (decided 11-19: a page turn never cuts a row).
+ *
+ * inkOS lays a Settings page out as one column of composables, so [PagedColumn], which pages by
+ * list items, saw a single tall item and turned it a screen at a time, cutting rows in half. Here
+ * each row reports where it sits ([settingsRow], hooked into SettingsComposable's rows), and the
+ * page follows the house list's rules (STYLE.md, Lists; [PagedColumn]):
+ *
+ * - a turn forward brings the first row that did not fit to the top of the page;
+ * - a row that does not fit at the foot is neither drawn nor pressable until the next page;
+ * - a heading is never the last thing on a page: it goes over with the row under it;
+ * - a turn back goes one page back and lands on a row;
+ * - the scrollbar is drawn as [PagedColumn] draws it, its thumb measured in pixels.
+ *
+ * Content that is not a reported row (a picture, a note) is turned past a page at a time.
+ */
+object IoriSettingsPages {
+
+    /** A row's span down the page's content, in px; [heading] when it heads a group. */
+    data class Span(val top: Int, val bottom: Int, val heading: Boolean = false, val key: Any? = null)
+
+    /**
+     * The headings with nothing under them: what follows is another heading, or nothing. Rows
+     * that cannot be used are left out (SettingsComposable), so a group can be emptied; its
+     * heading folds to no height rather than stand alone. A folded heading keeps its place, so
+     * whether it folds never depends on itself, only on what follows, and it opens again when
+     * its rows come back.
+     */
+    fun emptyHeadings(spans: List<Span>): Set<Any> {
+        val out = HashSet<Any>()
+        spans.filter { it.heading && it.key != null }.forEach { h ->
+            val next = spans.filter { it !== h && it.top >= h.bottom }
+                .minWithOrNull(compareBy<Span>({ it.top }, { if (it.heading) 0 else 1 }))
+            if (next == null || next.heading) out += h.key!!
+        }
+        return out
+    }
+
+    /** Where a page that opens at [top] stops drawing, or null to draw to the foot. */
+    fun foot(spans: List<Span>, top: Int, height: Int): Int? {
+        val sorted = spans.sortedBy { it.top }
+        val cut = sorted.firstOrNull { it.bottom > top + height && it.top > top } ?: return null
+        var foot = cut.top
+        // A heading left alone at the foot goes over with its rows.
+        val before = sorted.lastOrNull { it.bottom <= foot && it.top >= top }
+        if (before != null && before.heading && before.top > top) foot = before.top
+        return foot - top
+    }
+
+    /** Where a turn forward from a page opening at [top] lands, or null at the end. */
+    fun forward(spans: List<Span>, top: Int, height: Int, contentHeight: Int): Int? {
+        if (top + height >= contentHeight) return null
+        val f = foot(spans, top, height) ?: return (top + height).coerceAtMost(lastStart(spans, height, contentHeight))
+        return top + f
+    }
+
+    /** Where a turn back from a page opening at [top] lands, or null at the start. */
+    fun back(spans: List<Span>, top: Int, height: Int): Int? {
+        if (top <= 0) return null
+        val target = (top - height).coerceAtLeast(0)
+        if (target == 0) return 0
+        // The first row that starts on or after the target, so the page opens on a row's edge.
+        return spans.map { it.top }.filter { it in target until top }.minOrNull() ?: target
+    }
+
+    /** The page a jump to [fraction] of the way down opens on: the row starting nearest above it. */
+    fun jump(spans: List<Span>, fraction: Float, height: Int, contentHeight: Int): Int {
+        val target = (fraction * contentHeight).toInt().coerceIn(0, lastStart(spans, height, contentHeight))
+        return spans.map { it.top }.filter { it <= target }.maxOrNull() ?: 0
+    }
+
+    /** The page that shows the end: it opens on the first row that lets the last one fit. */
+    fun lastStart(spans: List<Span>, height: Int, contentHeight: Int): Int {
+        val least = (contentHeight - height).coerceAtLeast(0)
+        return spans.map { it.top }.filter { it >= least }.minOrNull() ?: least
+    }
+
+    private class Registry {
+        var content: LayoutCoordinates? = null
+        val rows = HashMap<Any, Pair<LayoutCoordinates, Boolean>>()
+        /** Headings folded because nothing follows them. */
+        val folded = mutableStateMapOf<Any, Boolean>()
+        /** Set by [Pages]: read the rows again (a row moved, came or went). */
+        var onChange: () -> Unit = {}
+        fun spans(): List<Span> {
+            val c = content ?: return emptyList()
+            if (!c.isAttached) return emptyList()
+            return rows.entries.mapNotNull { (key, value) ->
+                val (r, heading) = value
+                if (!r.isAttached) return@mapNotNull null
+                val y = c.localPositionOf(r, Offset.Zero).y.toInt()
+                Span(y, y + r.size.height, heading, key)
+            }
+        }
+    }
+
+    private val LocalRegistry = compositionLocalOf<Registry?> { null }
+
+    /** Marks a Settings row (or, with [heading], a group's heading) for whole-row pages. */
+    fun Modifier.settingsRow(heading: Boolean = false): Modifier = composed {
+        val registry = LocalRegistry.current ?: return@composed this
+        val key = remember { Any() }
+        androidx.compose.runtime.DisposableEffect(registry) {
+            onDispose { registry.rows.remove(key); registry.folded.remove(key); registry.onChange() }
+        }
+        val fold = heading && registry.folded[key] == true
+        this
+            .onGloballyPositioned { registry.rows[key] = it to heading; registry.onChange() }
+            .then(if (fold) Modifier.layout { m, c -> val p = m.measure(c); layout(p.width, 0) {} } else Modifier)
+    }
+
+    /** A Settings page; [resetKey] changes when the page does, and the new page opens at its top. */
+    @Composable
+    fun Pages(resetKey: Any, content: @Composable () -> Unit) {
+        val registry = remember { Registry() }
+        var top by remember { mutableIntStateOf(0) }
+        var height by remember { mutableIntStateOf(0) }
+        var contentHeight by remember { mutableIntStateOf(0) }
+        var spans by remember { mutableStateOf(emptyList<Span>()) }
+        LaunchedEffect(resetKey) { top = 0 }
+        fun refresh() {
+            spans = registry.spans()
+            val empty = emptyHeadings(spans)
+            spans.filter { it.heading }.forEach { h ->
+                val fold = h.key in empty
+                if ((registry.folded[h.key!!] == true) != fold) registry.folded[h.key] = fold
+            }
+        }
+        registry.onChange = { refresh() }
+        fun turnForward() { refresh(); forward(spans, top, height, contentHeight)?.let { top = it } }
+        fun turnBack() { refresh(); back(spans, top, height)?.let { top = it } }
+        val ink = Theme.colors.text
+        val paper = Theme.colors.background
+        val foot = foot(spans, top, height)
+        val many = contentHeight > height && height > 0
+
+        Row(Modifier.fillMaxSize()) {
+            Box(
+                Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .clipToBounds()
+                    .onSizeChanged { height = it.height }
+                    .pointerInput(Unit) {
+                        var turned = false
+                        detectVerticalDragGestures(onDragStart = { turned = false }) { _, drag ->
+                            if (!turned && drag != 0f) {
+                                turned = true
+                                if (drag < 0f) turnForward() else turnBack()
+                            }
+                        }
+                    }
+                    // A row hidden at the foot takes no press: what cannot be seen is not there.
+                    .pointerInput(foot) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                            if (foot != null && down.position.y >= foot) down.consume()
+                        }
+                    }
+                    .drawWithContent {
+                        if (foot == null) drawContent() else clipRect(bottom = foot.toFloat()) { this@drawWithContent.drawContent() }
+                    },
+            ) {
+                androidx.compose.runtime.CompositionLocalProvider(LocalRegistry provides registry) {
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .layout { measurable, constraints ->
+                                val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity))
+                                contentHeight = placeable.height
+                                layout(constraints.maxWidth, constraints.maxHeight) { placeable.place(0, -top) }
+                            }
+                            .onGloballyPositioned { registry.content = it; refresh() },
+                    ) { content() }
+                }
+            }
+            if (many) Bar(
+                top = top, height = height, contentHeight = contentHeight,
+                atStart = top <= 0, atEnd = top + height >= contentHeight,
+                ink = ink, paper = paper,
+                onBack = { turnBack() },
+                onForward = { turnForward() },
+                onFirst = { top = 0 },
+                onLast = { refresh(); top = lastStart(spans, height, contentHeight) },
+                onJump = { f -> refresh(); top = jump(spans, f, height, contentHeight) },
+            )
+        }
+    }
+
+    /** [PagedColumn]'s bar (MMD's `VerticalScrollbar` as MMD draws it), measured in pixels. */
+    @OptIn(ExperimentalFoundationApi::class)
+    @Composable
+    private fun Bar(
+        top: Int, height: Int, contentHeight: Int, atStart: Boolean, atEnd: Boolean,
+        ink: androidx.compose.ui.graphics.Color, paper: androidx.compose.ui.graphics.Color,
+        onBack: () -> Unit, onForward: () -> Unit, onFirst: () -> Unit, onLast: () -> Unit, onJump: (Float) -> Unit,
+    ) {
+        Column(
+            modifier = Modifier.fillMaxHeight().padding(start = 8.dp, end = 8.dp),
+            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+        ) {
+            Icon(
+                painter = painterResource(if (atStart) R.drawable.iori_chevron_dotted_up else R.drawable.iori_chevron_filled_up),
+                contentDescription = null,
+                tint = ink,
+                modifier = Modifier.padding(vertical = 16.dp).size(24.dp).combinedClickable(onClick = onBack, onLongClick = onFirst),
+            )
+            Canvas(
+                modifier = Modifier
+                    .width(8.dp)
+                    .weight(1f)
+                    .border(width = 1.dp, color = ink, shape = RoundedCornerShape(4.dp))
+                    .pointerInput(Unit) { detectTapGestures { offset -> onJump(offset.y / size.height) } },
+            ) {
+                val slider = (size.height * height / contentHeight.coerceAtLeast(1)).coerceAtLeast(max(size.height * 0.05f, 16f))
+                val maxOffset = (size.height - slider).coerceAtLeast(0f)
+                val offset = (top.toFloat() / (contentHeight - height).coerceAtLeast(1) * maxOffset).coerceIn(0f, maxOffset)
+                val corner = CornerRadius(size.width / 2, size.width / 2)
+                drawRoundRect(color = paper, topLeft = Offset.Zero, size = Size(size.width, size.height), cornerRadius = corner)
+                drawRoundRect(color = ink, topLeft = Offset(0f, offset), size = Size(size.width, slider), cornerRadius = corner)
+            }
+            Icon(
+                painter = painterResource(if (atEnd) R.drawable.iori_chevron_dotted_down else R.drawable.iori_chevron_filled_down),
+                contentDescription = null,
+                tint = ink,
+                modifier = Modifier.padding(vertical = 16.dp).size(24.dp).combinedClickable(onClick = onForward, onLongClick = onLast),
+            )
+        }
+    }
+}

@@ -91,7 +91,7 @@ fun SettingsTheme(
                     image = color,
                     selector = color,
                     border = color,
-                    horizontalPadding = 24.dp.scaled(screenScale)
+                    horizontalPadding = com.wanderwildwood.iori.ui.IoriSettingsLook.ROW_SIDE // iori: the house side margin
                 )
             }
 

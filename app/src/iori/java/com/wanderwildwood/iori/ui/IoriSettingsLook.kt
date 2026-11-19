@@ -3,10 +3,7 @@ package com.wanderwildwood.iori.ui
 import android.graphics.Typeface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
@@ -16,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.isSpecified
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
@@ -31,6 +29,15 @@ import androidx.compose.ui.unit.sp
  * setting back from that.
  */
 object IoriSettingsLook {
+    /** The side margin of every Settings row and heading, as Memo's rows (20 dp). */
+    val ROW_SIDE = 20.dp
+
+    /** The space above and below a row's words, as Memo's rows (12 dp). */
+    val ROW_GAP = 12.dp
+
+    /** Whether an alignment row shows inkOS's three-line glyph: no, its value is in words. */
+    const val ALIGN_GLYPH = false
+
     /** Whether a Settings row shows inkOS's icon beside its label: not in the house look. */
     const val ROW_ICONS = false
 
@@ -102,21 +109,6 @@ object IoriSettingsLook {
         return remember(font, path) {
             val regular = font.getFont(context, path) ?: getTrueSystemFont()
             FontFamily(Typeface.create(regular, Typeface.BOLD))
-        }
-    }
-
-    /**
-     * A Settings page's rows in Home's [PagedColumn], so the page turns with the house scrollbar
-     * (chevrons, track, thumb) instead of inkOS's page dots. inkOS lays a page out as one column,
-     * so it is one item here, read a page at a time. [resetKey] changes when the page does, and
-     * the new page opens at its top.
-     */
-    @Composable
-    fun Pages(resetKey: Any, content: @Composable () -> Unit) {
-        val state = rememberLazyListState()
-        LaunchedEffect(resetKey) { state.scrollToItem(0) }
-        PagedColumn(modifier = Modifier.fillMaxSize(), state = state) {
-            item { content() }
         }
     }
 }

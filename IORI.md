@@ -86,7 +86,7 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!*.md'` must list exactly these: 58 lines (11-19; SettingsFragment's 398 (no page dots) and 419 (the page in `IoriSettingsLook.Pages`, PagedColumn's scrollbar) are new; SettingsComposable's 16 are one row below, and the older rows were last counted at 32, so recheck them at the next merge).
+'!app/src/iori/**' --glob '!*.md'` must list exactly these: 93 lines (11-19; SettingsFragment's 398 (no page dots) and 419 (the page in `IoriSettingsLook.Pages`, PagedColumn's scrollbar) are new; SettingsComposable's 16 are one row below, and the older rows were last counted at 32, so recheck them at the next merge).
 
 | File:line | Purpose |
 |---|---|
@@ -98,6 +98,7 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt:714` | imports pass through `IoriBackup.rewrite`, so an inkOS backup restores into iori |
 | `app/src/main/java/com/github/gezimos/inkos/ui/RecentsFragment.kt:672` | iori is left out of its own Recents |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` (16 lines) | the house look on every Settings page, through `IoriSettingsLook`: no row icons, value under the label, plain bold headings with no line, house sizes that follow inkOS's Settings text size, the house switch, an emptied note takes no line. inkOS's English Settings strings are overridden in `app/src/iori/res/values/iori_upstream_settings.xml` (sentence case; notes that only restate their label emptied) |
+| `SettingsFragment.kt`, `SettingsTheme.kt` (11-19 house pass) | Settings fully in the house look: Back in the top bar with no buttons (coffee + llama are rows in About Home); whole-row pages through `IoriSettingsPages` (rows report their place via `settingsRow`, a heading with nothing under it folds); 20 dp side margin, 12 dp rows; rows that cannot be used are left out; no gesture-number marks or stars (not-default said in words); dp units on margins and gaps; alignment in words; "Reset all" at the house floor; inkOS's Onboarding row hidden (Run setup again does it) |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:334` | `IoriLinesAtTop(...)`: the home lines under the date line, when Home lines > Place on home is Top |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:340` | `IoriLinesPlace.appsRoom()` on the home apps' box, and line 342 its `contentAlignment` through `IoriLinesPlace.appsAlignment()`: with the lines at the top the apps' last row sits at the bottom, above what is at the foot |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/HomeUI.kt:387` | `IoriLinesPlace.footMeasured` on the foot column, so the apps know how much room it takes |

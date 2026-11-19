@@ -78,43 +78,6 @@ object IoriAbout {
     /** gezimos's own Buy Me a Coffee, which upstream's header button opened. */
     private const val COFFEE = "https://buymeacoffee.com/gezimos"
 
-    /**
-     * In the Settings header, where upstream has its Buy Me a Coffee button: a cup that still
-     * opens gezimos's page, and a llama that opens this app's. Upstream's pill, border and focus
-     * look, with a glyph the height of the words it replaces.
-     */
-    @Composable
-    fun HeaderButtons(shape: Shape, fontSize: TextUnit) {
-        val size = if (fontSize.isSpecified) fontSize else SettingsTheme.typography.title.fontSize
-        val glyph = with(LocalDensity.current) { (if (size.isSpecified) size * 1.25f else 20.sp).toDp() }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            HeaderButton(R.drawable.iori_support_coffee, stringResource(R.string.iori_support_coffee), COFFEE, shape, glyph)
-            HeaderButton(R.drawable.iori_llama, stringResource(R.string.iori_support_llama), DONATE, shape, glyph)
-        }
-    }
-
-    @Composable
-    private fun HeaderButton(@DrawableRes icon: Int, description: String, url: String, shape: Shape, glyph: Dp) {
-        val context = LocalContext.current
-        val interactionSource = remember { MutableInteractionSource() }
-        val focused = interactionSource.collectIsFocusedAsState().value
-        val text = Theme.colors.text
-        val background = Theme.colors.background
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = description,
-            tint = if (focused) background else text,
-            modifier = Modifier
-                .padding(start = 8.dp)
-                .clip(shape)
-                .background(if (focused) text else Color.Transparent)
-                .border(width = 2.dp, color = text, shape = shape)
-                .clickable(interactionSource = interactionSource, indication = null, role = Role.Button) { open(context, url) }
-                .padding(horizontal = 12.dp, vertical = 6.dp)
-                .size(glyph),
-        )
-    }
-
     private var open by mutableStateOf(false)
 
     /** The Home lines row of the Settings home page: the lines' status, seen and changed even when home has none. */
@@ -267,6 +230,16 @@ object IoriAbout {
                 Image(painter = painterResource(R.drawable.iori_llama), contentDescription = null, modifier = Modifier.size(22.dp))
                 Spacer(Modifier.width(6.dp))
                 Text(stringResource(R.string.iori_support_llama), style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        entries += Entry("coffee") {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().clickable { open(context, COFFEE) }.padding(vertical = 8.dp),
+            ) {
+                Image(painter = painterResource(R.drawable.iori_support_coffee), contentDescription = null, modifier = Modifier.size(22.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.iori_support_coffee), style = MaterialTheme.typography.bodyMedium)
             }
         }
         DRAWERS.forEach { d ->

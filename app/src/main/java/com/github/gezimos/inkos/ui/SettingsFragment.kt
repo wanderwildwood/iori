@@ -368,7 +368,7 @@ class SettingsFragment : Fragment() {
                                 )
                             }
                             PageHeader(
-                                iconRes = R.drawable.ic_inkos,
+                                iconRes = R.drawable.ic_back, // iori: Back, as on every other app's Settings
                                 title = stringResource(R.string.settings_name),
                                 onClick = {
                                     val popped = try {
@@ -386,7 +386,7 @@ class SettingsFragment : Fragment() {
                                     }
                                 },
                                 showStatusBar = uiState.showStatusBar,
-                                pageIndicator = { com.wanderwildwood.iori.IoriAbout.HeaderButtons(supportButtonShape, if (settingsSize > 0) (settingsSize * 1.2).sp else TextUnit.Unspecified) }, // iori: a coffee cup for gezimos and a llama for Home
+                                pageIndicator = null, // iori: no buttons in the bar; the coffee cup and the llama are rows in About Home
                                 titleFontSize = if (settingsSize > 0) (settingsSize * 1.5).sp else TextUnit.Unspecified
                             )
                         } else {
@@ -416,8 +416,8 @@ class SettingsFragment : Fragment() {
                 val settingsSize = (uiState.settingsSize - 3)
 
                 SettingsTheme(isDark) {
-                    // iori: the pages turn with the house scrollbar (PagedColumn), not inkOS's page dots
-                    com.wanderwildwood.iori.ui.IoriSettingsLook.Pages(resetKey = scrollResetTrigger) {
+                    // iori: whole-row pages with the house scrollbar (IoriSettingsPages), not inkOS's page dots
+                    com.wanderwildwood.iori.ui.IoriSettingsPages.Pages(resetKey = scrollResetTrigger) {
                         SettingsRouteContent(settingsSize.sp)
                     }
                 }
@@ -547,9 +547,9 @@ class SettingsFragment : Fragment() {
             }
             SettingsHomeItem(
                 title = stringResource(R.string.settings_advanced_title) +
-                        if (!isinkosDefault(requireContext())) "*" else "",
+                        if (false && !isinkosDefault(requireContext())) "*" else "", // iori: said in words below, not with a star
                 imageVector = Icons.Rounded.Settings,
-                description = stringResource(R.string.desc_advanced_settings),
+                description = if (!isinkosDefault(requireContext())) stringResource(R.string.iori_not_default) else stringResource(R.string.desc_advanced_settings), // iori
                 titleFontSize = titleFontSize,
                 onClick = { navigateTo(SettingsRoute.Advanced) },
             )
@@ -759,11 +759,12 @@ class SettingsFragment : Fragment() {
                 onClick = { dialogBuilder.showThemeDialog() }
             )
             SettingsHomeItem(
-                title = stringResource(changeLauncherText) + if (!isinkosDefault(requireContext())) "*" else "",
-                description = "Choose which launcher to use as your home screen",
+                title = stringResource(changeLauncherText), // iori: said in words below, not with a star
+                description = if (!isinkosDefault(requireContext())) stringResource(R.string.iori_not_default) else "Choose which launcher to use as your home screen", // iori
                 titleFontSize = titleFontSize,
                 onClick = { requireContext().startActivity(Intent(android.provider.Settings.ACTION_HOME_SETTINGS)) }
             )
+            if (false) // iori: the same as Run setup again on the Settings page, which keeps the phone as it is
             SettingsHomeItem(
                 title = stringResource(R.string.onboarding),
                 description = "View the setup wizard again",
@@ -824,7 +825,7 @@ class SettingsFragment : Fragment() {
         Column(modifier = Modifier.fillMaxWidth()) {
             SettingsTitle(text = stringResource(R.string.layout_positioning), fontSize = titleFontSize)
             SettingsSelect(
-                title = stringResource(R.string.app_padding_size), option = homeUiState.textPaddingSize.toString(), fontSize = titleFontSize,
+                title = stringResource(R.string.app_padding_size), option = "${homeUiState.textPaddingSize} dp", fontSize = titleFontSize, // iori: the unit
                 description = stringResource(R.string.desc_app_padding),
                 onClick = {
                     dialogBuilder.showSliderDialog(requireContext(), getString(R.string.app_padding_size),
@@ -832,7 +833,7 @@ class SettingsFragment : Fragment() {
                 }
             )
             SettingsSelect(
-                title = stringResource(R.string.home_apps_y_offset), option = homeUiState.homeAppsYOffset.toString(), fontSize = titleFontSize,
+                title = stringResource(R.string.home_apps_y_offset), option = "${homeUiState.homeAppsYOffset} dp", fontSize = titleFontSize, // iori: the unit
                 description = stringResource(R.string.desc_home_y_offset),
                 onClick = {
                     dialogBuilder.showSliderDialog(requireContext(), getString(R.string.home_apps_y_offset),
@@ -840,7 +841,7 @@ class SettingsFragment : Fragment() {
                 }
             )
             SettingsSelect(
-                title = stringResource(R.string.top_widget_margin), option = homeUiState.topWidgetMargin.toString(), fontSize = titleFontSize,
+                title = stringResource(R.string.top_widget_margin), option = "${homeUiState.topWidgetMargin} dp", fontSize = titleFontSize, // iori: the unit
                 description = stringResource(R.string.desc_top_widget_margin),
                 onClick = {
                     dialogBuilder.showSliderDialog(requireContext(), getString(R.string.top_widget_margin),
@@ -848,7 +849,7 @@ class SettingsFragment : Fragment() {
                 }
             )
             SettingsSelect(
-                title = stringResource(R.string.bottom_widget_margin), option = homeUiState.bottomWidgetMargin.toString(), fontSize = titleFontSize,
+                title = stringResource(R.string.bottom_widget_margin), option = "${homeUiState.bottomWidgetMargin} dp", fontSize = titleFontSize, // iori: the unit
                 description = stringResource(R.string.desc_bottom_widget_margin),
                 onClick = {
                     dialogBuilder.showSliderDialog(requireContext(), getString(R.string.bottom_widget_margin),
@@ -971,7 +972,7 @@ class SettingsFragment : Fragment() {
                 val countSourceLabels = arrayOf(stringResource(R.string.option_simple_tray), stringResource(R.string.option_letters), stringResource(R.string.option_hub))
                 SettingsSelect(title = stringResource(R.string.desc_notification_style),
                     option = countSourceLabels.getOrElse(homeUiState.notificationCountSource) { "SimpleTray" },
-                    description = stringResource(R.string.desc_notification_style),
+                    description = null, // iori: the note only repeated the label
                     fontSize = titleFontSize, onClick = { viewModel.setNotificationCountSource((homeUiState.notificationCountSource + 1) % 3) })
             }
             SettingsSelect(title = stringResource(R.string.home_date_alignment),
@@ -1319,7 +1320,7 @@ class SettingsFragment : Fragment() {
             )
             SettingsTitle(text = stringResource(R.string.customizations), fontSize = titleFontSize)
             SettingsSelect(
-                title = stringResource(R.string.app_padding_size), option = uiState.appDrawerGap.toString(), fontSize = titleFontSize,
+                title = stringResource(R.string.app_padding_size), option = "${uiState.appDrawerGap} dp", fontSize = titleFontSize, // iori: the unit
                 description = stringResource(R.string.desc_drawer_gap),
                 onClick = {
                     dialogBuilder.showSliderDialog(requireContext(), getString(R.string.app_padding_size),
@@ -1852,7 +1853,7 @@ class SettingsFragment : Fragment() {
         Column(modifier = Modifier.fillMaxSize()) {
             SettingsTitle(text = stringResource(R.string.tap_click_actions), fontSize = titleFontSize)
             SettingsSelect(
-                title = "${stringResource(R.string.double_tap)} (2)",
+                title = stringResource(R.string.double_tap), // iori: no gesture-number marks
                 option = if (uiState.doubleTapAction == Action.OpenApp) openAppDisplay(appLabelDoubleTapAction) else uiState.doubleTapAction.string(),
                 fontSize = titleFontSize,
                 description = stringResource(R.string.desc_double_tap),
@@ -1862,7 +1863,7 @@ class SettingsFragment : Fragment() {
                 }
             )
             SettingsSelect(
-                title = "${stringResource(R.string.clock_click_app)} (6)",
+                title = stringResource(R.string.clock_click_app), // iori: no gesture-number marks
                 option = when (uiState.clickClockAction) { Action.OpenApp -> openAppDisplay(appLabelClickClockAction); Action.OpenAppDrawer -> getString(R.string.app_drawer); else -> uiState.clickClockAction.string() },
                 fontSize = titleFontSize,
                 description = stringResource(R.string.desc_clock_tap),
@@ -1874,7 +1875,7 @@ class SettingsFragment : Fragment() {
                 }
             )
             SettingsSelect(
-                title = "${stringResource(R.string.date_click_app)} (7)",
+                title = stringResource(R.string.date_click_app), // iori: no gesture-number marks
                 option = when (uiState.clickDateAction) { Action.OpenApp -> openAppDisplay(appLabelClickDateAction); Action.OpenAppDrawer -> getString(R.string.app_drawer); else -> uiState.clickDateAction.string() },
                 fontSize = titleFontSize,
                 description = stringResource(R.string.desc_date_tap),
@@ -1886,7 +1887,7 @@ class SettingsFragment : Fragment() {
                 }
             )
             SettingsSelect(
-                title = "${stringResource(R.string.quote_click_app)} (8)",
+                title = stringResource(R.string.quote_click_app), // iori: no gesture-number marks
                 option = when (uiState.quoteAction) { Action.OpenApp -> openAppDisplay(appLabelQuoteAction); Action.OpenAppDrawer -> getString(R.string.app_drawer); else -> uiState.quoteAction.string() },
                 fontSize = titleFontSize,
                 description = stringResource(R.string.desc_quote_tap),
@@ -1911,7 +1912,7 @@ class SettingsFragment : Fragment() {
                 }
             )
             SettingsSelect(
-                title = "${stringResource(R.string.swipe_right_app)} (<)",
+                title = stringResource(R.string.swipe_right_app), // iori: no gesture-number marks
                 option = when (uiState.swipeRightAction) { Action.OpenApp -> openAppDisplay(appLabelSwipeRightAction); Action.OpenAppDrawer -> getString(R.string.app_drawer); Action.Disabled -> stringResource(R.string.disabled); else -> uiState.swipeRightAction.string() },
                 fontSize = titleFontSize,
                 description = stringResource(R.string.desc_swipe_right),
@@ -1924,13 +1925,13 @@ class SettingsFragment : Fragment() {
             )
             SettingsSelect(
                 title = "Gesture vs page conflict",
-                option = "Read more",
+                option = "", // iori: no "Read more"; the row opens the explanation
                 fontSize = titleFontSize,
                 description = "How short vs long swipes work with home pages",
                 onClick = { dialogBuilder.showGestureVsPageConflictSheet() }
             )
             SettingsSelect(
-                title = "${stringResource(R.string.swipe_up_app)} (^)",
+                title = stringResource(R.string.swipe_up_app), // iori: no gesture-number marks
                 option = when (uiState.swipeUpAction) { Action.OpenApp -> openAppDisplay(appLabelSwipeUpAction); Action.OpenAppDrawer -> getString(R.string.app_drawer); Action.Disabled -> stringResource(R.string.disabled); else -> uiState.swipeUpAction.string() },
                 fontSize = titleFontSize,
                 description = stringResource(R.string.desc_swipe_up),
@@ -1942,7 +1943,7 @@ class SettingsFragment : Fragment() {
                 }
             )
             SettingsSelect(
-                title = "${stringResource(R.string.swipe_down_app)} (v)",
+                title = stringResource(R.string.swipe_down_app), // iori: no gesture-number marks
                 option = when (uiState.swipeDownAction) { Action.OpenApp -> openAppDisplay(appLabelSwipeDownAction); Action.OpenAppDrawer -> getString(R.string.app_drawer); Action.Disabled -> stringResource(R.string.disabled); else -> uiState.swipeDownAction.string() },
                 fontSize = titleFontSize,
                 description = stringResource(R.string.desc_swipe_down),
@@ -1998,7 +1999,7 @@ class SettingsFragment : Fragment() {
                 Text(
                     text = stringResource(R.string.reset_all),
                     style = SettingsTheme.typography.button,
-                    fontSize = if (titleFontSize.isSpecified) (titleFontSize.value * 0.7).sp else 14.sp,
+                    fontSize = com.wanderwildwood.iori.ui.IoriSettingsLook.value(titleFontSize), // iori: nothing under the house floor
                     modifier = Modifier.padding(end = SettingsTheme.color.horizontalPadding).clickable {
                         viewModel.resetFontsToDefault()
                         viewModel.setSettingsSize(16); viewModel.setAppSize(27); viewModel.setClockSize(48)

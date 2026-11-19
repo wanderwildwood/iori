@@ -79,6 +79,7 @@
 
     <!-- The phone's Nextcloud account -->
     <string name="iori_first_nextcloud">NEXTCLOUD</string>
+    <string name="iori_not_default">Home is not the phone\'s home screen yet</string>
     <string name="iori_nc_title">Nextcloud account</string>
     <string name="iori_nc_row_out">Not signed in. Sign in once, for the apps that use it</string>
     <string name="iori_nc_row_in">%1$s on %2$s</string>
