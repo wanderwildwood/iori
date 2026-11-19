@@ -70,6 +70,29 @@ object IoriSettingsLook {
     fun pageTitle(rowFontSize: TextUnit): TextUnit = sized(20f, rowFontSize)
 
     /**
+     * An allowlist's value in words. inkOS lets every app through while its list is empty, so an
+     * empty list reads "All apps", never "0".
+     */
+    @Composable
+    fun apps(count: Int): String {
+        val res = LocalContext.current.resources
+        return if (count == 0) res.getString(com.github.gezimos.inkos.R.string.iori_all_apps)
+        else res.getQuantityString(com.github.gezimos.inkos.R.plurals.iori_apps, count, count)
+    }
+
+    /** A character limit in words. */
+    @Composable
+    fun characters(count: Int): String =
+        LocalContext.current.resources.getQuantityString(com.github.gezimos.inkos.R.plurals.iori_characters, count, count)
+
+    /** A text size with its unit, as the margins carry theirs. */
+    fun sp(size: Int): String = "$size sp"
+
+    /** A built-in font by the name the font list gives it ("Public Sans", not "PublicSans"). */
+    fun fontName(context: android.content.Context, font: com.github.gezimos.inkos.data.Constants.FontFamily): String =
+        font.getString(context)
+
+    /**
      * The house switch: on is a filled track with a light thumb, off an outlined track with a
      * dark thumb, in the page's own two colors, so it reads the same in dark.
      */

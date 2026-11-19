@@ -220,4 +220,18 @@
     <string name="iori_dialog_add_font">Add a font file</string>
     <string name="iori_dialog_remove">Remove</string>
     <string name="iori_dialog_auto">automatic</string>
+    <!-- 11-19 phone test: values in words, and rows that no longer repeat their heading -->
+    <string name="iori_all_apps">All apps</string>
+    <plurals name="iori_apps">
+        <item quantity="one">%d app</item>
+        <item quantity="other">%d apps</item>
+    </plurals>
+    <plurals name="iori_characters">
+        <item quantity="one">%d character</item>
+        <item quantity="other">%d characters</item>
+    </plurals>
+    <string name="iori_heading_fonts">Fonts</string>
+    <string name="iori_one_font">One font everywhere</string>
+    <string name="iori_window_title">Window title</string>
+    <string name="iori_show_window">Show the window</string>
 </resources>

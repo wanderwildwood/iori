@@ -161,9 +161,15 @@ internal fun FittedPages(
 ) {
     SubcomposeLayout(modifier) { constraints ->
         val loose = constraints.copy(minWidth = 0, minHeight = 0, maxHeight = Constraints.Infinity)
-        val natural = subcompose("measure") { rows.forEach { (_, row) -> row() } }
-            .sumOf { it.measure(loose).height }
-        val height = natural.coerceIn(constraints.minHeight, constraints.maxHeight)
+        val heights = subcompose("measure") { rows.forEach { (_, row) -> row() } }
+            .map { it.measure(loose).height }
+        // A list longer than the room stops at the last whole row that fits, so the dialog ends
+        // under a row and not under a blank band where the cut row would be (11-19 phone test).
+        var fitted = 0
+        for (h in heights) { if (fitted + h > constraints.maxHeight) break; fitted += h }
+        val natural = heights.sum()
+        val height = (if (natural > constraints.maxHeight && fitted > 0) fitted else natural)
+            .coerceIn(constraints.minHeight, constraints.maxHeight)
         val width = constraints.maxWidth
         val list = subcompose("rows") {
             PagedColumn(Modifier.fillMaxWidth(), state = state) {

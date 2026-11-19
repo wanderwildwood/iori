@@ -182,6 +182,7 @@ class SettingsFragment : Fragment() {
 
     private var currentRoute by mutableStateOf<SettingsRoute>(SettingsRoute.Home)
     private val backStack = mutableListOf<SettingsRoute>()
+    private val pageMemory = com.wanderwildwood.iori.ui.IoriSettingsPages.PageMemory() // iori: Back keeps the page
 
     // Page indicator state
     private var currentPage by mutableStateOf(0)
@@ -263,6 +264,7 @@ class SettingsFragment : Fragment() {
 
     private fun navigateTo(route: SettingsRoute) {
         backStack.add(currentRoute)
+        pageMemory.push() // iori: Back returns to the page this one was left from
         currentRoute = route
         resetScroll()
     }
@@ -270,6 +272,7 @@ class SettingsFragment : Fragment() {
     private fun navigateBack(): Boolean {
         if (backStack.isNotEmpty()) {
             currentRoute = backStack.removeAt(backStack.lastIndex)
+            pageMemory.pop() // iori: back to the page it was left from
             resetScroll()
             return true
         }
@@ -417,7 +420,7 @@ class SettingsFragment : Fragment() {
 
                 SettingsTheme(isDark) {
                     // iori: whole-row pages with the house scrollbar (IoriSettingsPages), not inkOS's page dots
-                    com.wanderwildwood.iori.ui.IoriSettingsPages.Pages(resetKey = scrollResetTrigger) {
+                    com.wanderwildwood.iori.ui.IoriSettingsPages.Pages(resetKey = scrollResetTrigger, memory = pageMemory) {
                         SettingsRouteContent(settingsSize.sp)
                     }
                 }
@@ -1188,7 +1191,7 @@ class SettingsFragment : Fragment() {
                     }
                 )
                 SettingsSelect(
-                    title = stringResource(R.string.android_widget_height), option = "${homeUiState.androidWidgetHeight}dp", fontSize = titleFontSize,
+                    title = stringResource(R.string.android_widget_height), option = "${homeUiState.androidWidgetHeight} dp", fontSize = titleFontSize, // iori: spaced as the others
                     description = stringResource(R.string.desc_widget_height),
                     onClick = {
                         dialogBuilder.showSliderDialog(requireContext(), getString(R.string.android_widget_height),
@@ -1998,7 +2001,7 @@ class SettingsFragment : Fragment() {
 
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                SettingsTitle(text = stringResource(R.string.universal_custom_font), fontSize = titleFontSize, modifier = Modifier.weight(1f))
+                SettingsTitle(text = stringResource(R.string.iori_heading_fonts), fontSize = titleFontSize, modifier = Modifier.weight(1f)) // iori: not the row's name again
                 Text(
                     text = stringResource(R.string.reset_all),
                     style = SettingsTheme.typography.button,
@@ -2015,7 +2018,7 @@ class SettingsFragment : Fragment() {
                     }
                 )
             }
-            SettingsSwitch(text = stringResource(R.string.universal_custom_font), fontSize = titleFontSize,
+            SettingsSwitch(text = stringResource(R.string.iori_one_font), fontSize = titleFontSize, // iori: not the heading's name again
                 description = stringResource(R.string.desc_universal_font),
                 defaultState = universalFontEnabledState,
                 onCheckedChange = { enabled ->
@@ -2055,7 +2058,7 @@ class SettingsFragment : Fragment() {
                 description = stringResource(R.string.desc_settings_font),
                 onClick = { if (!universalFontEnabledState) { showFontSelectionDialogWithCustoms(R.string.settings_font_section, "settings") { newFont, _ -> viewModel.setFontFamily(newFont); settingsFontState = newFont } } },
                 fontColor = if (!universalFontEnabledState) SettingsTheme.typography.title.color else SettingsTheme.typography.title.color.copy(alpha = 0.4f), enabled = !universalFontEnabledState)
-            SettingsSelect(title = stringResource(R.string.settings_text_size), option = homeUiState.settingsSize.toString(), fontSize = titleFontSize,
+            SettingsSelect(title = stringResource(R.string.settings_text_size), option = com.wanderwildwood.iori.ui.IoriSettingsLook.sp(homeUiState.settingsSize), fontSize = titleFontSize, // iori: the unit
                 description = stringResource(R.string.desc_settings_size),
                 onClick = { dialogBuilder.showSliderDialog(requireContext(), getString(R.string.settings_text_size), Constants.MIN_SETTINGS_TEXT_SIZE, Constants.MAX_SETTINGS_TEXT_SIZE, homeUiState.settingsSize) { viewModel.setSettingsSize(it) } })
             SettingsTitle(text = stringResource(R.string.home_fonts), fontSize = titleFontSize)
@@ -2063,10 +2066,10 @@ class SettingsFragment : Fragment() {
                 description = stringResource(R.string.desc_apps_font),
                 onClick = { if (!universalFontEnabledState) { showFontSelectionDialogWithCustoms(R.string.apps_font, "apps") { newFont, customPath -> viewModel.setAppsFont(newFont); customPath?.let { viewModel.setCustomFontPath("apps", it) } } } },
                 fontColor = if (!universalFontEnabledState) SettingsTheme.typography.title.color else SettingsTheme.typography.title.color.copy(alpha = 0.4f), enabled = !universalFontEnabledState)
-            SettingsSelect(title = stringResource(R.string.app_text_size), option = homeUiState.appSize.toString(), fontSize = titleFontSize,
+            SettingsSelect(title = stringResource(R.string.app_text_size), option = com.wanderwildwood.iori.ui.IoriSettingsLook.sp(homeUiState.appSize), fontSize = titleFontSize, // iori: the unit
                 description = stringResource(R.string.desc_apps_size),
                 onClick = { dialogBuilder.showSliderDialog(requireContext(), requireContext().getString(R.string.app_text_size), Constants.MIN_APP_SIZE, Constants.MAX_APP_SIZE, homeUiState.appSize) { viewModel.setAppSize(it) } })
-            SettingsSelect(title = stringResource(R.string.app_drawer_size), option = homeUiState.appDrawerSize.toString(), fontSize = titleFontSize,
+            SettingsSelect(title = stringResource(R.string.app_drawer_size), option = com.wanderwildwood.iori.ui.IoriSettingsLook.sp(homeUiState.appDrawerSize), fontSize = titleFontSize, // iori: the unit
                 description = stringResource(R.string.desc_drawer_font_size),
                 onClick = { dialogBuilder.showSliderDialog(requireContext(), getString(R.string.app_drawer_size), Constants.MIN_APP_SIZE, Constants.MAX_APP_SIZE, homeUiState.appDrawerSize) { viewModel.setAppDrawerSize(it) } })
             val appNameModeLabels = listOf(stringResource(R.string.app_name_mode_normal), stringResource(R.string.small_caps_apps), stringResource(R.string.app_name_mode_all_caps))
@@ -2077,21 +2080,21 @@ class SettingsFragment : Fragment() {
                 description = stringResource(R.string.desc_clock_font),
                 onClick = { if (!universalFontEnabledState) { showFontSelectionDialogWithCustoms(R.string.clock_font, "clock") { newFont, customPath -> viewModel.setClockFont(newFont); customPath?.let { viewModel.setCustomFontPath("clock", it) } } } },
                 fontColor = if (!universalFontEnabledState) SettingsTheme.typography.title.color else SettingsTheme.typography.title.color.copy(alpha = 0.4f), enabled = !universalFontEnabledState)
-            SettingsSelect(title = stringResource(R.string.clock_text_size), option = homeUiState.clockSize.toString(), fontSize = titleFontSize,
+            SettingsSelect(title = stringResource(R.string.clock_text_size), option = com.wanderwildwood.iori.ui.IoriSettingsLook.sp(homeUiState.clockSize), fontSize = titleFontSize, // iori: the unit
                 description = stringResource(R.string.desc_clock_size),
                 onClick = { dialogBuilder.showSliderDialog(requireContext(), requireContext().getString(R.string.clock_text_size), Constants.MIN_CLOCK_SIZE, Constants.MAX_CLOCK_SIZE, homeUiState.clockSize) { viewModel.setClockSize(it) } })
             SettingsSelect(title = stringResource(R.string.date_font), option = getFontDisplayName(homeUiState.dateFont, "date"), fontSize = titleFontSize,
                 description = stringResource(R.string.desc_date_font),
                 onClick = { if (!universalFontEnabledState) { showFontSelectionDialogWithCustoms(R.string.date_font, "date") { newFont, customPath -> viewModel.setDateFont(newFont); customPath?.let { viewModel.setCustomFontPath("date", it) } } } },
                 fontColor = if (!universalFontEnabledState) SettingsTheme.typography.title.color else SettingsTheme.typography.title.color.copy(alpha = 0.4f), enabled = !universalFontEnabledState)
-            SettingsSelect(title = stringResource(R.string.date_text_size), option = homeUiState.dateSize.toString(), fontSize = titleFontSize,
+            SettingsSelect(title = stringResource(R.string.date_text_size), option = com.wanderwildwood.iori.ui.IoriSettingsLook.sp(homeUiState.dateSize), fontSize = titleFontSize, // iori: the unit
                 description = stringResource(R.string.desc_date_size),
                 onClick = { dialogBuilder.showSliderDialog(requireContext(), requireContext().getString(R.string.date_text_size), 10, 64, homeUiState.dateSize) { viewModel.setDateSize(it) } })
             SettingsSelect(title = stringResource(R.string.quote_font), option = getFontDisplayName(homeUiState.quoteFont, "quote"), fontSize = titleFontSize,
                 description = stringResource(R.string.desc_quote_font),
                 onClick = { if (!universalFontEnabledState) { showFontSelectionDialogWithCustoms(R.string.quote_font, "quote") { newFont, customPath -> viewModel.setQuoteFont(newFont); customPath?.let { viewModel.setCustomFontPath("quote", it) } } } },
                 fontColor = if (!universalFontEnabledState) SettingsTheme.typography.title.color else SettingsTheme.typography.title.color.copy(alpha = 0.4f), enabled = !universalFontEnabledState)
-            SettingsSelect(title = stringResource(R.string.quote_text_size), option = homeUiState.quoteSize.toString(), fontSize = titleFontSize,
+            SettingsSelect(title = stringResource(R.string.quote_text_size), option = com.wanderwildwood.iori.ui.IoriSettingsLook.sp(homeUiState.quoteSize), fontSize = titleFontSize, // iori: the unit
                 description = stringResource(R.string.desc_quote_size),
                 onClick = { dialogBuilder.showSliderDialog(requireContext(), requireContext().getString(R.string.quote_text_size), 10, 64, homeUiState.quoteSize) { viewModel.setQuoteSize(it) } })
             SettingsTitle(text = stringResource(R.string.label_notifications), fontSize = titleFontSize)
@@ -2101,20 +2104,20 @@ class SettingsFragment : Fragment() {
                 description = stringResource(R.string.desc_noti_label_font),
                 onClick = { if (!universalFontEnabledState) { showFontSelectionDialogWithCustoms(R.string.app_notification_font, "notification") { newFont, customPath -> viewModel.setLabelNotificationsFont(newFont); if (newFont == Constants.FontFamily.Custom && customPath != null) viewModel.setCustomFontPath("notification", customPath) } } },
                 fontColor = if (!universalFontEnabledState) SettingsTheme.typography.title.color else SettingsTheme.typography.title.color.copy(alpha = 0.4f), enabled = !universalFontEnabledState)
-            SettingsSelect(title = stringResource(R.string.label_notifications_size), option = labelnotificationsFontSize.toString(), fontSize = titleFontSize,
+            SettingsSelect(title = stringResource(R.string.label_notifications_size), option = com.wanderwildwood.iori.ui.IoriSettingsLook.sp(labelnotificationsFontSize), fontSize = titleFontSize, // iori: the unit
                 description = stringResource(R.string.desc_noti_label_size),
                 onClick = { dialogBuilder.showSliderDialog(requireContext(), getString(R.string.label_notifications_size), Constants.MIN_LABEL_NOTIFICATION_TEXT_SIZE, Constants.MAX_LABEL_NOTIFICATION_TEXT_SIZE, prefs.labelnotificationsTextSize) { newSize -> viewModel.setLabelNotificationsTextSize(newSize); labelnotificationsFontSize = newSize } })
             SettingsTitle(text = stringResource(R.string.letters_window), fontSize = titleFontSize)
-            SettingsSelect(title = stringResource(R.string.letters_window), option = notificationsTitle, fontSize = titleFontSize,
+            SettingsSelect(title = stringResource(R.string.iori_window_title), option = notificationsTitle, fontSize = titleFontSize, // iori: not the heading's name again
                 description = stringResource(R.string.desc_letters_title),
                 onClick = { dialogBuilder.showInputDialog(requireContext(), getString(R.string.title_label), notificationsTitle) { newTitle -> val singleLineTitle = newTitle.replace("\n", ""); viewModel.setLettersTitle(singleLineTitle); notificationsTitle = singleLineTitle } })
             SettingsSelect(title = stringResource(R.string.title_font),
-                option = if (homeUiState.lettersTitleFont == Constants.FontFamily.Custom) getFontDisplayName(homeUiState.lettersTitleFont, "lettersTitle") else homeUiState.lettersTitleFont.name,
+                option = if (homeUiState.lettersTitleFont == Constants.FontFamily.Custom) getFontDisplayName(homeUiState.lettersTitleFont, "lettersTitle") else com.wanderwildwood.iori.ui.IoriSettingsLook.fontName(requireContext(), homeUiState.lettersTitleFont), // iori: the list's name
                 fontSize = titleFontSize,
                 description = stringResource(R.string.desc_letters_title_font),
                 onClick = { if (!universalFontEnabledState) { showFontSelectionDialogWithCustoms(R.string.letters_font, "lettersTitle") { newFont, customPath -> viewModel.setLettersTitleFont(newFont); if (newFont == Constants.FontFamily.Custom && customPath != null) viewModel.setCustomFontPath("lettersTitle", customPath) } } },
                 fontColor = if (!universalFontEnabledState) SettingsTheme.typography.title.color else SettingsTheme.typography.title.color.copy(alpha = 0.4f), enabled = !universalFontEnabledState)
-            SettingsSelect(title = stringResource(R.string.title_size), option = notificationsTitleSize.toString(), fontSize = titleFontSize,
+            SettingsSelect(title = stringResource(R.string.title_size), option = com.wanderwildwood.iori.ui.IoriSettingsLook.sp(notificationsTitleSize), fontSize = titleFontSize, // iori: the unit
                 description = stringResource(R.string.desc_letters_title_size),
                 onClick = { dialogBuilder.showSliderDialog(requireContext(), getString(R.string.title_size), 10, 60, notificationsTitleSize) { newSize -> viewModel.setLettersTitleSize(newSize); notificationsTitleSize = newSize } })
             SettingsSelect(title = stringResource(R.string.body_font),
@@ -2124,7 +2127,7 @@ class SettingsFragment : Fragment() {
                 description = stringResource(R.string.desc_noti_body_font),
                 onClick = { if (!universalFontEnabledState) { showFontSelectionDialogWithCustoms(R.string.letters_font, "notifications") { newFont, customPath -> viewModel.setNotificationsFont(newFont); if (newFont == Constants.FontFamily.Custom && customPath != null) viewModel.setCustomFontPath("notifications", customPath) } } },
                 fontColor = if (!universalFontEnabledState) SettingsTheme.typography.title.color else SettingsTheme.typography.title.color.copy(alpha = 0.4f), enabled = !universalFontEnabledState)
-            SettingsSelect(title = stringResource(R.string.body_text_size), option = notificationsTextSize.toString(), fontSize = titleFontSize,
+            SettingsSelect(title = stringResource(R.string.body_text_size), option = com.wanderwildwood.iori.ui.IoriSettingsLook.sp(notificationsTextSize), fontSize = titleFontSize, // iori: the unit
                 description = stringResource(R.string.desc_noti_body_size),
                 onClick = { dialogBuilder.showSliderDialog(requireContext(), getString(R.string.body_text_size), Constants.MIN_LABEL_NOTIFICATION_TEXT_SIZE, Constants.MAX_LABEL_NOTIFICATION_TEXT_SIZE, notificationsTextSize) { newSize -> viewModel.setNotificationsTextSize(newSize); notificationsTextSize = newSize } })
             Spacer(modifier = Modifier.height(24.dp))
@@ -2139,8 +2142,8 @@ class SettingsFragment : Fragment() {
                 prefs.getCustomFontPath("notifications") ?: prefs.getCustomFontPath("universal")
             } else { prefs.getCustomFontPathForContext(contextKey) }
             path?.let { File(it).name } ?: font.name
-        } else { font.name }
-        return if (fontName.length > 12) "${fontName.take(12)}..." else fontName
+        } else { com.wanderwildwood.iori.ui.IoriSettingsLook.fontName(requireContext(), font) } // iori: the name the font list gives it
+        return fontName // iori: the value has its own line; no cut at 12
     }
 
     private fun showSearchFoldersSheet(onFolderCountChanged: (Int) -> Unit) {
@@ -2342,7 +2345,7 @@ class SettingsFragment : Fragment() {
                 defaultState = uiState.showMediaName, enabled = pushNotificationsEnabled, onCheckedChange = { viewModel.setShowMediaName(it) })
 
             var showBadgeDialog by remember { mutableStateOf(false) }
-            SettingsSelect(title = stringResource(R.string.home_notifications_allowlist), option = uiState.allowedBadgeNotificationApps.size.toString(),
+            SettingsSelect(title = stringResource(R.string.home_notifications_allowlist), option = com.wanderwildwood.iori.ui.IoriSettingsLook.apps(uiState.allowedBadgeNotificationApps.size), // iori: in words; empty lets every app through
                 fontSize = titleFontSize, description = stringResource(R.string.desc_noti_app_filter), onClick = { showBadgeDialog = true }, enabled = pushNotificationsEnabled)
             if (showBadgeDialog) {
                 LaunchedEffect(Unit) {
@@ -2360,7 +2363,7 @@ class SettingsFragment : Fragment() {
             SettingsSwitch(text = stringResource(R.string.show_message), fontSize = titleFontSize,
                 description = stringResource(R.string.desc_message_preview),
                 defaultState = uiState.showNotificationMessage, onCheckedChange = { viewModel.setShowNotificationMessage(it) }, enabled = pushNotificationsEnabled)
-            SettingsSelect(title = stringResource(R.string.badge_character_limit), option = uiState.homeAppCharLimit.toString(),
+            SettingsSelect(title = stringResource(R.string.badge_character_limit), option = com.wanderwildwood.iori.ui.IoriSettingsLook.characters(uiState.homeAppCharLimit), // iori: in words
                 fontSize = titleFontSize, enabled = pushNotificationsEnabled,
                 description = stringResource(R.string.desc_noti_char_limit),
                 onClick = {
@@ -2369,14 +2372,15 @@ class SettingsFragment : Fragment() {
             SettingsTitle(text = stringResource(R.string.letters_window), fontSize = titleFontSize)
 
             var showAllowlistDialog by remember { mutableStateOf(false) }
-            SettingsSwitch(text = stringResource(R.string.letters_window), fontSize = titleFontSize,
+            SettingsSwitch(text = stringResource(R.string.iori_show_window), fontSize = titleFontSize, // iori: not the heading's name again
                 description = stringResource(R.string.desc_enable_letters),
                 defaultState = uiState.notificationsEnabled, onCheckedChange = { viewModel.setNotificationsEnabled(it) }, enabled = pushNotificationsEnabled)
             SettingsSwitch(text = stringResource(R.string.clear_conversation_on_app_open), fontSize = titleFontSize,
                 description = stringResource(R.string.desc_clear_on_open),
-                defaultState = uiState.clearConversationOnAppOpen, enabled = pushNotificationsEnabled, onCheckedChange = { viewModel.setClearConversationOnAppOpen(it) })
-            SettingsSelect(title = stringResource(R.string.letters_allowlist), option = uiState.allowedNotificationApps.size.toString(),
-                fontSize = titleFontSize, description = stringResource(R.string.desc_letters_filter), onClick = { showAllowlistDialog = true }, enabled = pushNotificationsEnabled)
+                defaultState = uiState.clearConversationOnAppOpen, enabled = pushNotificationsEnabled && uiState.notificationsEnabled, // iori: hidden with the window off
+                onCheckedChange = { viewModel.setClearConversationOnAppOpen(it) })
+            SettingsSelect(title = stringResource(R.string.letters_allowlist), option = com.wanderwildwood.iori.ui.IoriSettingsLook.apps(uiState.allowedNotificationApps.size), // iori: in words; empty lets every app through
+                fontSize = titleFontSize, description = stringResource(R.string.desc_letters_filter), onClick = { showAllowlistDialog = true }, enabled = pushNotificationsEnabled && uiState.notificationsEnabled) // iori: hidden with the window off
             if (showAllowlistDialog) {
                 LaunchedEffect(Unit) {
                     showAllowlistDialog = false
@@ -2390,7 +2394,7 @@ class SettingsFragment : Fragment() {
                 description = stringResource(R.string.desc_bottom_nav),
                 defaultState = uiState.enableBottomNav, onCheckedChange = { viewModel.setEnableBottomNav(it) }, enabled = pushNotificationsEnabled)
             var showSimpleTrayAllowlistDialog by remember { mutableStateOf(false) }
-            SettingsSelect(title = stringResource(R.string.simple_tray_allowlist), option = uiState.allowedSimpleTrayApps.size.toString(),
+            SettingsSelect(title = stringResource(R.string.simple_tray_allowlist), option = com.wanderwildwood.iori.ui.IoriSettingsLook.apps(uiState.allowedSimpleTrayApps.size), // iori: in words; empty lets every app through
                 fontSize = titleFontSize, description = stringResource(R.string.desc_simple_tray_filter), onClick = { showSimpleTrayAllowlistDialog = true }, enabled = pushNotificationsEnabled)
             if (showSimpleTrayAllowlistDialog) {
                 LaunchedEffect(Unit) {

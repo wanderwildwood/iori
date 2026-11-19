@@ -164,15 +164,32 @@ object IoriSettingsPages {
             .then(if (fold) Modifier.layout { m, c -> val p = m.measure(c); layout(p.width, 0) {} } else Modifier)
     }
 
-    /** A Settings page; [resetKey] changes when the page does, and the new page opens at its top. */
+    /**
+     * Where each Settings page stood when a sub-page opened over it, so Back returns to that page
+     * of it and not to its first (found in a phone test 11-19). Settings calls [push] as it opens a
+     * sub-page and [pop] as it goes back; [Pages] keeps [top] current and opens at [opening].
+     */
+    class PageMemory {
+        internal var top = 0
+        internal var opening = 0
+        private val stack = ArrayList<Int>()
+        fun push() { stack.add(top); opening = 0 }
+        fun pop() { opening = stack.removeLastOrNull() ?: 0 }
+    }
+
+    /**
+     * A Settings page; [resetKey] changes when the page does, and the new page opens at its top,
+     * or, with [memory], where it stood when the page was left for a sub-page.
+     */
     @Composable
-    fun Pages(resetKey: Any, content: @Composable () -> Unit) {
+    fun Pages(resetKey: Any, memory: PageMemory? = null, content: @Composable () -> Unit) {
         val registry = remember { Registry() }
         var top by remember { mutableIntStateOf(0) }
         var height by remember { mutableIntStateOf(0) }
         var contentHeight by remember { mutableIntStateOf(0) }
         var spans by remember { mutableStateOf(emptyList<Span>()) }
-        LaunchedEffect(resetKey) { top = 0 }
+        LaunchedEffect(resetKey) { top = memory?.opening ?: 0 }
+        androidx.compose.runtime.SideEffect { memory?.top = top }
         fun refresh() {
             spans = registry.spans()
             val empty = emptyHeadings(spans)

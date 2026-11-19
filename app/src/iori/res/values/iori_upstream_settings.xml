@@ -4,7 +4,6 @@
     <string name="accessibility_permission_title">Accessibility permission required</string>
     <string name="add_custom_font">Add custom font...</string>
     <string name="advanced_settings_change_default_launcher">Change default launcher</string>
-    <string name="advanced_settings_restart_title">Restart launcher</string>
     <string name="advanced_settings_set_as_default_launcher">Set as default launcher</string>
     <string name="android_widget_height">Widget height</string>
     <string name="android_widget_margin_end">Right margin</string>
@@ -38,12 +37,10 @@
     <string name="chat_notifications_section">Chat notifications</string>
     <string name="choose_android_widget">Choose widget</string>
     <string name="clear_conversation_on_app_open">Clear when app opens</string>
-    <string name="clock_click_app">Click on clock</string>
     <string name="clock_font">Clock font</string>
     <string name="clock_format">Clock format</string>
     <string name="clock_style">Clock style</string>
     <string name="clock_text_size">Clock size</string>
-    <string name="date_click_app">Click on date</string>
     <string name="date_font">Date font</string>
     <string name="date_format">Date format</string>
     <string name="date_row_section">Date row</string>
@@ -146,7 +143,6 @@
     <string name="desc_widget_margin_start"></string>
     <string name="double_tap">Double tap</string>
     <string name="dual_clocks">Dual clocks</string>
-    <string name="eink_auto_mode">E-ink mode</string>
     <string name="eink_refresh_delay">E-ink refresh delay</string>
     <string name="enable_bottom_navigation">Enable bottom navigation</string>
     <string name="enable_home_pager">Enable page indicator</string>
@@ -158,7 +154,6 @@
     <string name="home_apps_alignment">Home apps alignment</string>
     <string name="home_apps_y_offset">Home apps Y-offset</string>
     <string name="home_fonts">Home fonts</string>
-    <string name="home_notifications_allowlist">Home noti. allowlist</string>
     <string name="home_page_reset">Home page reset</string>
     <string name="icon_shape">Icon shape</string>
     <string name="icon_style">Icon style</string>
@@ -169,7 +164,6 @@
     <string name="label_notifications_font">Label notifications font</string>
     <string name="label_notifications_size">Label notifications size</string>
     <string name="layout_positioning">Layout &amp; positioning</string>
-    <string name="letters_allowlist">Letters allowlist</string>
     <string name="letters_font">Letters font</string>
     <string name="letters_window">Letters window</string>
     <string name="lock_home_apps">Lock home apps</string>
@@ -189,7 +183,6 @@
     <string name="pages_on_home_screen">Number of pages</string>
     <string name="private_space">Private spaces</string>
     <string name="push_notifications">Enable notifications</string>
-    <string name="quote_click_app">Click on quote</string>
     <string name="quote_font">Widget font</string>
     <string name="quote_text">Quote text</string>
     <string name="quote_text_size">Widget size</string>
@@ -218,7 +211,6 @@
     <string name="show_notification_count">Show notification count</string>
     <string name="show_sender_name">Sender name</string>
     <string name="show_status_bar">Show status bar</string>
-    <string name="simple_tray_allowlist">Simple Tray allowlist</string>
     <string name="sort_order">Sort order</string>
     <string name="swipe_movement">Swipe movement</string>
     <string name="text_islands">Enable text islands</string>
@@ -227,7 +219,6 @@
     <string name="title_size">Title size</string>
     <string name="top_widget_margin">Top widget margin</string>
     <string name="ui_scale">UI scale</string>
-    <string name="universal_custom_font">Universal font</string>
     <string name="use_volume_keys_for_pages">Volume keys turn pages</string>
     <string name="vibration_feedback">Vibration feedback</string>
     <string name="vibration_strength">Vibration strength</string>
@@ -253,4 +244,33 @@
     <string name="option_simple_tray">Simple Tray</string>
     <string name="desc_app_name_mode"></string>
     <string name="desc_letters_title"></string>
+    <!-- 11-19 phone test: allowlists named for what they hold, sentence-case gesture choices, Tap not Click -->
+    <string name="home_notifications_allowlist">Home notification apps</string>
+    <string name="letters_allowlist">Letters apps</string>
+    <string name="simple_tray_allowlist">Simple Tray apps</string>
+    <string name="universal_custom_font">Font for everything</string>
+    <string name="desc_universal_font"></string>
+    <string name="app_name_mode_normal">As named</string>
+    <string name="clock_click_app">Tap the clock</string>
+    <string name="date_click_app">Tap the date</string>
+    <string name="quote_click_app">Tap the quote</string>
+    <string name="tap_click_actions">Taps</string>
+    <string name="desc_fonts_settings">Fonts and text sizes</string>
+    <string name="desc_backup_restore">Back up, restore or clear all data</string>
+    <string name="advanced_settings_backup_restore_title">Back up and restore</string>
+    <string name="lock_screen">Lock screen</string>
+    <string name="show_recents">Show recents</string>
+    <string name="quick_settings">Quick settings</string>
+    <string name="power_dialog">Power menu</string>
+    <string name="open_quick_settings">Open quick settings</string>
+    <string name="open_power_dialog">Open power menu</string>
+    <string name="open_tools">Open tools</string>
+    <string name="open_clock">Open clock</string>
+    <string name="next_page">Next page</string>
+    <string name="previous_page">Previous page</string>
+    <string name="eink_auto_refresh">Auto E-ink refresh</string>
+    <string name="eink_auto_mode">E-ink mode</string>
+    <string name="eink_refresh">E-ink refresh</string>
+    <string name="restart_launcher">Restart Home</string>
+    <string name="advanced_settings_restart_title">Restart Home</string>
 </resources>
