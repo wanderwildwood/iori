@@ -102,9 +102,17 @@ object IoriSettingsPages {
         return foot - top
     }
 
+    /**
+     * Where the content ends: the foot of the last row. A page's content can close on a spacer
+     * that is not a row (16dp on Settings, 24dp on Gestures and Fonts); measured to the spacer, a
+     * page whose rows all fit still had more to show, and a turn forward brought nothing new.
+     * With no rows, the whole content.
+     */
+    fun end(spans: List<Span>, contentHeight: Int): Int = spans.maxOfOrNull { it.bottom } ?: contentHeight
+
     /** Where a turn forward from a page opening at [top] lands, or null at the end. */
     fun forward(spans: List<Span>, top: Int, height: Int, contentHeight: Int): Int? {
-        if (top + height >= contentHeight) return null
+        if (top + height >= end(spans, contentHeight)) return null
         val f = foot(spans, top, height) ?: return (top + height).coerceAtMost(lastStart(spans, height, contentHeight))
         return top + f
     }
@@ -120,13 +128,13 @@ object IoriSettingsPages {
 
     /** The page a jump to [fraction] of the way down opens on: the row starting nearest above it. */
     fun jump(spans: List<Span>, fraction: Float, height: Int, contentHeight: Int): Int {
-        val target = (fraction * contentHeight).toInt().coerceIn(0, lastStart(spans, height, contentHeight))
+        val target = (fraction * end(spans, contentHeight)).toInt().coerceIn(0, lastStart(spans, height, contentHeight))
         return spans.map { it.top }.filter { it <= target }.maxOrNull() ?: 0
     }
 
     /** The page that shows the end: it opens on the first row that lets the last one fit. */
     fun lastStart(spans: List<Span>, height: Int, contentHeight: Int): Int {
-        val least = (contentHeight - height).coerceAtLeast(0)
+        val least = (end(spans, contentHeight) - height).coerceAtLeast(0)
         return spans.map { it.top }.filter { it >= least }.minOrNull() ?: least
     }
 
@@ -204,7 +212,8 @@ object IoriSettingsPages {
         val ink = Theme.colors.text
         val paper = Theme.colors.background
         val foot = foot(spans, top, height)
-        val many = contentHeight > height && height > 0
+        val end = end(spans, contentHeight)
+        val many = end > height && height > 0
 
         Row(Modifier.fillMaxSize()) {
             Box(
@@ -247,8 +256,8 @@ object IoriSettingsPages {
                 }
             }
             if (many) Bar(
-                top = top, height = height, contentHeight = contentHeight,
-                atStart = top <= 0, atEnd = top + height >= contentHeight,
+                top = top, height = height, contentHeight = end,
+                atStart = top <= 0, atEnd = top + height >= end,
                 ink = ink, paper = paper,
                 onBack = { turnBack() },
                 onForward = { turnForward() },

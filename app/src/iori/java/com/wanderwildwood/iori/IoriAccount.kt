@@ -82,11 +82,19 @@ object IoriAccount {
      * several); [signers] gives the SHA-256 of every certificate a package is signed with, or
      * nothing when that cannot be read. One of its packages has to be in [CALLERS] with every
      * signer the pinned one; in a debug build of Home ([debugBuild]) the same package signed
-     * only with [DEBUG_CERTS] passes too. No certificate read is a refusal, never a pass.
+     * only with [DEBUG_CERTS] passes too, and so does its debug build (the same name with
+     * `.debug` on the end), but only with [DEBUG_CERTS], never the pinned one. No certificate
+     * read is a refusal, never a pass.
      */
     fun allowed(packages: List<String>, debugBuild: Boolean, signers: (String) -> List<String>?): Boolean =
         packages.any { name ->
-            val pinned = CALLERS[name] ?: return@any false
+            val pinned = CALLERS[name]
+            if (pinned == null) {
+                // A debug build of an app is named "<its package>.debug"; only a debug Home answers it.
+                if (!debugBuild || !name.endsWith(".debug") || name.removeSuffix(".debug") !in CALLERS) return@any false
+                val found = signers(name)
+                return@any !found.isNullOrEmpty() && found.all { it in DEBUG_CERTS }
+            }
             val found = signers(name)
             if (found.isNullOrEmpty()) return@any false
             found.all { it == pinned } || (debugBuild && found.all { it in DEBUG_CERTS })

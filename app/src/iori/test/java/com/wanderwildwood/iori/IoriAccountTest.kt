@@ -77,6 +77,21 @@ class IoriAccountTest {
     }
 
     @Test
+    fun aDebugBuildOfAPinnedAppIsAnsweredOnlyByADebugHomeAndOnlyUnderTheDebugCert() {
+        assertTrue(allowed(true, "$memo.debug" to listOf(debugCert)))
+        // Never under the release cert, which a ".debug" build is not signed with.
+        assertFalse(allowed(true, "$memo.debug" to listOf(memoCert)))
+        assertFalse(allowed(true, "$memo.debug" to listOf(debugCert, strange)))
+        // A release Home answers no debug build.
+        assertFalse(allowed(false, "$memo.debug" to listOf(debugCert)))
+        // Only the debug build of a pinned app, and no certificate read is still a refusal.
+        assertFalse(allowed(true, "org.example.notes.debug" to listOf(debugCert)))
+        assertFalse(allowed(true, "$memo.debug.debug" to listOf(debugCert)))
+        assertFalse(allowed(true, "$memo.debug" to null))
+        assertFalse(allowed(true, "$memo.debug" to emptyList()))
+    }
+
+    @Test
     fun oneGoodPackageOfASharedUidIsEnough() {
         assertTrue(allowed(false, "org.example.other" to listOf(strange), memo to listOf(memoCert)))
     }
@@ -218,6 +233,47 @@ class IoriAccountTest {
         // A debug build also takes a stand-in server on its own network, and nothing further out.
         assertTrue(IoriLogin.usable("http://10.0.2.2:8085", true))
         assertFalse(IoriLogin.usable("http://cloud.example.org", true))
+    }
+
+    @Test
+    fun aDebugBuildTakesPlainHttpOnlyToANumberOnItsOwnNetwork() {
+        val nearby = listOf(
+            "http://172.20.0.5", "http://172.16.0.1:8080", "http://192.168.1.5", "http://10.0.2.2:8085",
+            "http://127.0.0.1", "http://[::1]:8080", "http://localhost:8080", "http://LOCALHOST",
+        )
+        nearby.forEach { assertTrue(it, IoriLogin.usable(it, true)) }
+        // A name is never looked up, however it begins; a public number is not nearby.
+        val far = listOf(
+            "http://10.example.org", "http://192.168.example.org", "http://127.0.0.1.example.org",
+            "http://8.8.8.8", "http://172.32.0.1", "http://[2001:4860:4860::8888]", "http://cloud.example.org",
+            // Not whole numbers, so they would be looked up: never let through.
+            "http://10.0.0.300", "http://999.1.1.1", "http://[1:2]", "http://[:::]", "http://[1::2::3]",
+        )
+        far.forEach { assertFalse(it, IoriLogin.usable(it, true)) }
+        // A release takes none of them.
+        (nearby + far).forEach { assertFalse(it, IoriLogin.usable(it, false)) }
+    }
+
+    @Test
+    fun theAppPasswordIsReadFromTheServersSwap() {
+        val body = """{"ocs":{"meta":{"status":"ok","statuscode":200},"data":{"apppassword":"app-password-two"}}}"""
+        assertEquals("app-password-two", IoriLogin.parseAppPassword(body))
+        assertNull(IoriLogin.parseAppPassword("""{"ocs":{"meta":{"statuscode":403},"data":[]}}"""))
+        assertNull(IoriLogin.parseAppPassword("""{"ocs":{"data":{"apppassword":""}}}"""))
+        assertNull(IoriLogin.parseAppPassword("""{"ocs":{"data":{}}}"""))
+        assertNull(IoriLogin.parseAppPassword("<html>hello</html>"))
+        assertNull(IoriLogin.parseAppPassword(""))
+    }
+
+    @Test
+    fun onlyTheServersOwnWordsMakeA403AnAppPassword() {
+        val already = """{"ocs":{"meta":{"status":"failure","statuscode":403,"message":"You cannot request an new apppassword with an apppassword"},"data":[]}}"""
+        assertTrue(IoriLogin.isAppPasswordRefusal(already))
+        // No login password to read back (single sign-on), or a proxy in the way: not an app password.
+        assertFalse(IoriLogin.isAppPasswordRefusal("""{"ocs":{"meta":{"status":"failure","statuscode":403,"message":""},"data":[]}}"""))
+        assertFalse(IoriLogin.isAppPasswordRefusal("""{"ocs":{"meta":{"statuscode":403},"data":[]}}"""))
+        assertFalse(IoriLogin.isAppPasswordRefusal("<html>403 Forbidden</html>"))
+        assertFalse(IoriLogin.isAppPasswordRefusal(""))
     }
 
     @Test

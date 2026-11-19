@@ -157,6 +157,7 @@ object IoriNextcloudUi {
         Problem.NO_BROWSER -> R.string.iori_nc_no_browser
         Problem.NOT_KEPT -> R.string.iori_nc_not_kept
         Problem.GAVE_UP -> R.string.iori_nc_gave_up
+        Problem.NO_APP_PASSWORD -> R.string.iori_nc_no_app_password
     }
 
     /** The rows themselves, the same in the page and in the dialog. */
@@ -255,7 +256,12 @@ object IoriNextcloudUi {
                     }
                 }
                 item(key = "password_note") {
-                    Text(stringResource(R.string.iori_nc_password_note), style = look.note, color = look.ink, modifier = Modifier.padding(vertical = 4.dp))
+                    // In bold, as the status is: what becomes of a login password typed here is said plainly.
+                    Text(
+                        stringResource(R.string.iori_nc_password_note),
+                        style = look.note, color = look.ink, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 6.dp),
+                    )
                 }
             }
             val status = when (phase) {

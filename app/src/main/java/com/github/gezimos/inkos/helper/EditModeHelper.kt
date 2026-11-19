@@ -989,7 +989,7 @@ object EditModeHelper {
                     0 -> {
                         // Theme tab
 
-                        SettingRow(label = "Theme Mode", value = when (uiState.appTheme) {
+                        if (!com.wanderwildwood.iori.IoriDark.systemHasDarkSetting(context)) SettingRow(label = "Theme Mode", value = when (uiState.appTheme) { // iori: hidden where the system has a dark setting; Home's theme follows it
                             Constants.Theme.Dark -> Constants.Theme.Dark.getString(context)
                             Constants.Theme.Light -> Constants.Theme.Light.getString(context)
                             else -> Constants.Theme.System.getString(context)

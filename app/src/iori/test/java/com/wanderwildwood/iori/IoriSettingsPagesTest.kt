@@ -55,6 +55,19 @@ class IoriSettingsPagesTest {
     }
 
     @Test
+    fun aPageEndsAtItsLastRowNotATrailingSpacer() {
+        // The rows end at 1000; the content closes on a 16 px spacer.
+        assertEquals(1000, IoriSettingsPages.end(rows, 1016))
+        assertEquals(2000, IoriSettingsPages.end(emptyList(), 2000))
+        // A page showing every row down to 1000 but not the spacer turns no further.
+        assertNull(IoriSettingsPages.forward(rows, 600, 410, 1016))
+        assertEquals(600, IoriSettingsPages.lastStart(rows, 410, 1016))
+        assertEquals(600, IoriSettingsPages.jump(rows, 1f, 410, 1016))
+        // Before it, a turn still lands on the row the foot cut.
+        assertEquals(400, IoriSettingsPages.forward(rows, 0, page, 1016))
+    }
+
+    @Test
     fun contentWithNoRowsTurnsAPageAtATime() {
         assertNull(IoriSettingsPages.foot(emptyList(), 0, page))
         assertEquals(450, IoriSettingsPages.forward(emptyList(), 0, page, 2000))

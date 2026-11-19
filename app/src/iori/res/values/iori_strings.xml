@@ -89,7 +89,7 @@
     <string name="iori_nc_server_hint">cloud.example.org</string>
     <string name="iori_nc_user">User name</string>
     <string name="iori_nc_password">App password</string>
-    <string name="iori_nc_password_note">Make one in Nextcloud on another device: Settings, Security, Devices &amp; sessions. Name it Home.</string>
+    <string name="iori_nc_password_note">Make one in Nextcloud on another device: Settings, Security, Devices &amp; sessions. Name it Home. Typed your login password instead? Home uses it once to get an app password from the server, keeps only that, and forgets the login password.</string>
     <string name="iori_nc_show">Show</string>
     <string name="iori_nc_hide">Hide</string>
     <string name="iori_nc_sign_in">Sign in</string>
@@ -103,9 +103,10 @@
     <string name="iori_nc_needs_https">Home signs in only to an https address.</string>
     <string name="iori_nc_unreachable">The server could not be reached. Check the address and the connection.</string>
     <string name="iori_nc_not_nextcloud">That address answered, but not as a Nextcloud.</string>
-    <string name="iori_nc_wrong_password">The server did not take that user name and app password.</string>
+    <string name="iori_nc_wrong_password">The server did not take that user name and password.</string>
     <string name="iori_nc_no_browser">This phone has no browser to open the server\'s sign-in page with. Type an app password here.</string>
     <string name="iori_nc_not_kept">The phone could not lock the password away, so nothing was kept.</string>
+    <string name="iori_nc_no_app_password">The server would not make an app password for Home, so nothing was kept. Make one in Nextcloud on another device and type it here.</string>
     <string name="iori_nc_gave_up">The sign-in was not finished in twenty minutes. Press Sign in to start again.</string>
     <string name="iori_nc_signed_in">Signed in as %1$s on %2$s</string>
     <string name="iori_nc_shared">Your Ecosystem apps can use this account. The password is locked on this phone and handed to them alone.</string>

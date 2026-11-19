@@ -515,7 +515,7 @@ class MainActivity : AppCompatActivity() {
         navController = this.findNavController(R.id.nav_host_fragment)
 
         if (prefs.firstOpen) {
-            if (com.github.gezimos.inkos.helper.device.DeviceHelper.isEinkDevice()) {
+            if (com.github.gezimos.inkos.helper.device.DeviceHelper.isEinkDevice() && !com.wanderwildwood.iori.IoriDark.systemHasDarkSetting(this)) { // iori: not where the system has a dark setting; Home took the system's above
                 prefs.appTheme = Constants.Theme.Light
             }
             navController.navigate(R.id.onboardingFragment)

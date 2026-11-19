@@ -37,21 +37,26 @@ import com.github.gezimos.inkos.ui.compose.SettingsComposable.SettingsHomeItem
  * since it last asked, so pressing here turns them all, and a switch pressed later inside one
  * app still holds for that app.
  *
- * The provider gives out two numbers and nothing else: dark or not, and when the switch was
- * last pressed. Any app may read them; none can write.
+ * The provider gives out two numbers and nothing else: dark or not, and a stamp. The stamp moves
+ * whenever the answer does: when the switch is pressed, and when the answer changes by itself
+ * ([given]). Any app may read them; none can write.
  *
  * The switch is only on MuditaOS, which has no dark setting a person can reach. Anywhere else
  * ([systemHasDarkSetting]: KompaktOS, any other Android from 10 on) the system's own dark setting
  * is the one switch: Home's row only opens it, Home's own theme follows it ([atStart],
  * [systemChanged]), and the provider answers "not dark" whatever the switch was left at
  * ([answer]). Each app follows the system by itself, and a switch left on under MuditaOS before
- * the phone moved to KompaktOS would otherwise hold them all dark; each app clears what it last
- * heard from Home the next time it comes to the front and asks.
+ * the phone moved to KompaktOS would otherwise hold them all dark. Home has no switch there to
+ * press, so the answer turning from dark to not dark moves the stamp itself ([given]), and each
+ * app hears it the next time it comes to the front and asks.
  */
 object IoriDark {
 
     private const val KEY_ON = "dark_all"
     private const val KEY_STAMP = "dark_all_stamp"
+
+    /** The answer the provider last gave out (0 or 1), so a change is seen across restarts. */
+    private const val KEY_GIVEN = "dark_all_given"
 
     fun uri(context: Context): Uri = Uri.parse("content://${context.packageName}.dark/state")
 
@@ -131,9 +136,14 @@ object IoriDark {
         return wanted.takeIf { Prefs(context).appTheme != it }
     }
 
-    /** As Home starts, before it reads its theme: the system's dark setting, where it has one, is Home's. */
+    /**
+     * As Home starts, before it reads its theme: the system's dark setting, where it has one, is
+     * Home's. It also moves the provider's stamp now if its answer changed ([given]), so the apps
+     * that are open hear it without waiting to ask.
+     */
     fun atStart(context: Context, setHomeTheme: (Constants.Theme) -> Unit) {
         owed(context)?.let(setHomeTheme)
+        given(context)
     }
 
     /** The system's setting changed while Home was up: Home turns with it, as a press on its own switch would. */
@@ -151,9 +161,35 @@ object IoriDark {
 
     fun stamp(context: Context): Long = Iori.prefs(context).getLong(KEY_STAMP, 0L)
 
+    /**
+     * What the provider gives out: the answer and its stamp. When the answer is not the one last
+     * given out (the phone moved from MuditaOS to a system with its own dark setting, with the
+     * switch left on), the stamp moves and the open apps are told, as a press would. Before this
+     * was kept, the last answer given was the switch itself.
+     */
+    @Synchronized
+    fun given(context: Context): Pair<Int, Long> {
+        val prefs = Iori.prefs(context)
+        val switchOn = on(context)
+        val now = answer(switchOn, systemHasDarkSetting(context))
+        val last = prefs.getInt(KEY_GIVEN, if (switchOn) 1 else 0)
+        if (now != last || !prefs.contains(KEY_GIVEN)) {
+            val edit = prefs.edit().putInt(KEY_GIVEN, now)
+            if (now != last) edit.putLong(KEY_STAMP, System.currentTimeMillis())
+            edit.commit()
+            if (now != last) runCatching { context.contentResolver.notifyChange(uri(context), null) }
+        }
+        return now to stamp(context)
+    }
+
     /** The switch: remembers it, tells the apps that are open, and turns Home itself. */
+    @Synchronized
     fun set(context: Context, dark: Boolean, setHomeTheme: (Constants.Theme) -> Unit) {
-        Iori.prefs(context).edit().putBoolean(KEY_ON, dark).putLong(KEY_STAMP, System.currentTimeMillis()).commit()
+        Iori.prefs(context).edit()
+            .putBoolean(KEY_ON, dark)
+            .putLong(KEY_STAMP, System.currentTimeMillis())
+            .putInt(KEY_GIVEN, answer(dark, systemHasDarkSetting(context)))
+            .commit()
         runCatching { context.contentResolver.notifyChange(uri(context), null) }
         setHomeTheme(if (dark) Constants.Theme.Dark else Constants.Theme.Light)
         AppCompatDelegate.setDefaultNightMode(if (dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO)
@@ -188,14 +224,15 @@ object IoriDark {
     }
 }
 
-/** What the other apps read: one row, `dark` (0 or 1, see [IoriDark.answer]) and `stamp`. Read-only. */
+/** What the other apps read: one row, `dark` (0 or 1, see [IoriDark.answer]) and `stamp` ([IoriDark.given]). Read-only. */
 class IoriDarkProvider : ContentProvider() {
     override fun onCreate(): Boolean = true
 
     override fun query(uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?): Cursor? {
         val context = context ?: return null
         return MatrixCursor(arrayOf("dark", "stamp")).apply {
-            addRow(arrayOf<Any>(IoriDark.answer(IoriDark.on(context), IoriDark.systemHasDarkSetting(context)), IoriDark.stamp(context)))
+            val (dark, stamp) = IoriDark.given(context)
+            addRow(arrayOf<Any>(dark, stamp))
             setNotificationUri(context.contentResolver, IoriDark.uri(context))
         }
     }

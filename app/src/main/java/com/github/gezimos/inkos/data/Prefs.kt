@@ -368,7 +368,7 @@ class Prefs(val context: Context) {
         val root = gson.fromJson(json, Map::class.java) as? Map<String, Any?>
             ?: throw IllegalArgumentException("Invalid theme file")
         val prefsMap = root["prefs"] as? Map<String, Any?> ?: emptyMap()
-        val filtered = prefsMap.filterKeys { it in themeExportKeys }
+        val filtered = prefsMap.filterKeys { it in themeExportKeys && !(it == APP_THEME && com.wanderwildwood.iori.IoriDark.systemHasDarkSetting(context)) } // iori: theme mode follows the system where it has a dark setting
         loadThemeFromMap(filtered, useCommit = true)
         loadCustomThemeFromMap(filtered)
         appTheme = appTheme
@@ -715,6 +715,7 @@ class Prefs(val context: Context) {
             val pm = context.packageManager
             for ((key, value) in all) {
                 if (key in deprecatedImportKeys) continue
+                if (key == APP_THEME && com.wanderwildwood.iori.IoriDark.systemHasDarkSetting(context)) continue // iori: theme mode follows the system where it has a dark setting
                 if (key == "allowed_notification_apps" || key == "allowed_badge_notification_apps" ||
                     key == HIDDEN_APPS || key == LOCKED_APPS
                 ) {

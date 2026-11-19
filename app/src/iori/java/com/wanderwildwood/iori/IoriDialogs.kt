@@ -30,6 +30,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -435,10 +436,17 @@ private fun ChoiceDialog(title: String, rows: List<Choice>, close: () -> Unit) {
         val room = LocalConfiguration.current.screenHeightDp.dp - 200.dp
         val state = rememberLazyListState()
         val chosen = rows.indexOfFirst { it is Choice.Pick && it.chosen }
-        // The page opens on the ticked row when it is not on the first page.
-        LaunchedEffect(Unit) {
-            if (chosen <= 0) return@LaunchedEffect
-            val info = snapshotFlow { state.layoutInfo }.first { it.visibleItemsInfo.isNotEmpty() }
+        // The page opens on the ticked row when it is not on the first page. Keyed on the row, as
+        // the rows can come in after the dialog opens (the gesture list's apps load late, so a
+        // gesture set to an app has no ticked row at first). It moves the page once only: when it
+        // has, or the person has turned a page meanwhile, a later change leaves the page alone.
+        var placed by remember { mutableStateOf(false) }
+        LaunchedEffect(chosen, rows.size) {
+            if (placed || chosen < 0) return@LaunchedEffect
+            val info = snapshotFlow { state.layoutInfo }
+                .first { it.visibleItemsInfo.isNotEmpty() && it.totalItemsCount > chosen }
+            placed = true
+            if (chosen == 0 || state.firstVisibleItemIndex != 0 || state.firstVisibleItemScrollOffset != 0) return@LaunchedEffect
             val seen = info.visibleItemsInfo.firstOrNull { it.index == chosen }
             if (seen == null || seen.offset + seen.size > info.viewportEndOffset) state.scrollToItem(chosen)
         }

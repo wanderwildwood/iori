@@ -663,6 +663,7 @@ fun ThemePresetsPage(
     val applyWallpaper = remember { mutableStateOf(true) }
     // Config bottom sheet
     val context = LocalContext.current
+    val systemDarkSetting = remember { com.wanderwildwood.iori.IoriDark.systemHasDarkSetting(context) } // iori: the system's dark setting is the switch there, so the light/dark/system button is not drawn
     val sheetHost = remember { (context as? Activity)?.let { ComposeBottomSheetHost(it) } }
     val showConfigSheet = {
         sheetHost?.show {
@@ -701,7 +702,7 @@ fun ThemePresetsPage(
                         currentIndex = currentIndexState,
                         presetsLastIndex = ThemePresets.PRESETS.lastIndex,
                         hasSelectButton = true,
-                        headerMaxIndex = 2,
+                        headerMaxIndex = if (systemDarkSetting) 1 else 2, // iori: no light/dark/system button to reach
                         onBackClick = onBackClick,
                         onHeaderAction = { index ->
                             when (index) {
@@ -764,7 +765,7 @@ fun ThemePresetsPage(
                             Constants.Theme.Dark -> Icons.Rounded.DarkMode
                             Constants.Theme.System -> Icons.Rounded.Android
                         }
-                        Box(
+                        if (!systemDarkSetting) Box( // iori: hidden where the system has a dark setting; Home's theme follows it
                             modifier = Modifier
                                 .fillMaxHeight()
                                 .clip(buttonShape)

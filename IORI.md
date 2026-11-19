@@ -42,15 +42,18 @@ only. Source: https://github.com/wanderwildwood/iori
   the provider answers "not dark" whatever the switch was left at, so a switch left on under
   MuditaOS cannot hold the apps dark after a move to KompaktOS.
 - **One Nextcloud login.** Home signs in to the person's Nextcloud once (first run, page 5, or
-  Settings → Nextcloud account): Login Flow v2 in the browser, or an app password typed in
-  where there is no browser. It keeps ONE app password (Nextcloud will not make an app password
+  Settings → Nextcloud account): Login Flow v2 in the browser, or a password typed in where
+  there is no browser: a login password typed there is used once to get an app password from
+  the server (`core/getapppassword`) and is never kept; an app password typed there is kept as
+  it is. It keeps ONE app password (Nextcloud will not make an app password
   from an app password), sealed by a keystore key, in a file left out of backups
   (`IoriAccount.kt`). `IoriAccountProvider` (`content://<package>.accounts/nextcloud`: server,
   user, password, stamp) hands it only to callers whose package AND signing certificate are
   pinned in `IoriAccount.CALLERS` (every Ecosystem app that signs in to a Nextcloud, eleven; the test holds the list to
   `iori_apps.json`), and a change notice goes out on sign-in and sign-out. Sign out also asks
   the server to delete the app password. https only; a debug build also takes plain http to a
-  host on its own network, for a stand-in server (`app/src/debug/AndroidManifest.xml`). The
+  host written as a number on its own network or the phone itself (127/8, 10/8, 172.16/12,
+  192.168/16, ::1), or localhost; a name is never looked up, for a stand-in server (`app/src/debug/AndroidManifest.xml`). The
   apps' side is `sync/HomeAccount.kt`, the same file in each app that has the row "Use the
   phone's Nextcloud account".
 - **The Settings home page in groups** (`IoriSettings.kt`): Phone, Apps, Home screen (inkOS's
@@ -86,7 +89,7 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!*.md'` must list exactly these: 145 lines (11-19, after the Settings house pass, the house dialogs, the phone-test fixes, the e-ink mode row, Theme mode hidden and the pinch menu without About; the rows below give each file's lines; the older rows were last counted at 32, so recheck them at the next merge).
+'!app/src/iori/**' --glob '!*.md'` must list exactly these: 152 lines (11-19, after the Settings house pass, the house dialogs, the phone-test fixes, the e-ink mode row, Theme mode hidden, the pinch menu without About, the dark fixes and imports that keep the system's theme; the rows below give each file's lines; the older rows were last counted at 32, so recheck them at the next merge).
 
 | File:line | Purpose |
 |---|---|
@@ -95,6 +98,7 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/build.gradle.kts:186` | `apply(from = "iori.gradle")`: identity, iori sources and strings |
 | `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt:8` | migrations run on `UPSTREAM_VERSION_CODE`, so upstream's thresholds still fire; line 258 writes back the same value |
 | `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt:152` | migrated internal slots point at `BuildConfig.APPLICATION_ID`, not `app.inkos` |
+| `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt:371` | a theme import leaves Theme mode (`APP_THEME`) alone where the system has a dark setting (`IoriDark.systemHasDarkSetting`): Home's theme follows the system's there; line 718 does the same for a full backup restore |
 | `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt:714` | imports pass through `IoriBackup.rewrite`, so an inkOS backup restores into iori |
 | `app/src/main/java/com/github/gezimos/inkos/ui/RecentsFragment.kt:672` | iori is left out of its own Recents |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` (16 lines) | the house look on every Settings page, through `IoriSettingsLook`: no row icons, value under the label, plain bold headings with no line, house sizes that follow inkOS's Settings text size, the house switch, an emptied note takes no line. inkOS's English Settings strings are overridden in `app/src/iori/res/values/iori_upstream_settings.xml` (sentence case; notes that only restate their label emptied) |
@@ -113,7 +117,10 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/helper/IconUtility.kt:280` | `isSyntheticPackage` accepts iori's package, and `app.inkos` only when this build is inkOS, so the real inkOS beside it is an ordinary app |
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:467` | `Iori.guardCrashes(this)`, right after onCreate puts CrashHandler back |
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:468` | `IoriDark.atStart(...)`, before onCreate reads the theme: where the system has a dark setting of its own, Home's theme is the system's |
+| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:518` | on a first run, inkOS's e-ink Light theme is not set where the system has a dark setting (`IoriDark.systemHasDarkSetting`): Home took the system's at line 468, and Light would leave a light home in a night-mode window |
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:644` | `IoriDark.systemChanged(...)` in `onConfigurationChanged`: the system's dark setting changed while Home was up, and Home turns with it |
+| `app/src/main/java/com/github/gezimos/inkos/ui/compose/ThemePresetsUI.kt` (3 lines: 666, 705, 768) | Settings → Themes: the light/dark/system button in the header is not drawn, nor reached by the D-pad, where the system has a dark setting; Home's theme follows the system's there, which would undo the button |
+| `app/src/main/java/com/github/gezimos/inkos/helper/EditModeHelper.kt:992` | Edit mode → Background → Theme Mode is hidden where the system has a dark setting, for the same reason |
 | `app/src/main/java/com/github/gezimos/inkos/helper/SearchHelper.kt:585` | a contact opens in enishi first, inkOS's chooser if that fails |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:389` | the Settings header's Buy Me a Coffee button becomes `IoriAbout.HeaderButtons`: a cup that opens gezimos's Buy Me a Coffee, and a llama that opens this app's donation page (upstream's 27 lines of the button are gone from here) |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt:536` | `IoriSettings.Top(...)`, the first line of the Settings home page: the headings Phone (Dark mode, Nextcloud account) and Apps (Ecosystem apps, Default apps), then the heading Home screen over inkOS's own rows |
