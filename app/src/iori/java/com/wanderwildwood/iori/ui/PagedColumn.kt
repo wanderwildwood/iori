@@ -19,11 +19,13 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListLayoutInfo
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
@@ -32,12 +34,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -45,16 +51,28 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.max
+import kotlin.math.roundToInt
 
 /**
  * The list every screen uses: Mudita's list look, with its scrollbar (a chevron at each end that
@@ -64,7 +82,8 @@ import kotlin.math.max
  * (3 Nov 2026: pages end on whole rows; the scrollbar stays):
  *
  * - a turn forward brings the first row that did not fit to the top of the page;
- * - a row that does not fit at the foot is not drawn (nor pressable) until the next page;
+ * - a row that does not fit at the foot is not drawn (nor pressable) until the next page, and
+ *   (16 Nov 2026) is not there for a screen reader either;
  * - a blank tail after the last row lets that row come to the top, so the last page also starts on
  *   a row and is never shifted back to end flush, mid-row at its top;
  * - a turn back goes one page back and lands on a row.
@@ -80,7 +99,10 @@ import kotlin.math.max
  *
  * The bar is drawn as MMD's `VerticalScrollbar` draws it (MMD 1.0.2, `LazyMMD.kt`, Apache-2.0,
  * Copyright 2025 The Android Open Source Project, modified by Mudita Sp. z o.o.), with its own
- * chevron drawables; only where a turn lands is ours.
+ * chevron drawables; only where a turn lands is ours, and (15 Nov 2026) the arrow at an end the
+ * list cannot turn past, drawn as a plain outline instead of MMD's dotted one (a grey dither on
+ * e-ink). A screen reader calls the arrows "Previous page" and "Next page" (the app's strings
+ * `page_arrow_previous` and `page_arrow_next` where it has them).
  *
  * Called as `LazyColumnMMD` was. [isScrollbarVisible] is on by default; a list that must not show
  * one passes false. [folio] and [rowStep] are kept so every existing call compiles.
@@ -89,6 +111,20 @@ import kotlin.math.max
  * the bar ends that far above the foot of the list, so the button keeps its corner and the lower
  * chevron stands over it instead of under it, where a press meant for the next page pressed the
  * button. One 56 dp button on its 16 dp margin is 72 dp. The rows are not moved.
+ *
+ * Whether the bar is needed is decided at the rows' full width (16 Nov 2026). The bar takes width
+ * from the rows, so rows that wrap onto more lines beside it can keep needing it: Wallet's Settings,
+ * shrunk by a dialog's keyboard, got the bar, and when the keyboard closed its narrower rows still
+ * ran onto a second page, so the bar and the narrower text stayed. Now, when the list grows (taller
+ * or wider) while the bar is up, the rows are laid out once without it, and the bar comes back only
+ * if they still run past one page.
+ *
+ * A list that gets shorter under its page (15 Nov 2026) comes back to its last real page. Level's
+ * Settings: turned on to "Forget calibration", then forgotten, the row went and the page was left
+ * on the blank tail alone, with no scrollbar and nothing a swipe could turn. The page that ends
+ * on the last row is shown instead, as a turn back from the end would show it. Only then: a list
+ * that grows, or a page that still shows a row, is left where it is, and a turn under way is let
+ * finish first.
  *
  * [onPullAtTop], when given, is called when a swipe down starts on the first page of the rows: the
  * list asks for them again. It asks for nothing otherwise, and does not take the swipe from the
@@ -149,6 +185,31 @@ fun PagedColumn(
     val cutRow by rememberUpdatedState(showCutRow)
     val shown by remember(state) { derivedStateOf { state.layoutInfo.totalItemsCount > if (cutRow) 0 else 1 } }
     val pages by remember(state) { derivedStateOf { state.layoutInfo.view(cutRow).pages } }
+    // The rows went from under the page: back to the last real one (see above).
+    val lost by remember(state) { derivedStateOf { stranded(state.layoutInfo.view(cutRow)) } }
+    LaunchedEffect(state, lost) {
+        if (!lost) return@LaunchedEffect
+        snapshotFlow { state.isScrollInProgress }.first { !it }
+        if (stranded(state.layoutInfo.view(cutRow))) state.resnap(cutRow)
+    }
+    // The bar at full width (see above): while [recheckAt] holds the list's width from before, the
+    // bar is left out until the rows have been laid out wider than that, without it.
+    var recheckAt by remember(state) { mutableStateOf(-1) }
+    val bar = pages && isScrollbarVisible && recheckAt < 0
+    val barNow by rememberUpdatedState(bar)
+    LaunchedEffect(state) {
+        var wide = 0
+        var tall = 0
+        snapshotFlow { state.layoutInfo.viewportSize }.collect { now ->
+            if (recheckAt >= 0) {
+                if (now.width > recheckAt) recheckAt = -1
+            } else if (recheckBar(barNow, wide, tall, now.width, now.height)) {
+                recheckAt = now.width
+            }
+            wide = now.width
+            tall = now.height
+        }
+    }
     Row(
         modifier = (if (onPullAtTop == null) modifier else modifier.pullAtTop(state) { pull?.invoke(); Unit })
             .then(widen)
@@ -189,7 +250,7 @@ fun PagedColumn(
                 // The list turns its own pages.
                 userScrollEnabled = false,
             ) {
-                content()
+                FootScope(this) { row -> FootRow(state, showCutRow, horizontalAlignment, row) }.content()
                 // With the cut row shown there is no tail: the last page ends flush.
                 // The tail has no key of its own (8 Nov 2026): a list keeps its place on the key of its
                 // first row, so a list that opened empty (its rows still loading) and so on the tail alone
@@ -197,7 +258,7 @@ fun PagedColumn(
                 if (!showCutRow) item(contentType = TAIL) { Spacer(Modifier.height(tail)) }
             }
         }
-        if (pages && isScrollbarVisible) {
+        if (bar) {
             PageBar(
                 state = state,
                 cutRow = showCutRow,
@@ -210,6 +271,57 @@ fun PagedColumn(
             )
         }
     }
+}
+
+/**
+ * The caller's rows, each handed through [wrap] (16 Nov 2026), so the list can take a row that is
+ * not drawn at the foot of the page out of what a screen reader is told. Sticky headers are passed
+ * on as they are.
+ */
+@OptIn(ExperimentalFoundationApi::class)
+private class FootScope(
+    private val real: LazyListScope,
+    private val wrap: @Composable (@Composable () -> Unit) -> Unit,
+) : LazyListScope by real {
+    override fun item(key: Any?, contentType: Any?, content: @Composable LazyItemScope.() -> Unit) {
+        val row = wrap
+        real.item(key, contentType) { val scope = this; row { scope.content() } }
+    }
+
+    override fun items(
+        count: Int,
+        key: ((index: Int) -> Any)?,
+        contentType: (index: Int) -> Any?,
+        itemContent: @Composable LazyItemScope.(index: Int) -> Unit,
+    ) {
+        val row = wrap
+        real.items(count, key, contentType) { index -> val scope = this; row { scope.itemContent(index) } }
+    }
+}
+
+/**
+ * One row of the list. A row that starts at or below the foot is not drawn and takes no press (see
+ * [PagedColumn]); here it also says nothing of itself, so a screen reader does not find a row the
+ * page does not show. Where the row stands is noted as it is placed and only "hidden or not" is
+ * read in composition, so a page turn composes a row again only when that changes.
+ */
+@Composable
+private fun FootRow(state: LazyListState, cutRow: Boolean, align: Alignment.Horizontal, content: @Composable () -> Unit) {
+    var top by remember { mutableStateOf(Int.MIN_VALUE) }
+    val shows by rememberUpdatedState(cutRow)
+    val hidden by remember(state) {
+        derivedStateOf {
+            val foot = state.layoutInfo.view(shows).foot
+            foot != null && top >= foot
+        }
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .onPlaced { top = it.positionInParent().y.roundToInt() }
+            .then(if (hidden) Modifier.clearAndSetSemantics { } else Modifier),
+        horizontalAlignment = align,
+    ) { content() }
 }
 
 /**
@@ -287,6 +399,59 @@ internal fun backSnap(page: PageView): Int? {
     return page.rows.getOrNull(1)?.index
 }
 
+/**
+ * Whether [page] is past the end of a list that got shorter under it: no row with anything in it
+ * is on the page (only the blank tail, or rows of no height), the list has rows, and the page is
+ * not the first. A turn never lands there (the last page opens on the last row), so only a list
+ * that shrank does. Never with the cut row shown: that list has no tail and ends flush by itself.
+ */
+internal fun stranded(page: PageView): Boolean =
+    !page.showsCut && page.count > 0 && page.height > 0 &&
+        page.rows.none { it.index == 0 } && page.rows.none { it.bottom > it.top }
+
+/**
+ * Whether the bar must be decided again at the rows' full width (see [PagedColumn]): it is shown
+ * ([barShown]) and the list has grown, taller or wider, from a size it had been laid out at. A list
+ * that shrinks, or one with no bar, keeps what it has.
+ */
+internal fun recheckBar(barShown: Boolean, wasWidth: Int, wasHeight: Int, width: Int, height: Int): Boolean =
+    barShown && wasWidth > 0 && wasHeight > 0 && (width > wasWidth || height > wasHeight)
+
+/**
+ * The row a tap at [y] on the scrollbar ([height] pixels) jumps to, with [visible] rows whole on
+ * the page and [count] rows in all: the slider's middle comes to the tap. Null with no rows.
+ */
+internal fun jumpTarget(y: Float, height: Int, visible: Int, count: Int): Int? {
+    if (count <= 0 || height <= 0) return null
+    val slider = height * visible / count
+    return ((y - slider / 2) / height * count).toInt().coerceIn(0, count - 1)
+}
+
+/** The scrollbar's thumb: its [height] and [offset] in pixels on a bar [barHeight] pixels tall, and whether it is [filled] (drawn). */
+internal data class Thumb(val height: Float, val offset: Float, val filled: Boolean)
+
+/**
+ * Where the thumb sits. Normally it counts rows: [visible] whole rows of [PageView.count], the page
+ * starting at row [first]. A list that is one row taller than the page (a reader-style screen, read
+ * a page at a time) has nothing to count, so the thumb is measured in pixels: the page's share of
+ * the row's height, placed by how far the row has been scrolled (the row's top is negative then).
+ */
+internal fun thumb(barHeight: Float, page: PageView, visible: Int, first: Int): Thumb {
+    val tall = page.rows.singleOrNull()?.takeIf { page.count == 1 && it.bottom - it.top > page.height }
+    val tallLength = tall?.let { (it.bottom - it.top).toFloat() }
+    val height = (
+        if (tallLength != null) barHeight * page.height / tallLength
+        else barHeight * visible / page.count
+    ).coerceAtLeast(max(barHeight * 0.05f, 16f))
+    val maxOffset = (barHeight - height).coerceAtLeast(0f)
+    val denominator = (page.count - visible).coerceAtLeast(1)
+    val offset = (
+        if (tall != null && tallLength != null) -tall.top / (tallLength - page.height) * maxOffset
+        else first.toFloat() / denominator * maxOffset
+    ).coerceIn(0f, maxOffset)
+    return Thumb(height, offset, filled = tall != null || visible < page.count)
+}
+
 private fun LazyListLayoutInfo.view(cutRow: Boolean = false): PageView {
     val items = visibleItemsInfo.filter { it.contentType != TAIL }
     val rows = items.map { RowSpan(it.index, it.offset - viewportStartOffset, it.offset - viewportStartOffset + it.size) }
@@ -307,6 +472,19 @@ private suspend fun LazyListState.turnBack(cutRow: Boolean = false) {
     val page = layoutInfo.view(cutRow)
     if (page.atStart) return
     scrollBy(-page.height.toFloat())
+    backSnap(layoutInfo.view(cutRow))?.let { scrollToItem(it) }
+}
+
+/**
+ * Back to the last real page from past the end ([stranded]): the tail's top on the foot, so the
+ * last row ends the page, then onto a whole row at the top, as a turn back does.
+ */
+private suspend fun LazyListState.resnap(cutRow: Boolean = false) {
+    scrollToItem((layoutInfo.totalItemsCount - 1).coerceAtLeast(0))
+    val info = layoutInfo
+    val tail = info.visibleItemsInfo.lastOrNull { it.contentType == TAIL } ?: return
+    val back = info.view(cutRow).height - (tail.offset - info.viewportStartOffset)
+    if (back > 0) scrollBy(-back.toFloat())
     backSnap(layoutInfo.view(cutRow))?.let { scrollToItem(it) }
 }
 
@@ -332,6 +510,8 @@ private fun PageBar(
 ) {
     val page = state.layoutInfo.view(cutRow)
     if (page.count == 0) return
+    val previous = pageLabel("page_arrow_previous", "Previous page")
+    val next = pageLabel("page_arrow_next", "Next page")
     val containerColor = MaterialTheme.colorScheme.onPrimary
     val sliderColor = MaterialTheme.colorScheme.primary
     Column(
@@ -339,61 +519,86 @@ private fun PageBar(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(
-            painter = painterResource(if (page.atStart) com.github.gezimos.inkos.R.drawable.iori_chevron_dotted_up else com.github.gezimos.inkos.R.drawable.iori_chevron_filled_up),
-            contentDescription = null,
+            painter = if (page.atStart) rememberVectorPainter(ChevronOutlineUp) else painterResource(com.github.gezimos.inkos.R.drawable.iori_chevron_filled_up),
+            contentDescription = previous,
             modifier = Modifier
                 .padding(vertical = 16.dp)
                 .size(24.dp)
-                .combinedClickable(onClick = onBack, onLongClick = onFirst),
+                .combinedClickable(role = Role.Button, onClick = onBack, onLongClick = onFirst),
         )
         val whole = page.whole
         val visible = whole.size.coerceAtLeast(1)
         val first = whole.firstOrNull()?.index ?: page.rows.firstOrNull()?.index ?: 0
+        // The tap handler is set up once; it reads the page as it is now, not as it was when the
+        // bar was first drawn (a turn changes how many rows are whole on the page, not the count).
+        val shownNow by rememberUpdatedState(visible)
+        val countNow by rememberUpdatedState(page.count)
+        val jump by rememberUpdatedState(onJump)
         Canvas(
             modifier = Modifier
                 .width(8.dp)
                 .weight(1f)
                 .border(width = 1.dp, color = sliderColor, shape = RoundedCornerShape(4.dp))
-                .pointerInput(page.count) {
+                .pointerInput(Unit) {
                     detectTapGestures { offset ->
-                        val slider = size.height * visible / page.count
-                        val target = ((offset.y - slider / 2) / size.height * page.count).toInt().coerceIn(0, page.count - 1)
-                        onJump(target)
+                        jumpTarget(offset.y, size.height, shownNow, countNow)?.let { jump(it) }
                     }
                 },
         ) {
-            // A list that is one row taller than the page (Home's Settings pages, inkOS's one
-            // column) has no rows to count, so its thumb is measured in pixels: how much of the
-            // row the page shows, and how far down it the page is.
-            val tall = page.rows.singleOrNull()?.takeIf { page.count == 1 && it.bottom - it.top > page.height }
-            val tallLength = tall?.let { (it.bottom - it.top).toFloat() }
-            val sliderHeight = (if (tallLength != null) size.height * page.height / tallLength else size.height * visible / page.count)
-                .coerceAtLeast(max(size.height * 0.05f, 16f))
-            val maxOffset = (size.height - sliderHeight).coerceAtLeast(0f)
-            val denominator = (page.count - visible).coerceAtLeast(1)
-            val sliderOffset = (
-                if (tall != null && tallLength != null) -tall.top / (tallLength - page.height) * maxOffset
-                else first.toFloat() / denominator * maxOffset
-            ).coerceIn(0f, maxOffset)
+            val thumb = thumb(size.height, page, visible, first)
             val corner = CornerRadius(size.width / 2, size.width / 2)
             drawRoundRect(color = containerColor, topLeft = Offset.Zero, size = Size(size.width, size.height), cornerRadius = corner)
             drawRoundRect(
-                color = if (tall == null && visible >= page.count) containerColor else sliderColor,
-                topLeft = Offset(0f, sliderOffset),
-                size = Size(size.width, sliderHeight),
+                color = if (thumb.filled) sliderColor else containerColor,
+                topLeft = Offset(0f, thumb.offset),
+                size = Size(size.width, thumb.height),
                 cornerRadius = corner,
             )
         }
         Icon(
-            painter = painterResource(if (page.atEnd) com.github.gezimos.inkos.R.drawable.iori_chevron_dotted_down else com.github.gezimos.inkos.R.drawable.iori_chevron_filled_down),
-            contentDescription = null,
+            painter = if (page.atEnd) rememberVectorPainter(ChevronOutlineDown) else painterResource(com.github.gezimos.inkos.R.drawable.iori_chevron_filled_down),
+            contentDescription = next,
             modifier = Modifier
                 .padding(vertical = 16.dp)
                 .size(24.dp)
-                .combinedClickable(onClick = onForward, onLongClick = onLast),
+                .combinedClickable(role = Role.Button, onClick = onForward, onLongClick = onLast),
         )
     }
 }
+
+/**
+ * The words a screen reader says for a page arrow: the app's own string of that name (its
+ * strings.xml, translated where the app is), or English when the app has none. Looked up by name
+ * because this file is shared and cannot see an app's R; the name is a string in the code, so R8's
+ * resource shrinker (default, non-strict) keeps the string. `copy.sh` adds both strings.
+ */
+@Composable
+private fun pageLabel(name: String, english: String): String {
+    val context = LocalContext.current
+    return remember(name) {
+        val id = context.resources.getIdentifier(name, "string", context.packageName)
+        if (id == 0) english else context.getString(id)
+    }
+}
+
+/**
+ * The arrow at an end the list cannot turn past (15 Nov 2026): MMD's filled chevron drawn as an
+ * outline in the ink color, the same shape, size and place. MMD's own end chevron is dotted, which
+ * e-ink shows as a grey dither.
+ */
+private val ChevronOutlineUp: ImageVector = chevronOutline(
+    "ChevronOutlineUp",
+    "M13.347,6.001C12.621,5.215 11.379,5.215 10.653,6.001L3.84,13.382C2.756,14.556 3.589,16.458 5.187,16.458H18.813C20.411,16.458 21.244,14.556 20.16,13.382L13.347,6.001Z",
+)
+private val ChevronOutlineDown: ImageVector = chevronOutline(
+    "ChevronOutlineDown",
+    "M10.653,17.999C11.379,18.785 12.621,18.785 13.347,17.999L20.16,10.618C21.244,9.444 20.411,7.542 18.813,7.542L5.187,7.542C3.589,7.542 2.756,9.444 3.84,10.618L10.653,17.999Z",
+)
+
+private fun chevronOutline(name: String, path: String): ImageVector =
+    ImageVector.Builder(name = name, defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f)
+        .addPath(pathData = addPathNodes(path), stroke = SolidColor(Color.Black), strokeLineWidth = 1.5f)
+        .build()
 
 /**
  * Calls [onPull] when a swipe that began with the list on its first page ends further down than

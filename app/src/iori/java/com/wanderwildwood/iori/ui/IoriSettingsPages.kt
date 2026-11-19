@@ -43,6 +43,10 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.github.gezimos.inkos.R
@@ -251,8 +255,8 @@ object IoriSettingsPages {
             horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
         ) {
             Icon(
-                painter = painterResource(if (atStart) R.drawable.iori_chevron_dotted_up else R.drawable.iori_chevron_filled_up),
-                contentDescription = null,
+                painter = if (atStart) rememberVectorPainter(OutlineUp) else painterResource(R.drawable.iori_chevron_filled_up),
+                contentDescription = "Previous page",
                 tint = ink,
                 modifier = Modifier.padding(vertical = 16.dp).size(24.dp).combinedClickable(onClick = onBack, onLongClick = onFirst),
             )
@@ -271,11 +275,27 @@ object IoriSettingsPages {
                 drawRoundRect(color = ink, topLeft = Offset(0f, offset), size = Size(size.width, slider), cornerRadius = corner)
             }
             Icon(
-                painter = painterResource(if (atEnd) R.drawable.iori_chevron_dotted_down else R.drawable.iori_chevron_filled_down),
-                contentDescription = null,
+                painter = if (atEnd) rememberVectorPainter(OutlineDown) else painterResource(R.drawable.iori_chevron_filled_down),
+                contentDescription = "Next page",
                 tint = ink,
                 modifier = Modifier.padding(vertical = 16.dp).size(24.dp).combinedClickable(onClick = onForward, onLongClick = onLast),
             )
         }
     }
+
+    // The end arrows as the shared PagedColumn draws them (15 Nov 2026): the filled chevron's
+    // shape as an outline in the ink color; a dotted one came out as a grey dither on e-ink.
+    private val OutlineUp: ImageVector = outline(
+        "ChevronOutlineUp",
+        "M13.347,6.001C12.621,5.215 11.379,5.215 10.653,6.001L3.84,13.382C2.756,14.556 3.589,16.458 5.187,16.458H18.813C20.411,16.458 21.244,14.556 20.16,13.382L13.347,6.001Z",
+    )
+    private val OutlineDown: ImageVector = outline(
+        "ChevronOutlineDown",
+        "M10.653,17.999C11.379,18.785 12.621,18.785 13.347,17.999L20.16,10.618C21.244,9.444 20.411,7.542 18.813,7.542L5.187,7.542C3.589,7.542 2.756,9.444 3.84,10.618L10.653,17.999Z",
+    )
+
+    private fun outline(name: String, path: String): ImageVector =
+        ImageVector.Builder(name = name, defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f)
+            .addPath(pathData = addPathNodes(path), stroke = SolidColor(androidx.compose.ui.graphics.Color.Black), strokeLineWidth = 1.5f)
+            .build()
 }
