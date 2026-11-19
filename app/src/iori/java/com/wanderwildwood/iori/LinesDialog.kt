@@ -58,13 +58,12 @@ fun LinesDialog(tripped: Boolean, onTurnBackOn: () -> Unit, onDismiss: () -> Uni
     // sources' status is the guarded part, and the dialog is where the reader looks for why.
     LaunchedEffect(Unit) {
         IoriLinesRepository.refresh(context)
-        IoriApps.refreshInstalled(context)
     }
-    OnResume { IoriApps.resumed(context) }
+    OnResume { IoriAppInstaller.resumed(context) }
     val prefs = remember { Iori.prefs(context) }
-    val installs by IoriApps.states.collectAsState()
+    val installs by IoriAppInstaller.jobs.collectAsState()
     // Asked again once an app got from here is on the phone.
-    val onPhone = installs.count { it.value.installed != null }
+    val onPhone = installs.count { it.value.step == IoriAppInstaller.Step.INSTALLED }
     LaunchedEffect(onPhone) { IoriLinesRepository.refresh(context) }
 
     // Each row on its own, so a long list or a large text size pages by whole rows.
@@ -186,7 +185,7 @@ private fun MutableList<Pair<String, @Composable () -> Unit>>.row(key: String, c
 
 /** One source, what it is doing, and in a debug build the fault it is made to give. */
 @Composable
-private fun SourceRow(source: IoriLinesRepository.Source, presses: Int, install: IoriApps.State?, onPressed: () -> Unit) {
+private fun SourceRow(source: IoriLinesRepository.Source, presses: Int, install: IoriAppInstaller.Job?, onPressed: () -> Unit) {
     val context = LocalContext.current
     val prefs = remember { Iori.prefs(context) }
     val onHere = remember(presses, source.pkg) { prefs.getBoolean(Iori.lineKey(source.pkg), true) }
@@ -201,7 +200,7 @@ private fun SourceRow(source: IoriLinesRepository.Source, presses: Int, install:
     // A source that is missing or too old, and is one of the apps Home can get: a press gets it.
     val gettable = remember(source.pkg) { IoriApps.find(context, source.pkg) }
         .takeIf { status == Status.NOT_INSTALLED || status == Status.NEEDS_UPDATE }
-    val progress = if (gettable != null) progressText(install ?: IoriApps.State()) else null
+    val progress = if (gettable != null) shortStatus(install) else null
     Column(Modifier.fillMaxWidth()) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val statusRoom = maxWidth * 0.6f
@@ -211,7 +210,7 @@ private fun SourceRow(source: IoriLinesRepository.Source, presses: Int, install:
                     .fillMaxWidth()
                     .clickable {
                         if (gettable != null) {
-                            IoriApps.install(context, gettable)
+                            IoriAppInstaller.install(context, gettable.pkg)
                         } else {
                             prefs.edit().putBoolean(Iori.lineKey(source.pkg), !onHere).apply()
                             onPressed()
@@ -265,7 +264,7 @@ private fun Line(text: String) {
 
 /** Glance's own trouble, with Get beside it when Glance is one of the apps Home can get. */
 @Composable
-private fun GetLine(text: String, pkg: String, installs: Map<String, IoriApps.State>) {
+private fun GetLine(text: String, pkg: String, installs: Map<String, IoriAppInstaller.Job>) {
     val context = LocalContext.current
     val app = remember(pkg) { IoriApps.find(context, pkg) }
     if (app == null) {
@@ -275,13 +274,13 @@ private fun GetLine(text: String, pkg: String, installs: Map<String, IoriApps.St
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { IoriApps.install(context, app) }
+            .clickable { IoriAppInstaller.install(context, app.pkg) }
             .padding(vertical = 5.dp),
     ) {
         Text(text = text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
         Spacer(Modifier.width(8.dp))
         Text(
-            text = progressText(installs[pkg] ?: IoriApps.State()) ?: stringResource(R.string.iori_apps_get),
+            text = shortStatus(installs[pkg]) ?: stringResource(R.string.iori_apps_get),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.End,

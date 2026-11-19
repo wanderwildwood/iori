@@ -35,8 +35,8 @@ replacing it, and either one can be the home app.
   notification access); your apps; default apps; Nextcloud; theme and home apps.
   **Settings → Run setup again** opens it again. Nothing is reset.
 - **One Nextcloud account** for the whole phone. See below.
-- **Ecosystem apps** (the "Your apps" of the plan): the apps made to work with Home, installed
-  or missing, with Get and Update. See below.
+- **Your apps**: the apps made to work with Home, in folders, installed or missing, with
+  Install and Update. See below.
 - **Default apps.** One row for each kind of thing an app of the family opens: calls, texts,
   contacts, calendar, alarms, gallery, maps, text files, passwords and more. Each row says what
   Android does today. Press a row that is not chosen, pick the app, then Always.
@@ -87,29 +87,33 @@ while signed out, and a change notice goes out on that address when the account 
 callers allowed are `CALLERS` in
 [`IoriAccount.kt`](app/src/iori/java/com/wanderwildwood/iori/IoriAccount.kt).
 
-## Ecosystem apps
+## Your apps
 
-**Settings → Ecosystem apps** lists the apps made to work with Home, in groups (Core first),
-each one installed, missing or with an update. Get downloads an app from its own GitHub
-release; Update gets the newer one. The first run has the same list as a page of tick boxes,
-with the core apps that are missing already ticked.
+**Settings → Your apps** lists the apps made to work with Home in a folder for each group
+(Core first). Each folder says how many of its apps are on the phone, or how many can be
+updated or are being installed. In a folder, each app says what it is, the version on the
+phone or "Not installed", how an install is going, and has Install, Update or Up to date.
+The list comes from <https://wanderthe.dev/apps.json>; the copy from last time is shown when
+there is no connection. The first run has the same apps as a page of tick boxes, with the core
+apps that are missing already ticked, and installs them the same way, one after the other.
 
-A download is installed only if it is signed with the key listed for that app inside Home.
-Android asks once before each first install. On Android 12 and later, an app Home installed
-can then be updated without asking again.
+Every app Home installs, from Settings, the first run, or the offer to get a missing app,
+goes through the same checks. A download is installed only if its size and SHA-256 are the
+list's, it is the package and version the list names, it is signed with the list's key and no
+other, that key is the one Home itself carries for the app, and, for an update, the app on
+the phone is signed with the same key. Android asks once before each first install. On
+Android 12 and later, an app Home installed can then be updated without asking again.
 
 ## What it sends
 
 Nothing about you. Home has no server of its own. Unlike inkOS, it has the internet
 permission, for these things only:
 
-- **Ecosystem apps**: when you open the list in Settings, or press Get or Update, it asks
-  GitHub for the latest release of each app and downloads the ones you ask for. The first
-  run's page reaches nothing until you press GET.
 - **Your apps**: when you open it in Settings, it reads the list of the house's apps from
-  <https://wanderthe.dev/apps.json> and downloads from GitHub the ones you ask for. Each
-  download is installed only if its checksum, version and signing key match the list and the
-  key Home already holds for that app.
+  <https://wanderthe.dev/apps.json>, and it downloads from GitHub the ones you ask for, there,
+  on the first run's page (which reaches nothing until you press GET), or from the offer to get
+  a missing app. Each download is installed only if its size, checksum, package, version and
+  signing key match the list and the key Home already holds for that app.
 - **Nextcloud**: only the server you sign in to, to sign in and to sign out.
 
 Settings, usage counts and everything shown on home stay on the phone. A crash report is sent

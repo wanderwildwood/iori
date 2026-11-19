@@ -122,12 +122,12 @@ object IoriHandOff {
     @Composable
     private fun Offer(app: IoriApps.App, onGot: () -> Unit, onPhonesOwn: () -> Unit, onDismiss: () -> Unit) {
         val context = LocalContext.current
-        val states by IoriApps.states.collectAsState()
-        val state = states[app.pkg] ?: IoriApps.State()
-        LaunchedEffect(Unit) { IoriApps.refreshInstalled(context) }
-        OnResume { IoriApps.resumed(context) }
+        val jobs by IoriAppInstaller.jobs.collectAsState()
+        val job = jobs[app.pkg]
+        OnResume { IoriAppInstaller.resumed(context) }
         // Once it is on the phone, the press that started this is carried out.
-        LaunchedEffect(state.installed) { if (state.installed != null) onGot() }
+        val got = job?.step == IoriAppInstaller.Step.INSTALLED && IoriAppInstaller.installed(context, app.pkg) != null
+        LaunchedEffect(got) { if (got) onGot() }
 
         MaterialTheme(colorScheme = monochrome, typography = houseTypography) {
             EInkDialog(onDismiss = onDismiss) {
@@ -137,8 +137,8 @@ object IoriHandOff {
                     fontWeight = FontWeight.Bold,
                 )
                 Spacer(Modifier.height(16.dp))
-                Press(progressText(state) ?: stringResource(R.string.iori_handoff_get, app.name)) {
-                    IoriApps.install(context, app)
+                Press(shortStatus(job) ?: stringResource(R.string.iori_handoff_get, app.name)) {
+                    IoriAppInstaller.install(context, app.pkg)
                 }
                 Spacer(Modifier.height(10.dp))
                 Press(stringResource(R.string.iori_handoff_phones_own), onPhonesOwn)

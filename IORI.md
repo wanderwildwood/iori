@@ -58,9 +58,8 @@ only. Source: https://github.com/wanderwildwood/iori
   phone's Nextcloud account".
 - **Settings in Home's own order** (`IoriSettings.kt`, makeover piece 2, 11-19): the top page is
   Home's, drawn with inkOS's rows and headings: **Phone-wide** (Dark mode, Nextcloud account,
-  Default apps; font and size come here later), **Apps** (Your apps, one row that opens
-  `IoriYourApps`; on this branch a stand-in that shows the Ecosystem apps list, until the
-  installer page replaces the file), **Home** (Home screen, Look & feel, Gestures, Advanced),
+  Default apps; font and size come here later), **Apps** (Your apps, the one row and the one
+  page for the house's apps, `IoriYourApps`; see below), **Home** (Home screen, Look & feel, Gestures, Advanced),
   and **Setup and about** (Run setup again, which opens the first run at its first page and
   resets nothing; About Home, with the credit to gezimos and inkOS's own About as a row of it).
   Home screen is a sub-page holding inkOS's own home-page rows as they are (Home, App drawer,
@@ -159,16 +158,38 @@ Not hooks, but carried on top of v0.6:
   `ui/compose/AppsUI.kt`, `ui/AppsDrawerState.kt`, `ui/dialogs/ComposeDialogManager.kt`,
   `data/Prefs.kt`, `data/repository/AppsRepository.kt`): these are edits to upstream's drawer,
   not one-line hooks, and will need care at the next upstream merge.
-- **Ecosystem apps** ("Your apps" until 14 Nov; the Settings row is named Your apps again from 19 Nov and opens `IoriYourApps`, which shows this list until the installer page takes its place; `IoriAppsRow` is no longer drawn), listed under sections (Core, then Outdoors, On the road, Daily life, Music,
-  Reading and writing, Games and oracles, Tools: `SECTIONS` in `tools/make-apps-list.py`, which
-  stops on an app with no section) (`IoriApps.kt`, `IoriAppsDialog.kt`, `assets/iori_apps.json` from
-  `tools/make-apps-list.py`): three permissions and a receiver in the manifest. The first run
-  (`IoriFirstRun.kt`) has the same list as its third page, Ecosystem, a page of tick boxes
-  (`IoriPickApps.kt`), ahead of Theme and home apps so that what is got there can be put on the
-  home screen: the core apps that are missing come ticked, GET fetches the ticked ones one
-  after the other (`IoriApps.installAll`),
-  and an install question put away without an answer is given up when the page is back in
-  front (`IoriApps.resumed`), so the ones behind it are not held up.
+- **Your apps** (one page since 19 Nov, "decisions": the earlier Ecosystem apps page and its
+  GitHub-based installer are gone, merged into this one). Settings → Apps → Your apps
+  (`IoriYourApps.kt` the page, `IoriAppInstaller.kt` the work, `IoriAppsManifest.kt` the list and
+  the two decisions, pure Kotlin with its tests; `IoriApps.kt` Home's own list): the house's apps
+  from `https://wanderthe.dev/apps.json` (made by `tools/apps-manifest.py` in the site's
+  repository; a copy is kept in Home's files for when there is no connection), in a folder for
+  each section (Core, then Outdoors, On the road, Daily life, Music, Reading and writing, Games
+  and oracles, Tools). The sections come from Home's own list, `assets/iori_apps.json` (from
+  `tools/make-apps-list.py`, `SECTIONS` there, which stops on an app with no section); an app
+  that list does not name goes under Core when the site marks it core, else under the last
+  heading. A folder row says how many of its apps are on the phone ("3 of 5"), or in bold how
+  many can be updated or are being got. In a folder each app has what it is, its version or
+  "Not installed", how an install is going or why it failed, and Install / Update / Up to date.
+  An app is downloaded to Home's cache and handed to Android's PackageInstaller only when its
+  size, SHA-256, package and version code are the list's, it is signed with the list's
+  certificate and no other, that certificate is the one Home pins for the app
+  (`assets/iori_apps.json` and `IoriAccount.CALLERS`; an app with no pin is not shown and never
+  installed, so the list on the site cannot swap a key or bring in a new app), and an update is
+  signed like the app on the phone. Android 12+ updates apps Home installed with no question. The
+  file is deleted after; one left by a killed download is cleared when the list is next read.
+  This is Home's only installer: the first run, the hand-off offer (`IoriHandOff`) and the lines
+  list's Get (`LinesDialog`) call `IoriAppInstaller.install(context, pkg)`, which reads the list
+  first when it is not in hand and fails with "Not in the list" for an app it does not have.
+  No upstream file changes: the permissions and the receiver were already there;
+  `IoriInstallReceiver` (now in `IoriAppInstaller.kt`) hands every answer to `IoriAppInstaller`.
+  The first run (`IoriFirstRun.kt`) has the same apps as its third page, Ecosystem, a page of
+  tick boxes (`IoriPickApps.kt`, from Home's own list, so nothing is asked of the network until
+  GET), ahead of Theme and home apps so that what is got there can be put on the home screen:
+  the core apps that are missing come ticked, GET installs the ticked ones one after the other
+  through the same checked path (`IoriAppInstaller.installAll`), and an install question put
+  away without an answer is given up when the page is back in front (`IoriAppInstaller.resumed`),
+  so the ones behind it are not held up.
 
 - **House style on what Home adds, inkOS underneath** (14 Nov): inkOS's home, drawer, A-Z
   letters, Settings pages and first-run look stay inkOS's. Home's own dialogs take the house type
@@ -185,21 +206,6 @@ Not hooks, but carried on top of v0.6:
   `res/raw/ofl_license.txt`). Hoog (`hoog.ttf`, hooge 05_53 by Craig Kroeger) is left out: it
   came with no licence and is not OFL. `CREDITS.md` lists all of it, with the pictures that
   came with inkOS.
-- **Your apps** (19 Nov, makeover piece 4; `IoriYourApps.kt` the page, `IoriAppInstaller.kt` the
-  work, `IoriAppsManifest.kt` the list and the two decisions, pure Kotlin with its tests): the
-  house's apps from `https://wanderthe.dev/apps.json` (made by `tools/apps-manifest.py` in the
-  site's repository; a copy is kept in Home's files for when there is no connection), core apps
-  first, each with what it is, its version or "Not installed", and Install / Update / Up to date.
-  Opened from its Settings row under Apps, after Ecosystem apps.
-  An app is downloaded to Home's cache and handed to Android's PackageInstaller only when its
-  size, SHA-256, package and version code are the list's, it is signed with the list's
-  certificate and no other, that certificate is the one Home pins for the app
-  (`assets/iori_apps.json` and `IoriAccount.CALLERS`; an app with no pin is not shown and never
-  installed, so the list on the site cannot swap a key or bring in a new app), and an update is
-  signed like the app on the phone. Android 12+ updates apps Home installed with no question. The
-  file is deleted after; one left by a killed download is cleared when the list is next read.
-  No upstream file changes: the permission and the receiver were already there;
-  `IoriInstallReceiver` hands answers marked `your_apps` to `IoriAppInstaller`.
 - **README** (19 Nov): Home's own. Upstream's is kept, links fixed for its place, as
   `docs/README-inkOS.md`, so a merge that touches upstream's README conflicts only in
   `README.md`: take ours, and copy upstream's new one there.

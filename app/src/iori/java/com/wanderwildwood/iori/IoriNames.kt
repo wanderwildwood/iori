@@ -45,9 +45,9 @@ object IoriNames {
     private val UPSTREAM_NAME = Regex("""(?<![\w/.])inkOS(?![\w:/])""")
 
     // Upstream's first-run privacy page says there are no server connections. True of inkOS;
-    // Home reaches GitHub for "Your apps", so the sentence is told as it is here.
+    // Home reaches wanderthe.dev and GitHub for "Your apps", so the sentence is told as it is here.
     private const val UPSTREAM_NO_SERVERS = "There are no server connections and no tracking. Everything stays on your device."
-    private const val OWN_CONNECTIONS = "There is no tracking. The only connection Home makes is to GitHub, when you get or update your apps."
+    private const val OWN_CONNECTIONS = "There is no tracking. Home connects only to wanderthe.dev and GitHub, when you get or update your apps, and to your own Nextcloud if you sign in to it."
 
     /** [text] with upstream's name for this app replaced by [SELF]. */
     fun named(text: String): String = UPSTREAM_NAME.replace(text.replace(UPSTREAM_NO_SERVERS, OWN_CONNECTIONS), SELF)

@@ -2,7 +2,6 @@
 <resources>
     <!-- "Your apps" (IoriYourApps.kt): the house's apps from the list on wanderthe.dev. -->
     <string name="iori_your_apps_title">Your apps</string>
-    <string name="iori_your_apps_row_desc">Install and update from wanderthe.dev</string>
     <string name="iori_your_apps_core">✓ Core app</string>
     <string name="iori_your_apps_not_installed">Not installed</string>
     <string name="iori_your_apps_installed_version">Installed: %1$s</string>
@@ -40,5 +39,6 @@
     <string name="iori_your_apps_why_conflict">it clashes with the app on the phone.</string>
     <string name="iori_your_apps_why_incompatible">it does not work on this phone.</string>
     <string name="iori_your_apps_why_storage">there is not enough room on the phone.</string>
+    <string name="iori_your_apps_why_not_listed">the list on wanderthe.dev could not be read, or does not have this app. Try again later.</string>
     <string name="iori_your_apps_why_android">Android did not install it.</string>
 </resources>

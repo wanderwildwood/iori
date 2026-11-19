@@ -19,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,8 +48,10 @@ import com.wanderwildwood.iori.ui.monochrome
 /**
  * The Ecosystem page of a first run ([IoriFirstRun]): the apps Home is made to work with, under
  * their sections, the core set ticked, the rest not. The ticked ones are got one after the
- * other; Android asks once for each. Theme and home apps come after it, so what was got here
- * can be put on the home screen there.
+ * other, through the same checked path as Your apps ([IoriAppInstaller]: the list on
+ * wanderthe.dev, size, checksum, package, version and the pinned key); Android asks once for
+ * each. Theme and home apps come after it, so what was got here can be put on the home screen
+ * there.
  *
  * Nothing is asked of the network until the person presses GET.
  */
@@ -61,27 +62,30 @@ object IoriPickApps {
         val context = LocalContext.current
         val prefs = remember { Prefs(context) }
         val apps = remember { IoriApps.apps(context) }
-        val states by IoriApps.states.collectAsState()
-        val queue by IoriApps.queue.collectAsState()
-        LaunchedEffect(Unit) { IoriApps.refreshInstalled(context) }
-        OnResume { IoriApps.resumed(context) }
-
-        var ticked by remember {
-            IoriApps.refreshInstalled(context)
-            mutableStateOf(
-                IoriApps.firstPick(apps, apps.filter { IoriApps.states.value[it.pkg]?.installed != null }.map { it.pkg }.toSet())
-            )
+        val jobs by IoriAppInstaller.jobs.collectAsState()
+        val queue by IoriAppInstaller.queue.collectAsState()
+        // What is on the phone, read again when the page is back in front and when an install ends.
+        var looked by remember { mutableStateOf(0) }
+        OnResume {
+            looked++
+            IoriAppInstaller.resumed(context)
         }
+        val ended = jobs.filterValues { it.step == IoriAppInstaller.Step.INSTALLED }.keys
+        val onPhone = remember(apps, ended, looked) {
+            apps.filter { IoriAppInstaller.installed(context, it.pkg) != null }.map { it.pkg }.toSet()
+        }
+
+        var ticked by remember { mutableStateOf(IoriApps.firstPick(apps, onPhone)) }
         var total by remember { mutableStateOf(0) }
         var askedToAllow by remember { mutableStateOf(false) }
 
         // Ticked and still missing: what GET would fetch. A failed one stays here for another try.
-        val wanted = apps.filter { it.pkg in ticked && states[it.pkg]?.installed == null }
+        val wanted = apps.filter { it.pkg in ticked && it.pkg !in onPhone }
         val running = queue.isNotEmpty()
 
         // Leaving the page lets the app in hand through and drops the ones waiting behind it.
         fun leave(then: () -> Unit) {
-            IoriApps.stopQueue()
+            IoriAppInstaller.stopQueue()
             then()
         }
 
@@ -121,7 +125,7 @@ object IoriPickApps {
                     Text(
                         text = stringResource(
                             when {
-                                askedToAllow && !running && !IoriApps.allowed(context) -> R.string.iori_pick_allow
+                                askedToAllow && !running && !IoriAppInstaller.allowed(context) -> R.string.iori_pick_allow
                                 else -> R.string.iori_pick_body
                             }
                         ),
@@ -151,7 +155,8 @@ object IoriPickApps {
                                         item(key = app.pkg) {
                                             PickRow(
                                                 app = app,
-                                                state = states[app.pkg] ?: IoriApps.State(),
+                                                onPhone = app.pkg in onPhone,
+                                                job = jobs[app.pkg],
                                                 ticked = app.pkg in ticked,
                                                 waiting = app.pkg in queue,
                                                 fontSize = sizes.body,
@@ -187,13 +192,13 @@ object IoriPickApps {
                             when {
                                 running || wanted.isEmpty() -> leave(onNext)
                                 // Android's own switch first; nothing is downloaded without it.
-                                !IoriApps.allowed(context) -> {
+                                !IoriAppInstaller.allowed(context) -> {
                                     askedToAllow = true
-                                    IoriApps.askToAllow(context)
+                                    IoriAppInstaller.askToAllow(context)
                                 }
                                 else -> {
                                     total = wanted.size
-                                    IoriApps.installAll(context, wanted)
+                                    IoriAppInstaller.installAll(context, wanted.map { it.pkg })
                                 }
                             }
                         },
@@ -206,17 +211,17 @@ object IoriPickApps {
     @Composable
     private fun PickRow(
         app: IoriApps.App,
-        state: IoriApps.State,
+        onPhone: Boolean,
+        job: IoriAppInstaller.Job?,
         ticked: Boolean,
         waiting: Boolean,
         fontSize: TextUnit,
         textColor: Color,
         onToggle: () -> Unit,
     ) {
-        val onPhone = state.installed != null
         val status = when {
             onPhone -> stringResource(R.string.iori_pick_on_phone)
-            else -> progressText(state) ?: if (waiting) stringResource(R.string.iori_pick_waiting) else ""
+            else -> shortStatus(job) ?: if (waiting) stringResource(R.string.iori_pick_waiting) else ""
         }
         Row(
             modifier = Modifier

@@ -1,36 +1,14 @@
 package com.wanderwildwood.iori
 
+import com.github.gezimos.inkos.R
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class IoriAppsTest {
 
-    @Test
-    fun aHigherReleaseIsNewer() {
-        assertTrue(IoriApps.newer("1.35.35", "1.35.34"))
-        assertTrue(IoriApps.newer("1.36.0", "1.35.99"))
-        assertTrue(IoriApps.newer("0.10.0", "0.9.12"))
-        assertTrue(IoriApps.newer("1.2.1", "1.2"))
-    }
-
-    @Test
-    fun theSameOrAnOlderReleaseIsNot() {
-        assertFalse(IoriApps.newer("1.35.35", "1.35.35"))
-        assertFalse(IoriApps.newer("1.35.34", "1.35.35"))
-        assertFalse(IoriApps.newer("0.9.12", "0.10.0"))
-    }
-
-    @Test
-    fun aTestBuildOfTheSameVersionIsNotBehind() {
-        assertFalse(IoriApps.newer("1.35.33", "1.35.33-test"))
-        assertTrue(IoriApps.newer("1.35.34", "1.35.33-test"))
-    }
-
     private fun app(pkg: String, core: Boolean) = app(pkg, if (core) IoriApps.CORE else "tools")
 
-    private fun app(pkg: String, section: String) = IoriApps.App(pkg, pkg, "o/$pkg", "$pkg.apk", "00", section)
+    private fun app(pkg: String, section: String) = IoriApps.App(pkg, pkg, "00", section)
 
     @Test
     fun appsAreListedUnderTheirSectionsInOrderAndNoneIsLost() {
@@ -38,6 +16,15 @@ class IoriAppsTest {
         val listed = IoriApps.sections(apps)
         assertEquals(listOf(listOf("b"), listOf("a"), listOf("c", "d")), listed.map { s -> s.second.map { it.pkg } })
         assertEquals(apps.size, listed.sumOf { it.second.size })
+    }
+
+    @Test
+    fun theSitesAppsAreFoldedByTheSectionHomeGivesThem() {
+        // Your apps folds the entries of the list on wanderthe.dev by a section looked up per package.
+        val of = mapOf("x" to "games", "y" to IoriApps.CORE, "z" to "something new")
+        val listed = IoriApps.sections(listOf("x", "y", "z")) { of.getValue(it) }
+        assertEquals(listOf(R.string.iori_apps_core, R.string.iori_apps_games, R.string.iori_apps_tools), listed.map { it.first })
+        assertEquals(listOf(listOf("y"), listOf("x"), listOf("z")), listed.map { it.second })
     }
 
     @Test

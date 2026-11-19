@@ -2,6 +2,7 @@ package com.wanderwildwood.iori
 
 import com.github.gezimos.inkos.R
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInfo
@@ -18,6 +19,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
@@ -26,12 +28,13 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * The work behind "Your apps" ([IoriYourApps]): the list of the house's apps from wanderthe.dev
- * (kept in Home's files so the page shows something with no connection), what is on the phone,
- * and installing or updating one app.
+ * The work behind "Your apps" ([IoriYourApps]), and Home's only way of installing an app: the
+ * list of the house's apps from wanderthe.dev (kept in Home's files so the page shows something
+ * with no connection), what is on the phone, and installing or updating an app. The first run's
+ * tick boxes ([installAll]), the hand-off offer and the lines list (`install(context, pkg)`) come
+ * here too, so every app Home gets passes the same checks.
  *
  * An app is downloaded to Home's cache (no storage permission), and handed to Android only when
  * its size and SHA-256 are the ones in the list, it is the package and version the list names,
@@ -61,11 +64,16 @@ object IoriAppInstaller {
 
     enum class Step { IDLE, DOWNLOADING, CHECKING, INSTALLING, NEEDS_TAP, INSTALLED, FAILED }
 
-    /** One app's install: what is happening, and, when it failed, why in words. */
-    data class Job(val step: Step = Step.IDLE, val percent: Int = 0, val why: String? = null)
+    /**
+     * One app's install: what is happening, and, when it failed, why in words ([why], for the
+     * Your apps page) and in a few words ([short], a string, for the rows of the first run, the
+     * hand-off offer and the lines list).
+     */
+    data class Job(val step: Step = Step.IDLE, val percent: Int = 0, val why: String? = null, val short: Int? = null)
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val fetching = AtomicBoolean(false)
+    private val fetchLock = Any()
+    private val fetching = MutableStateFlow(false)
 
     private val _list = MutableStateFlow<ListState>(ListState.Loading)
     val list: StateFlow<ListState> = _list
@@ -80,7 +88,10 @@ object IoriAppInstaller {
     /** Shows the kept copy at once, then fetches the list again. */
     fun refresh(context: Context) {
         val app = context.applicationContext
-        if (!fetching.compareAndSet(false, true)) return
+        synchronized(fetchLock) {
+            if (fetching.value) return
+            fetching.value = true
+        }
         scope.launch {
             try {
                 sweep(app)
@@ -109,9 +120,19 @@ object IoriAppInstaller {
                 }
                 _list.value = ListState.Ready(parsed, fromCopy = false, problem = null)
             } finally {
-                fetching.set(false)
+                fetching.value = false
             }
         }
+    }
+
+    /**
+     * The list as it stands once a fetch has ended (fetched now, or the kept copy when that
+     * failed); null when there is none at all.
+     */
+    private suspend fun freshList(context: Context): List<Entry>? {
+        refresh(context)
+        fetching.first { !it }
+        return (_list.value as? ListState.Ready)?.apps
     }
 
     private fun fetchText(url: String, max: Long): String {
@@ -176,7 +197,7 @@ object IoriAppInstaller {
 
     /**
      * The certificates Home carries for its apps, by package: a list from the network cannot change
-     * these. The same pins the account uses ([IoriAccount.CALLERS]) and the Ecosystem list's
+     * these. The same pins the account uses ([IoriAccount.CALLERS]) and Home's own list's
      * (assets/iori_apps.json); `IoriAccountTest` holds the two to the same values, and a package
      * they disagree on is left out, so it is never installed.
      */
@@ -212,8 +233,31 @@ object IoriAppInstaller {
     fun install(context: Context, entry: Entry) {
         val app = context.applicationContext
         if (busy(_jobs.value[entry.pkg]?.step)) return
+        begin(app, entry)
+    }
+
+    /**
+     * Installs or updates the app [pkg] as the list on wanderthe.dev has it, reading the list
+     * first when it is not in hand. An app the list does not have (or whose certificate is not
+     * the one Home pins) is not installed, and its job says so.
+     */
+    fun install(context: Context, pkg: String) {
+        val app = context.applicationContext
+        if (busy(_jobs.value[pkg]?.step)) return
+        val listed = (_list.value as? ListState.Ready)?.apps?.firstOrNull { it.pkg == pkg }
+        if (listed != null) return begin(app, listed)
+        // Reading the list counts as the start of the download.
+        set(pkg, Job(Step.DOWNLOADING))
+        scope.launch {
+            val entry = freshList(app)?.firstOrNull { it.pkg == pkg }
+            if (entry != null) begin(app, entry)
+            else set(pkg, Job(Step.FAILED, why = app.getString(R.string.iori_your_apps_why_not_listed), short = R.string.iori_apps_failed_not_listed))
+        }
+    }
+
+    private fun begin(app: Context, entry: Entry) {
         if (!allowed(app)) {
-            set(entry.pkg, Job(Step.FAILED, why = app.getString(R.string.iori_your_apps_why_allow)))
+            set(entry.pkg, Job(Step.FAILED, why = app.getString(R.string.iori_your_apps_why_allow), short = R.string.iori_apps_failed_allow))
             askToAllow(app)
             return
         }
@@ -249,7 +293,58 @@ object IoriAppInstaller {
 
     private fun fail(context: Context, entry: Entry, why: Int, detail: String? = null) {
         val words = if (detail.isNullOrBlank()) context.getString(why) else context.getString(why) + " (" + detail + ")"
-        set(entry.pkg, Job(Step.FAILED, why = words))
+        set(entry.pkg, Job(Step.FAILED, why = words, short = short(why)))
+    }
+
+    /** The few words a small row says for a failure, from the reason [IoriYourApps] gives in full. */
+    private fun short(why: Int): Int = when (why) {
+        R.string.iori_your_apps_why_allow -> R.string.iori_apps_failed_allow
+        R.string.iori_your_apps_why_network -> R.string.iori_apps_failed_network
+        R.string.iori_your_apps_why_damaged -> R.string.iori_apps_failed_checksum
+        R.string.iori_your_apps_why_not_app, R.string.iori_your_apps_why_wrong_app -> R.string.iori_apps_failed_app
+        R.string.iori_your_apps_why_key, R.string.iori_your_apps_why_key_changed -> R.string.iori_apps_failed_key
+        R.string.iori_your_apps_why_not_listed -> R.string.iori_apps_failed_not_listed
+        else -> R.string.iori_apps_failed_refused
+    }
+
+    // --- Several, one after the other (the first run) ------------------------------------------
+
+    private val queueLock = Any()
+    private var worker: kotlinx.coroutines.Job? = null
+    private val _queue = MutableStateFlow<List<String>>(emptyList())
+
+    /** The packages still to be got by [installAll]; the first is the one in hand. */
+    val queue: StateFlow<List<String>> = _queue
+
+    /**
+     * Gets several apps one after the other through [install], so Android's "install this app?"
+     * questions come one at a time. An app that fails is passed over and the rest go on, except
+     * when Home may not install apps at all: then the same answer waits for every other app, and
+     * the queue stops.
+     */
+    fun installAll(context: Context, pkgs: List<String>) {
+        val app = context.applicationContext
+        synchronized(queueLock) {
+            _queue.update { now -> now + pkgs.filter { it !in now } }
+            if (worker != null) return
+            worker = scope.launch {
+                while (true) {
+                    val pkg = synchronized(queueLock) {
+                        _queue.value.firstOrNull().also { if (it == null) worker = null }
+                    } ?: break
+                    // install() has set the job before it returns (or left a running one alone).
+                    install(app, pkg)
+                    val end = jobs.first { all -> all[pkg]?.step.let { it == Step.INSTALLED || it == Step.FAILED || it == null || it == Step.IDLE } }[pkg]
+                    if (end?.step == Step.FAILED && !allowed(app)) _queue.value = listOf(pkg)
+                    _queue.update { it - pkg }
+                }
+            }
+        }
+    }
+
+    /** Lets the app in hand finish and drops the ones waiting behind it. */
+    fun stopQueue() {
+        _queue.update { it.take(1) }
     }
 
     private fun why(verdict: Verdict): Int = when (verdict) {
@@ -377,8 +472,7 @@ object IoriAppInstaller {
                 val result = PendingIntent.getBroadcast(
                     context, id,
                     Intent(context, IoriInstallReceiver::class.java)
-                        .putExtra(IoriInstallReceiver.EXTRA_PKG, entry.pkg)
-                        .putExtra(EXTRA_YOUR_APPS, true),
+                        .putExtra(IoriInstallReceiver.EXTRA_PKG, entry.pkg),
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
                 )
                 session.commit(result.intentSender)
@@ -389,9 +483,6 @@ object IoriAppInstaller {
             throw e
         }
     }
-
-    /** Marks an install answer as one for this page, so [IoriInstallReceiver] hands it here. */
-    const val EXTRA_YOUR_APPS = "com.wanderwildwood.iori.your_apps"
 
     /** Android's answer to an install; called by [IoriInstallReceiver]. */
     internal fun answered(context: Context, pkg: String, status: Int, message: String?) {
@@ -410,7 +501,7 @@ object IoriAppInstaller {
                     PackageInstaller.STATUS_FAILURE_STORAGE -> R.string.iori_your_apps_why_storage
                     else -> R.string.iori_your_apps_why_android
                 }
-                set(pkg, Job(Step.FAILED, why = context.getString(why)))
+                set(pkg, Job(Step.FAILED, why = context.getString(why), short = short(why)))
             }
         }
     }
@@ -441,7 +532,7 @@ object IoriAppInstaller {
                 sessions.remove(pkg)
                 _jobs.update { all ->
                     if (all[pkg]?.step != Step.NEEDS_TAP) all
-                    else all + (pkg to Job(Step.FAILED, why = app.getString(R.string.iori_your_apps_why_unanswered)))
+                    else all + (pkg to Job(Step.FAILED, why = app.getString(R.string.iori_your_apps_why_unanswered), short = R.string.iori_apps_failed_refused))
                 }
             }
         }
@@ -450,5 +541,25 @@ object IoriAppInstaller {
     /** A finished outcome (installed, failed) stays on its row until the page is opened again. */
     fun clearFinished() {
         _jobs.update { all -> all.filterValues { busy(it.step) || it.step == Step.NEEDS_TAP } }
+    }
+}
+
+/** Hears back from Android about an install Home asked for ([IoriAppInstaller]). */
+class IoriInstallReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        val pkg = intent.getStringExtra(EXTRA_PKG) ?: return
+        val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE)
+        val message = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)
+        IoriAppInstaller.answered(context, pkg, status, message)
+        if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
+            // Android's own "install this app?" question; the answer comes back here again.
+            @Suppress("DEPRECATION")
+            val confirm = intent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT) ?: return
+            runCatching { context.startActivity(confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        }
+    }
+
+    companion object {
+        const val EXTRA_PKG = "com.wanderwildwood.iori.pkg"
     }
 }

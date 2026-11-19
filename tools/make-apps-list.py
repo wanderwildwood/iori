@@ -6,6 +6,9 @@ typed by hand:
 its shown name, package, GitHub repo, the release file to download, the SHA-256 of the
 certificate its releases are signed with (read from the release APK on this machine), and
 which section it is listed in. Home installs nothing whose certificate differs from this.
+Home installs from the list on wanderthe.dev; this file gives Your apps its section folders and
+the first run its tick boxes, and pins each app's certificate. Home no longer reads the repo and
+file fields; they are kept for --check.
 
     tools/make-apps-list.py            # write the list
     tools/make-apps-list.py --check    # also ask GitHub that every download link exists

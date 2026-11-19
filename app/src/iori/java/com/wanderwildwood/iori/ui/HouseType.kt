@@ -6,7 +6,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 /*
- * The house type scale for Home's own dialogs (Ecosystem apps, Home lines, About, the offer to
+ * The house type scale for Home's own dialogs (Your apps, Home lines, About, the offer to
  * get an app): the sizes the other apps of this shop take from MMD, 28 / 24 / 20 / 18 / 16, with
  * nothing under 16 sp (the house floor; a 14 sp line is 22 px on the Kompakt, under the 24 px
  * its maker asks for). Home does not carry MMD, so the scale is written out here rather than
