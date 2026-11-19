@@ -219,6 +219,60 @@ class IoriAccountTest {
         assertEquals(1, s.pending().size)
     }
 
+    @Test
+    fun theSamePasswordTypedInAgainIsNotEndedOnTheServer() {
+        val s = store()
+        s.signIn(ada)
+        s.signOut()
+        assertEquals(1, s.pending().size)
+        // The server could not be reached at sign-out; the same app password is typed in again.
+        assertTrue(s.signIn(ada.copy(server = "HTTPS://Cloud.Example.org/")))
+        assertTrue(s.pending().isEmpty())
+        assertEquals(ada.password, s.account()!!.password)
+    }
+
+    @Test
+    fun aWaitingSignOutOnAnotherServerOrPasswordStays() {
+        val s = store()
+        s.signIn(ada)
+        s.signOut()
+        s.signIn(ada.copy(server = "https://other.example.org"))
+        assertEquals(1, s.pending().size)
+        s.signIn(ada.copy(password = "app-password-two"))
+        assertEquals(ada.password, s.pending().single().account.password)
+    }
+
+    @Test
+    fun aWaitingSignOutWithTheLivePasswordIsNeitherTriedNorKept() {
+        // A file written before sign-in dropped it: the live password also waits under revoke.
+        val memory = Memory()
+        store(memory).apply { signIn(ada); signOut(); signIn(ada.copy(password = "two")); signOut() }
+        val o = JsonParser.parseString(memory.text!!).asJsonObject
+        o.addProperty("server", ada.server)
+        o.addProperty("user", ada.user)
+        o.addProperty("sealed", "s:" + ada.password.reversed())
+        memory.text = o.toString()
+        val s = store(memory)
+        assertEquals(ada, s.account())
+        val waiting = s.pending().single()
+        assertEquals("two", waiting.account.password)
+        assertTrue(s.revoked(waiting.id))
+        assertFalse(memory.text!!.contains("\"revoke\""))
+        assertEquals(ada, s.account())
+    }
+
+    @Test
+    fun theAccountAndItsStampAreReadTogether() {
+        val s = store()
+        assertNull(s.held())
+        s.signIn(ada)
+        val held = s.held()!!
+        assertEquals(ada, held.account)
+        assertEquals(s.stamp(), held.stamp)
+        s.signOut()
+        assertNull(s.held())
+    }
+
     // ---- the user id -----------------------------------------------------------------------------
 
     @Test
@@ -259,6 +313,14 @@ class IoriAccountTest {
         assertFalse(s.fillUid(stamp, "ada"))
         assertFalse(s.fillUid(s.stamp(), "ada"))
         assertNull(s.account())
+    }
+
+    @Test
+    fun aUserIdOnceKeptIsNeverWrittenOver() {
+        val s = store()
+        s.signIn(ada.copy(uid = "Ada"))
+        assertFalse(s.fillUid(s.stamp(), "someone-else"))
+        assertEquals("Ada", s.account()!!.uid)
     }
 
     @Test

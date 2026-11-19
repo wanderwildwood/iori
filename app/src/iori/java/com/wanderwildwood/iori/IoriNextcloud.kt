@@ -303,15 +303,18 @@ object IoriNextcloud {
             val waiting = IoriAccount.pending(app)
             var left = false
             for (p in waiting) {
+                // Signed in again with this very app password since the list was read: never end it.
+                val live = IoriAccount.account(app)
+                if (live != null && live.server == p.account.server && live.password == p.account.password) continue
                 val reply = call("DELETE", "${p.account.server}/ocs/v2.php/core/apppassword", account = p.account)
                 if (reply != null && IoriLogin.revokedBy(reply.code)) IoriAccount.revoked(app, p.id) else left = true
             }
             withContext(Dispatchers.Main) { unrevoked = left }
-            val account = IoriAccount.account(app)
-            if (account != null && account.uid == null) {
-                val stamp = IoriAccount.stamp(app)
-                val uid = userId(account)
-                if (uid != null && IoriAccount.fillUid(app, stamp, uid)) withContext(Dispatchers.Main) {
+            // The account and its stamp in one read: a sign-in between two reads would pair them wrong.
+            val held = IoriAccount.held(app)
+            if (held != null && held.account.uid == null) {
+                val uid = userId(held.account)
+                if (uid != null && IoriAccount.fillUid(app, held.stamp, uid)) withContext(Dispatchers.Main) {
                     shown = IoriAccount.account(app)?.let { Shown(it.user, IoriLogin.host(it.server)) }
                 }
             }

@@ -60,6 +60,9 @@ object IoriAccount {
     /** A sign-out the server has not yet been told about: the old account, kept only to end it there. */
     class Pending(val id: String, val account: Account)
 
+    /** The account and the stamp it was kept under, read together, so neither can be from another sign-in. */
+    class Held(val account: Account, val stamp: String)
+
     fun uri(context: Context): Uri = Uri.parse("content://${context.packageName}.accounts/nextcloud")
 
     /** The provider's row. `uid` came fifth, so an app reads it only when it is there. */
@@ -182,14 +185,34 @@ object IoriAccount {
             if (list.isNotEmpty()) add("revoke", JsonArray().also { a -> list.takeLast(MAX_PENDING).forEach { a.add(it) } })
         }
 
+        private fun JsonObject.account(): Account? {
+            val server = text("server") ?: return null
+            val user = text("user") ?: return null
+            val password = text("sealed")?.let { sealer.open(it) }?.takeIf { it.isNotEmpty() } ?: return null
+            return Account(server, user, password, text("uid"))
+        }
+
+        /** The opened password of a waiting sign-out, or null when it does not open. */
+        private fun JsonObject.openedPassword(): String? =
+            text("sealed")?.let { sealer.open(it) }?.takeIf { it.isNotEmpty() }
+
+        /**
+         * Whether a waiting sign-out is the very app password [live] signs in with (same server,
+         * same password): it was typed in again, so it must not be deleted on the server.
+         */
+        private fun JsonObject.isLive(live: Account?): Boolean =
+            live != null && text("server") == live.server && openedPassword() == live.password
+
         /** The account, or nothing: none kept, the file unreadable, or the password not to be opened. */
         @Synchronized
-        fun account(): Account? {
+        fun account(): Account? = kept()?.account()
+
+        /** The account with its stamp, read at once; nothing when signed out. */
+        @Synchronized
+        fun held(): Held? {
             val o = kept() ?: return null
-            val server = o.text("server") ?: return null
-            val user = o.text("user") ?: return null
-            val password = o.text("sealed")?.let { sealer.open(it) }?.takeIf { it.isNotEmpty() } ?: return null
-            return Account(server, user, password, o.text("uid"))
+            val account = o.account() ?: return null
+            return Held(account, o.text("stamp").orEmpty())
         }
 
         @Synchronized
@@ -197,30 +220,35 @@ object IoriAccount {
 
         /**
          * Keeps [account] in place of any other, its server written one way ([IoriLogin.canonical]).
-         * False, and nothing changed, when it cannot be sealed. Old sign-outs still to be ended stay.
+         * False, and nothing changed, when it cannot be sealed. Old sign-outs still to be ended stay,
+         * except one with this very app password on this server: it is live again (typed in once
+         * more after a sign-out the server never heard of), and ending it would sign out every app.
          */
         @Synchronized
         fun signIn(account: Account): Boolean {
             if (account.server.isBlank() || account.user.isBlank() || account.password.isEmpty()) return false
             val sealed = sealer.seal(account.password) ?: return false
+            val server = IoriLogin.canonical(account.server)
             val o = JsonObject()
-            o.addProperty("server", IoriLogin.canonical(account.server))
+            o.addProperty("server", server)
             o.addProperty("user", account.user)
             account.uid?.takeIf { it.isNotBlank() }?.let { o.addProperty("uid", it) }
             o.addProperty("sealed", sealed)
             o.addProperty("stamp", newStamp())
-            return write(o.withRevoking(kept()?.revoking().orEmpty()))
+            val live = account.copy(server = server)
+            return write(o.withRevoking(kept()?.revoking().orEmpty().filterNot { it.isLive(live) }))
         }
 
         /**
          * Puts the user id the server gave in, if the account is still the one with [stamp] (not
-         * signed out or replaced while the server was asked). A new stamp, so the apps read again.
+         * signed out or replaced while the server was asked) and has none yet: a user id once kept
+         * is never written over. A new stamp, so the apps read again.
          */
         @Synchronized
         fun fillUid(stamp: String, uid: String): Boolean {
             if (uid.isBlank()) return false
             val o = kept() ?: return false
-            if (o.text("server") == null || o.text("stamp") != stamp || o.text("uid") == uid) return false
+            if (o.text("server") == null || o.text("stamp") != stamp || o.text("uid") != null) return false
             o.addProperty("uid", uid)
             o.addProperty("stamp", newStamp())
             return write(o)
@@ -252,26 +280,36 @@ object IoriAccount {
             return write(left.withRevoking(list))
         }
 
-        /** The old sign-ins still to be ended on their server, oldest first; those not to be opened are left out. */
+        /**
+         * The old sign-ins still to be ended on their server, oldest first. Those not to be opened
+         * are left out, and so is one whose app password is the live account's (never ended).
+         */
         @Synchronized
-        fun pending(): List<Pending> = kept()?.revoking().orEmpty().mapNotNull { e ->
-            val id = e.text("id") ?: return@mapNotNull null
-            val server = e.text("server") ?: return@mapNotNull null
-            val user = e.text("user") ?: return@mapNotNull null
-            val password = e.text("sealed")?.let { sealer.open(it) }?.takeIf { it.isNotEmpty() } ?: return@mapNotNull null
-            Pending(id, Account(server, user, password))
+        fun pending(): List<Pending> {
+            val o = kept() ?: return emptyList()
+            val live = o.account()
+            return o.revoking().mapNotNull { e ->
+                if (e.isLive(live)) return@mapNotNull null
+                val id = e.text("id") ?: return@mapNotNull null
+                val server = e.text("server") ?: return@mapNotNull null
+                val user = e.text("user") ?: return@mapNotNull null
+                val password = e.openedPassword() ?: return@mapNotNull null
+                Pending(id, Account(server, user, password))
+            }
         }
 
         /**
          * The server has ended the old sign-in [id] (or it can never be ended from here: the
-         * password no longer opens): it is forgotten for good. Entries that no longer open go too.
+         * password no longer opens): it is forgotten for good. Entries that no longer open go too,
+         * and any with the live account's app password (that one is not to be ended).
          */
         @Synchronized
         fun revoked(id: String): Boolean {
             val o = kept() ?: return false
+            val live = o.account()
             val before = o.revoking()
             val after = before.filter { e ->
-                e.text("id") != id && e.text("sealed")?.let { sealer.open(it) }?.isNotEmpty() == true
+                e.text("id") != id && e.openedPassword() != null && !e.isLive(live)
             }
             if (after.size == before.size) return false
             o.remove("revoke")
@@ -290,6 +328,9 @@ object IoriAccount {
     fun account(context: Context): Account? = store(context).account()
 
     fun stamp(context: Context): String = store(context).stamp()
+
+    /** The account with the stamp it is kept under, read together; nothing when signed out. */
+    fun held(context: Context): Held? = store(context).held()
 
     /** Keeps [account] and tells the apps. False when the phone could not seal it. */
     fun signIn(context: Context, account: Account): Boolean {

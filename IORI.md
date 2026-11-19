@@ -59,7 +59,8 @@ only. Source: https://github.com/wanderwildwood/iori
   kept only when it is. Sign out stops serving the account at once and asks the server to
   delete the app password; until the server says it is gone (200, 401 or 404) the password
   stays sealed under `revoke`, is tried again at each start of Home (the provider's
-  `onCreate`) and each time the account is shown, and the rows say so. https only; a debug build also takes plain http to a
+  `onCreate`) and each time the account is shown, and the rows say so. A sign-in with that
+  same app password on the same server takes it off the list (it is live again, never ended). https only; a debug build also takes plain http to a
   host written as a number on its own network or the phone itself (127/8, 10/8, 172.16/12,
   192.168/16, ::1), or localhost; a name is never looked up, for a stand-in server (`app/src/debug/AndroidManifest.xml`). The
   apps' side is `sync/HomeAccount.kt`, the same file in each app that has the row "Use the
