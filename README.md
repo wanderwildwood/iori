@@ -35,7 +35,7 @@ in the app, off in Glance, did not answer. Pressing one there turns it on or off
 and leaves the lock screen as it was. When Glance itself is the trouble, the list says so
 instead: not installed, needs 0.1.24, does not know this build, or did not answer.
 
-With no lines to press, the same list is under **Settings → Home lines**, and home shows a
+With no lines to press, the same list is under **Settings → Home screen → Home lines**, and home shows a
 "Home lines" row while it is being edited. The list turns its pages on whole rows, with Close
 always on screen, at any text size.
 
@@ -100,7 +100,7 @@ certificate its releases are signed with.
 
 ## What it sends
 
-Nothing about you. Unlike inkOS, Home has the internet permission, for one thing: **Ecosystem apps**
+Nothing about you. Unlike inkOS, Home has the internet permission, for one thing: **Your apps**
 (in Settings, and as the Ecosystem page of a first run). When you open the page in Settings it asks
 GitHub for the latest release of each of the apps you have, and when you press Get or Update,
 or GET on the first run's page, it downloads that app from its GitHub release. The first run's
@@ -163,7 +163,7 @@ all-day events), one commit each, so they can be offered back to inkOS.
 
 - [inkOS](https://github.com/gezimos/inkos) by gezimos, GPL-3.0, which is nearly all of this.
   inkOS was itself forked from mLauncher and Olauncher; see inkOS's own credits under
-  Settings → About.
+  Settings → About Home → inkOS's own About.
 - The lock-screen music strip follows [Katapult](https://github.com/gezimos/Katapult) by
   gezimos, GPL-3.0.
 

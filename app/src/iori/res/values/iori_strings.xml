@@ -69,10 +69,14 @@
     <string name="iori_dark_system_on">On, set by the phone for every app. Press to change it.</string>
     <string name="iori_dark_system_off">Off, set by the phone for every app. Press to change it.</string>
 
-    <!-- The Settings home page: Home's headings and its Run setup again row -->
-    <string name="iori_settings_phone">Phone</string>
+    <!-- The Settings home page (makeover piece 2): Home's headings, its rows, Run setup again -->
+    <string name="iori_settings_phone">Phone-wide</string>
     <string name="iori_settings_apps">Apps</string>
+    <string name="iori_settings_home_group">Home</string>
     <string name="iori_settings_home">Home screen</string>
+    <string name="iori_settings_home_desc">Widgets, app drawer, fonts, notifications, folders and lines</string>
+    <string name="iori_your_apps_title">Your apps</string>
+    <string name="iori_your_apps_desc">Installed or missing, get and update</string>
     <string name="iori_settings_setup">Setup and about</string>
     <string name="iori_setup_again">Run setup again</string>
     <string name="iori_setup_again_desc">The first-run pages, from the start. Nothing is reset</string>
@@ -143,7 +147,7 @@
     <string name="iori_apps_failed_key">Not signed by its maker</string>
     <string name="iori_apps_failed_refused">Not installed. Try again</string>
     <!-- First run: Pick your apps -->
-    <string name="iori_pick_body">These apps are made to work together. Tick the ones you want and press GET. Android asks once for each. The rest can be got later in Settings, under Ecosystem apps.</string>
+    <string name="iori_pick_body">These apps are made to work together. Tick the ones you want and press GET. Android asks once for each. The rest can be got later in Settings, under Your apps.</string>
     <string name="iori_first_ecosystem">ECOSYSTEM</string>
     <string name="iori_first_setup">SETUP</string>
     <string name="iori_first_defaults">DEFAULT APPS</string>
@@ -232,6 +236,16 @@
         <item quantity="other">%d characters</item>
     </plurals>
     <string name="iori_heading_fonts">Fonts</string>
+
+    <!-- inkOS's Settings words that were written in code, here so they can be read and changed -->
+    <string name="iori_upstream_about_title">About inkOS</string>
+    <string name="iori_desc_change_launcher">Pick which app is the phone\'s home screen</string>
+    <string name="iori_desc_guide">How Home\'s taps and swipes work</string>
+    <string name="iori_desc_restart">Starts Home again without restarting the phone</string>
+    <string name="iori_desc_exit">Pick another home screen app</string>
+    <string name="iori_desc_ui_scale">Makes all of Home bigger or smaller</string>
+    <string name="iori_gesture_conflict">Short and long swipes</string>
+    <string name="iori_desc_gesture_conflict">How a swipe on home tells a gesture from a page turn</string>
     <string name="iori_one_font">One font everywhere</string>
     <string name="iori_window_title">Window title</string>
     <string name="iori_show_window">Show the window</string>

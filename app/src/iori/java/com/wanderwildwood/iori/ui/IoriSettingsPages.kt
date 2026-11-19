@@ -65,6 +65,9 @@ import kotlin.math.max
  * - a row that does not fit at the foot is neither drawn nor pressable until the next page;
  * - a heading is never the last thing on a page: it goes over with the row under it;
  * - a turn back goes one page back and lands on a row;
+ * - a row taller than the page is read a page at a time within it, as [PagedColumn] does, and
+ *   is not cut at its top when only its heading would be left above it (found 11-19: such a row
+ *   left a page with its heading alone, and the turn after it skipped the rest of the row);
  * - the scrollbar is drawn as [PagedColumn] draws it, its thumb measured in pixels.
  *
  * Content that is not a reported row (a picture, a note) is turned past a page at a time.
@@ -95,6 +98,9 @@ object IoriSettingsPages {
     fun foot(spans: List<Span>, top: Int, height: Int): Int? {
         val sorted = spans.sortedBy { it.top }
         val cut = sorted.firstOrNull { it.bottom > top + height && it.top > top } ?: return null
+        // A row taller than the page with nothing but headings above it on this page: a turn
+        // would not bring it whole either, so it is drawn as far as it goes.
+        if (cut.bottom - cut.top > height && sorted.none { !it.heading && it.top >= top && it.top < cut.top }) return null
         var foot = cut.top
         // A heading left alone at the foot goes over with its rows.
         val before = sorted.lastOrNull { it.bottom <= foot && it.top >= top }
@@ -113,7 +119,11 @@ object IoriSettingsPages {
     /** Where a turn forward from a page opening at [top] lands, or null at the end. */
     fun forward(spans: List<Span>, top: Int, height: Int, contentHeight: Int): Int? {
         if (top + height >= end(spans, contentHeight)) return null
-        val f = foot(spans, top, height) ?: return (top + height).coerceAtMost(lastStart(spans, height, contentHeight))
+        val f = foot(spans, top, height)
+        // Nothing is cut inside the page, or the first cut lies past its foot: what runs past the
+        // foot is a row taller than the page (or content that is not a row), so the next page is
+        // the next part of it, never the row after it.
+        if (f == null || f > height) return (top + height).coerceAtMost(lastStart(spans, height, contentHeight))
         return top + f
     }
 
