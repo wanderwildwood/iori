@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -152,7 +154,11 @@ fun LinesDialog(tripped: Boolean, onTurnBackOn: () -> Unit, onDismiss: () -> Uni
  * drawn, to know how much of the room a short list needs.
  */
 @Composable
-private fun FittedPages(rows: List<Pair<String, @Composable () -> Unit>>, modifier: Modifier) {
+internal fun FittedPages(
+    rows: List<Pair<String, @Composable () -> Unit>>,
+    modifier: Modifier,
+    state: LazyListState = rememberLazyListState(),
+) {
     SubcomposeLayout(modifier) { constraints ->
         val loose = constraints.copy(minWidth = 0, minHeight = 0, maxHeight = Constraints.Infinity)
         val natural = subcompose("measure") { rows.forEach { (_, row) -> row() } }
@@ -160,7 +166,7 @@ private fun FittedPages(rows: List<Pair<String, @Composable () -> Unit>>, modifi
         val height = natural.coerceIn(constraints.minHeight, constraints.maxHeight)
         val width = constraints.maxWidth
         val list = subcompose("rows") {
-            PagedColumn(Modifier.fillMaxWidth()) {
+            PagedColumn(Modifier.fillMaxWidth(), state = state) {
                 rows.forEach { (key, row) -> item(key = key) { row() } }
             }
         }.map { it.measure(Constraints.fixed(width, height)) }

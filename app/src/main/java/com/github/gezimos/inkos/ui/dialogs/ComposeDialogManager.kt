@@ -20,6 +20,7 @@ class ComposeDialogManager(val context: Context, val activity: Activity) {
 
     private val prefs by lazy { Prefs(context) }
     private val sheetHost = ComposeBottomSheetHost(activity)
+    val iori = com.wanderwildwood.iori.IoriDialogs(activity) { sheetHost.onDismissed?.also { sheetHost.onDismissed = null }?.invoke() } // iori: Home's house dialogs; the after-close step runs once, whichever closes
 
     /** Called after any sub-dialog sheet is dismissed (e.g. to re-open the parent settings sheet). */
     var onAfterDismiss: (() -> Unit)? = null
@@ -105,6 +106,7 @@ class ComposeDialogManager(val context: Context, val activity: Activity) {
         valueFormatter: (Int) -> String = { it.toString() },
         onValueSelected: (Int) -> Unit
     ) {
+        if (iori.number(title, minValue, maxValue, currentValue, liveUpdate, step, valueFormatter, onValueSelected)) return // iori: the house number dialog
         sheetHost.show {
             SliderSheet(
                 title = title,
@@ -135,6 +137,7 @@ class ComposeDialogManager(val context: Context, val activity: Activity) {
         onItemDeleted: ((T, () -> Unit) -> Unit)? = null,
         maxHeightRatio: Float = 0.30f
     ) {
+        if (onItemDeleted == null && iori.choose(context.getString(titleResId), options.map { it.toString() }, selectedIndex, fonts, { nonSelectable?.invoke(options[it]) == true }) { onItemSelected(options[it]) }) return // iori: the house choice dialog
         sheetHost.show {
             SingleChoiceSheet(
                 title = context.getString(titleResId),
@@ -169,6 +172,7 @@ class ComposeDialogManager(val context: Context, val activity: Activity) {
         onItemSelected: (String, Boolean) -> Unit,
         onItemDeleted: ((String, () -> Unit) -> Unit)? = null
     ) {
+        if (iori.fonts(context.getString(titleResId), builtInOptions, builtInFonts, customOptions, customFonts, selectedIndex, onAddCustomFont, onItemSelected, onItemDeleted)) return // iori: the house font list
         sheetHost.show {
             TabbedFontPickerSheet(
                 title = context.getString(titleResId),
@@ -216,6 +220,7 @@ class ComposeDialogManager(val context: Context, val activity: Activity) {
         viewModel: MainViewModel,
         onSelect: (Action, AppListItem?) -> Unit
     ) {
+        if (iori.gesture(context.getString(titleResId), allowedActions, currentAction, currentAppLabel, viewModel, onSelect)) return // iori: the house list of actions
         sheetHost.show {
             GestureActionPickerSheet(
                 title = context.getString(titleResId),
@@ -417,6 +422,7 @@ class ComposeDialogManager(val context: Context, val activity: Activity) {
     }
 
     fun dismissAll() {
+        iori.dismiss() // iori: a house dialog closes with the sheets
         sheetHost.dismiss()
     }
 }

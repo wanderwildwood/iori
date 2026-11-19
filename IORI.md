@@ -86,7 +86,7 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!*.md'` must list exactly these: 93 lines (11-19; SettingsFragment's 398 (no page dots) and 419 (the page in `IoriSettingsLook.Pages`, PagedColumn's scrollbar) are new; SettingsComposable's 16 are one row below, and the older rows were last counted at 32, so recheck them at the next merge).
+'!app/src/iori/**' --glob '!*.md'` must list exactly these: 114 lines (11-19, after the Settings house pass and the house dialogs; the rows below give each file's lines; the older rows were last counted at 32, so recheck them at the next merge).
 
 | File:line | Purpose |
 |---|---|
@@ -123,6 +123,13 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/helper/utils/BrightnessHelper.kt:17` | the brightness-gesture toast, written in code, through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/notifications/NotificationsUI.kt:400` | the notification-access message reads `perm_notification_body` (upstream's same words), which iori overrides |
 | `app/src/main/java/com/github/gezimos/inkos/ui/notifications/LettersFragment.kt:305` | the same, in Letters |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt:23` | `val iori = IoriDialogs(...)`: Home's house dialogs (`IoriDialogs.kt`) beside inkOS's sheet host; the manager's after-close step (Edit mode reopening its sheet) runs once, whichever closes |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt:109` | `showSliderDialog` → `iori.number`: the house number dialog (value large, big − and +, Cancel / Save; Close when inkOS writes live); inkOS's sheet below is the fallback |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt:140` | `showSingleChoiceDialog` → `iori.choose`: a house list, the current one ticked; inkOS's sheet only for a caller that deletes rows (none today) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt:175` | `showTabbedFontPicker` → `iori.fonts`: one list of fonts in their own faces, added fonts with Remove, "Add a font file" last; no tabs, no ⓘ |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt:223` | `showGestureActionPicker` → `iori.gesture`: one list (Off, Home's actions, System, Apps) in place of three tabs |
+| `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeDialogManager.kt:425` | `dismissAll` also closes a house dialog |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` (15 lines: 670, 893, 907, 927, 955, 965, 977, 983, 1137, 1336, 1349, 1494, 1647, 1667, 2074) | rows that cycled through their choices in place open `iori.choose` (e-ink mode, the four alignments, clock format, clock style, date format, notification count, sort order, icon shape, button corners, app name type), and UI scale opens `iori.uiScale` instead of its own sheet; each writes what the cycle or sheet wrote |
 | `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt:1080` | the gesture sheet's "inkOS" tab title through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt:1618` | the shortcut sheet's "inkOS" tab title through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt:2292` | "What is inkOS Wallpaper?" reads `what_is_inkos_wallpaper` (upstream's same words), which iori overrides |

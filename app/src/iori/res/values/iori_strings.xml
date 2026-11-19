@@ -216,4 +216,8 @@
     <string name="iori_support_coffee">Buy the author of inkOS a coffee</string>
     <string name="iori_support_llama">Feed the llamas</string>
     <string name="iori_about_no_browser">There is no browser on this phone to open that with.</string>
+    <!-- Settings dialogs in the house look (IoriDialogs.kt) -->
+    <string name="iori_dialog_add_font">Add a font file</string>
+    <string name="iori_dialog_remove">Remove</string>
+    <string name="iori_dialog_auto">automatic</string>
 </resources>
