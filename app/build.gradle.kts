@@ -16,8 +16,8 @@ android {
         applicationId = "app.inkos"
         minSdk = 26
         targetSdk = 36
-        versionCode = 101014
-        versionName = "0.6.1"
+        versionCode = 101013
+        versionName = "0.6"
     }
 
     dependenciesInfo {

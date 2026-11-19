@@ -56,6 +56,8 @@ object Iori {
      */
     fun guardCrashes(context: Context) {
         IoriLinesRepository.warm(context)
+        // Also the first thing of iori's at each start: settings that name what was removed.
+        IoriRemoved.migrate(context)
         try {
             val current = Thread.getDefaultUncaughtExceptionHandler()
             if (current is Guard) return

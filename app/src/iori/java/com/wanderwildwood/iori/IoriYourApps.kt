@@ -1,8 +1,6 @@
 package com.wanderwildwood.iori
 
 import android.os.Build
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -34,10 +32,9 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.github.gezimos.inkos.R
-import com.github.gezimos.inkos.ui.compose.SettingsComposable.SettingsHomeItem
 import com.wanderwildwood.iori.IoriAppInstaller.Job
 import com.wanderwildwood.iori.IoriAppInstaller.ListState
 import com.wanderwildwood.iori.IoriAppInstaller.Step
@@ -49,25 +46,14 @@ import com.wanderwildwood.iori.ui.houseTypography
 import com.wanderwildwood.iori.ui.monochrome
 
 /**
- * "Your apps": the house's apps from the list on wanderthe.dev (core apps first), each with
- * what it is, the version on the phone or "Not installed", and Install, Update or Up to date.
- * The work is [IoriAppInstaller]'s; this is only the page and its Settings row (under Apps,
- * after Ecosystem apps).
+ * "Your apps", the one page for the house's apps (opened from its Settings row under Apps):
+ * the apps of the list on wanderthe.dev in a folder for each section (Core first, the sections
+ * from Home's own list, [IoriApps]); each folder says how many of its apps are on the phone, or
+ * how many can be updated or are being got. In a folder, each app with what it is, the version on
+ * the phone or "Not installed", how an install is going, and Install, Update or Up to date.
+ * The work is [IoriAppInstaller]'s; this is only the page.
  */
 object IoriYourApps {
-
-    @Composable
-    fun SettingsRow(titleFontSize: TextUnit) {
-        var open by remember { mutableStateOf(false) }
-        SettingsHomeItem(
-            title = stringResource(R.string.iori_your_apps_title),
-            imageVector = Icons.Rounded.SystemUpdate,
-            description = stringResource(R.string.iori_your_apps_row_desc),
-            titleFontSize = titleFontSize,
-            onClick = { open = true },
-        )
-        if (open) Dialog(onClose = { open = false })
-    }
 
     @Composable
     fun Dialog(onClose: () -> Unit) {
@@ -87,11 +73,18 @@ object IoriYourApps {
             looked++
             IoriAppInstaller.resumed(context)
         }
+        // A folder of the list, opened from its row: null is the list of folders.
+        var open by remember { mutableStateOf<Int?>(null) }
+        val sections = (list as? ListState.Ready)?.apps.orEmpty().let { apps ->
+            IoriApps.sections(apps) { IoriApps.sectionOf(context, it.pkg, it.core) }
+        }
+        val inFolder = sections.firstOrNull { it.first == open }
+        val back = { if (inFolder != null) open = null else onClose() }
 
         MaterialTheme(colorScheme = monochrome, typography = houseTypography) {
-            EInkDialog(onDismiss = onClose) {
+            EInkDialog(onDismiss = back) {
                 Text(
-                    text = stringResource(R.string.iori_your_apps_title),
+                    text = stringResource(inFolder?.first ?: R.string.iori_your_apps_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
@@ -112,35 +105,46 @@ object IoriYourApps {
                         val installed = remember(now.apps, ended, looked) {
                             now.apps.associate { it.pkg to IoriAppInstaller.installed(context, it.pkg) }
                         }
-                        PagedColumn(Modifier.fillMaxWidth().weight(1f, fill = false)) {
-                            if (now.problem != null) {
-                                item(key = "problem") {
-                                    Column(Modifier.padding(bottom = 12.dp)) {
-                                        Words(stringResource(R.string.iori_your_apps_from_copy, now.problem))
-                                        Spacer(Modifier.height(8.dp))
-                                        Press(stringResource(R.string.iori_your_apps_try_again), Modifier.fillMaxWidth()) {
-                                            IoriAppInstaller.refresh(context)
+                        // A folder opens on its first page.
+                        androidx.compose.runtime.key(open) {
+                            PagedColumn(Modifier.fillMaxWidth().weight(1f, fill = false)) {
+                                if (inFolder != null) {
+                                    inFolder.second.forEach { entry ->
+                                        item(key = entry.pkg) {
+                                            AppRow(entry, installed[entry.pkg], jobs[entry.pkg] ?: Job())
+                                        }
+                                    }
+                                    return@PagedColumn
+                                }
+                                if (now.problem != null) {
+                                    item(key = "problem") {
+                                        Column(Modifier.padding(bottom = 12.dp)) {
+                                            Words(stringResource(R.string.iori_your_apps_from_copy, now.problem))
+                                            Spacer(Modifier.height(8.dp))
+                                            Press(stringResource(R.string.iori_your_apps_try_again), Modifier.fillMaxWidth()) {
+                                                IoriAppInstaller.refresh(context)
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            if (!allowed) {
-                                item(key = "allow") {
-                                    Column(Modifier.padding(bottom = 12.dp)) {
-                                        Words(stringResource(R.string.iori_your_apps_allow_body))
-                                        Spacer(Modifier.height(8.dp))
-                                        Press(stringResource(R.string.iori_your_apps_allow_button), Modifier.fillMaxWidth()) {
-                                            IoriAppInstaller.askToAllow(context)
+                                if (!allowed) {
+                                    item(key = "allow") {
+                                        Column(Modifier.padding(bottom = 12.dp)) {
+                                            Words(stringResource(R.string.iori_your_apps_allow_body))
+                                            Spacer(Modifier.height(8.dp))
+                                            Press(stringResource(R.string.iori_your_apps_allow_button), Modifier.fillMaxWidth()) {
+                                                IoriAppInstaller.askToAllow(context)
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            if (now.apps.isEmpty()) {
-                                item(key = "empty") { Words(stringResource(R.string.iori_your_apps_empty)) }
-                            }
-                            now.apps.forEach { entry ->
-                                item(key = entry.pkg) {
-                                    AppRow(entry, installed[entry.pkg], jobs[entry.pkg] ?: Job())
+                                if (now.apps.isEmpty()) {
+                                    item(key = "empty") { Words(stringResource(R.string.iori_your_apps_empty)) }
+                                }
+                                sections.forEach { (head, inSection) ->
+                                    item(key = "folder:$head") {
+                                        FolderRow(head, inSection, installed, jobs) { open = head }
+                                    }
                                 }
                             }
                         }
@@ -148,17 +152,62 @@ object IoriYourApps {
                 }
                 Spacer(Modifier.height(16.dp))
                 Text(
-                    text = stringResource(R.string.iori_close),
+                    text = stringResource(if (inFolder != null) R.string.iori_back else R.string.iori_close),
                     style = MaterialTheme.typography.titleSmall,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
                         .border(1.dp, MaterialTheme.colorScheme.onSurface)
                         .semantics { role = Role.Button }
-                        .clickable(onClick = onClose)
+                        .clickable(onClick = back)
                         .padding(vertical = 12.dp),
                 )
             }
+        }
+    }
+
+    /**
+     * One folder of the list: its name, and on the right how many of its apps are on the phone,
+     * or, in bold, how many can be updated or are being got right now.
+     */
+    @Composable
+    private fun FolderRow(
+        head: Int,
+        apps: List<Entry>,
+        installed: Map<String, IoriAppsManifest.Installed?>,
+        jobs: Map<String, Job>,
+        onOpen: () -> Unit,
+    ) {
+        val context = LocalContext.current
+        val busy = apps.count { e ->
+            val step = jobs[e.pkg]?.step
+            (step != null && step != Step.IDLE && step != Step.INSTALLED) ||
+                IoriAppsManifest.status(e, installed[e.pkg], Build.VERSION.SDK_INT) == Status.UPDATE
+        }
+        val status = if (busy > 0) context.resources.getQuantityString(R.plurals.iori_apps_folder_updates, busy, busy)
+        else stringResource(R.string.iori_apps_folder_count, apps.count { installed[it.pkg] != null }, apps.size)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { role = Role.Button }
+                .clickable(onClick = onOpen)
+                .padding(vertical = 10.dp),
+        ) {
+            Text(
+                text = stringResource(head),
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = status,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = if (busy > 0) FontWeight.Bold else FontWeight.Normal,
+                maxLines = 1,
+            )
         }
     }
 
@@ -242,5 +291,36 @@ object IoriYourApps {
                 textAlign = TextAlign.Center,
             )
         }
+    }
+}
+
+/**
+ * What an install is doing or why it stopped, in a few words, for the small rows outside Your
+ * apps (the first run, the hand-off offer, the lines list); null when nothing is going on.
+ */
+@Composable
+internal fun shortStatus(job: Job?): String? {
+    if (job == null) return null
+    return when (job.step) {
+        Step.DOWNLOADING -> stringResource(R.string.iori_apps_downloading, job.percent)
+        Step.CHECKING -> stringResource(R.string.iori_apps_checking)
+        Step.INSTALLING -> stringResource(R.string.iori_apps_installing)
+        Step.NEEDS_TAP -> stringResource(R.string.iori_apps_confirm)
+        Step.FAILED -> stringResource(job.short ?: R.string.iori_apps_failed_refused)
+        Step.IDLE, Step.INSTALLED -> null
+    }
+}
+
+/** Runs [block] each time the screen this is on comes back in front. */
+@Composable
+internal fun OnResume(block: () -> Unit) {
+    val owner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val latest by androidx.compose.runtime.rememberUpdatedState(block)
+    androidx.compose.runtime.DisposableEffect(owner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) latest()
+        }
+        owner.lifecycle.addObserver(observer)
+        onDispose { owner.lifecycle.removeObserver(observer) }
     }
 }

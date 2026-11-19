@@ -58,9 +58,8 @@ only. Source: https://github.com/wanderwildwood/iori
   phone's Nextcloud account".
 - **Settings in Home's own order** (`IoriSettings.kt`, makeover piece 2, 11-19): the top page is
   Home's, drawn with inkOS's rows and headings: **Phone-wide** (Dark mode, Nextcloud account,
-  Default apps; font and size come here later), **Apps** (Your apps, one row that opens
-  `IoriYourApps`; on this branch a stand-in that shows the Ecosystem apps list, until the
-  installer page replaces the file), **Home** (Home screen, Look & feel, Gestures, Advanced),
+  Default apps; font and size come here later), **Apps** (Your apps, the one row and the one
+  page for the house's apps, `IoriYourApps`; see below), **Home** (Home screen, Look & feel, Gestures, Advanced),
   and **Setup and about** (Run setup again, which opens the first run at its first page and
   resets nothing; About Home, with the credit to gezimos and inkOS's own About as a row of it).
   Home screen is a sub-page holding inkOS's own home-page rows as they are (Home, App drawer,
@@ -98,7 +97,7 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!*.md'` must list exactly these: 165 lines (11-19, after the Settings restructure, the words moved from code to strings, after the Settings house pass, the house dialogs, the phone-test fixes, the e-ink mode row, Theme mode hidden, the pinch menu without About, the dark fixes and imports that keep the system's theme; the rows below give each file's lines; the older rows were last counted at 32, so recheck them at the next merge).
+'!app/src/iori/**' --glob '!*.md'` must list exactly these: 180 lines (19 Nov, decisions: 165 before, and 15 for what came from inkOS without a licence, below; 11-19, after the Settings restructure, the words moved from code to strings, after the Settings house pass, the house dialogs, the phone-test fixes, the e-ink mode row, Theme mode hidden, the pinch menu without About, the dark fixes and imports that keep the system's theme; the rows below give each file's lines; the older rows were last counted at 32, so recheck them at the next merge).
 
 | File:line | Purpose |
 |---|---|
@@ -107,7 +106,7 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/build.gradle.kts:186` | `apply(from = "iori.gradle")`: identity, iori sources and strings |
 | `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt:8` | migrations run on `UPSTREAM_VERSION_CODE`, so upstream's thresholds still fire; line 258 writes back the same value |
 | `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt:152` | migrated internal slots point at `BuildConfig.APPLICATION_ID`, not `app.inkos` |
-| `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt:371` | a theme import leaves Theme mode (`APP_THEME`) alone where the system has a dark setting (`IoriDark.systemHasDarkSetting`): Home's theme follows the system's there; line 718 does the same for a full backup restore |
+| `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt:371` | a theme import leaves Theme mode (`APP_THEME`) alone where the system has a dark setting (`IoriDark.systemHasDarkSetting`): Home's theme follows the system's there; line 718 does the same for a full backup restore. Since 19 Nov the same line also leaves out a theme's `INKOS_WALLPAPER_RESOURCE_ID` when it is a picture (a positive resource number: `IoriRemoved.removedWallpaper`), which in this build would name another resource |
 | `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt:714` | imports pass through `IoriBackup.rewrite`, so an inkOS backup restores into iori |
 | `app/src/main/java/com/github/gezimos/inkos/ui/RecentsFragment.kt:672` | iori is left out of its own Recents |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` (16 lines) | the house look on every Settings page, through `IoriSettingsLook`: no row icons, value under the label, plain bold headings with no line, house sizes that follow inkOS's Settings text size, the house switch, an emptied note takes no line. inkOS's English Settings strings are overridden in `app/src/iori/res/values/iori_upstream_settings.xml` (sentence case; notes that only restate their label emptied) |
@@ -152,6 +151,29 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt:1080` | the gesture sheet's "inkOS" tab title through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt:1618` | the shortcut sheet's "inkOS" tab title through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt:2292` | "What is inkOS Wallpaper?" reads `what_is_inkos_wallpaper` (upstream's same words), which iori overrides |
+| `app/src/main/java/com/github/gezimos/inkos/data/Constants.kt` (4 lines: 377, 408, 424, 452) | 19 Nov: no Hoog font. The `FontFamily.Hoog` entry and its three `when` branches are each replaced by a marker comment; a stored `Hoog` (inkOS reads an unknown name as the system font, so nothing crashes) is made Public Sans at each start by `IoriRemoved.migrate`, called from `Iori.guardCrashes` |
+| `app/src/main/java/com/github/gezimos/inkos/widget/QuoteWidget.kt:95` | 19 Nov: the quote widget's `"Hoog" -> Monospace` mapping, replaced by a marker comment |
+| `app/src/main/res/values/strings.xml:274` | 19 Nov: `settings_font_hoog` removed; the XML comment in its place carries the marker |
+| `app/src/main/java/com/github/gezimos/inkos/helper/WallpaperUtility.kt:27` | 19 Nov: the fourteen picture wallpapers (Japan, Japan 2, NYC, SF, Trees, Bamboo, Blossom, Building, Forrest, Leaf, Liberty, Urban, Halfdots, Halfdots Two) are gone from `PRESET_WALLPAPERS`; one marker comment stands for the fourteen lines. White, Black and the generated patterns stay |
+| `app/src/main/java/com/github/gezimos/inkos/data/ThemePresets.kt` (8 lines: 184, 185, 207, 208, 346, 347, 369, 370) | 19 Nov: the four themes that set a picture (SF, Leaf, NYC, Forrest) set none (`wallpaperResourceId = null`, which clears Home's wallpaper when the theme is applied) and a solid background (`backgroundOpacity = 255`, inkOS's 175, 160, 10, 160 in the comments). A stored picture is taken away at the next start by `IoriRemoved.migrate` (its saved copy deleted, background solid) |
+
+Upstream files removed whole on 19 Nov (decisions), so there is no line to mark: each came with
+inkOS with no licence (see `CREDITS.md`). At the next merge, a conflict on any of these is
+resolved by keeping it deleted, and a new upstream file of the same kind is checked the same way.
+
+| Removed | What it was |
+|---|---|
+| `app/src/main/res/font/hoog.ttf` | the Hoog font ("hooge 05_53", Craig Kroeger; no licence, not OFL) |
+| `app/src/main/res/raw/ofl_license.txt` (one line) | `- Hoog` taken out of its list of OFL fonts, which it never was; not marked, since the file is shown as it is in the app |
+| `app/src/main/res/drawable/{bamboo,blossom3,building,forrest,halfdots,halfdots_two,japan2,japan_left,leaf,liberty,nyc_left,sf_left,trees_left,urban}.png` | the fourteen picture wallpapers packed in the APK |
+| `app/src/main/res/play_store.png`, `play_store_features.png` | inkOS's store pictures |
+| `fastlane/` | inkOS's store listing: texts, screenshots, icon, changelogs (with the unmarked `101014.txt`) |
+| `wallpapers/` | inkOS's wallpaper pictures, not packed in the APK |
+| `others/bmc-button.png` | inkOS's Buy Me a Coffee button picture |
+| `docs/img/**/*.png`, `*.jpg`, `*.mp4` | inkOS's website screenshots, mockups and videos; the website's HTML under `docs/` is kept and its pictures no longer load; `docs/README-inkOS.md` links to inkOS's repository for screenshots instead |
+
+`Gemfile` and `Gemfile.lock` (fastlane's Ruby tooling) are kept unchanged: they are not pictures,
+and removing them would conflict on every merge for no gain.
 
 Not hooks, but carried on top of v0.6:
 
@@ -159,16 +181,38 @@ Not hooks, but carried on top of v0.6:
   `ui/compose/AppsUI.kt`, `ui/AppsDrawerState.kt`, `ui/dialogs/ComposeDialogManager.kt`,
   `data/Prefs.kt`, `data/repository/AppsRepository.kt`): these are edits to upstream's drawer,
   not one-line hooks, and will need care at the next upstream merge.
-- **Ecosystem apps** ("Your apps" until 14 Nov; the Settings row is named Your apps again from 19 Nov and opens `IoriYourApps`, which shows this list until the installer page takes its place; `IoriAppsRow` is no longer drawn), listed under sections (Core, then Outdoors, On the road, Daily life, Music,
-  Reading and writing, Games and oracles, Tools: `SECTIONS` in `tools/make-apps-list.py`, which
-  stops on an app with no section) (`IoriApps.kt`, `IoriAppsDialog.kt`, `assets/iori_apps.json` from
-  `tools/make-apps-list.py`): three permissions and a receiver in the manifest. The first run
-  (`IoriFirstRun.kt`) has the same list as its third page, Ecosystem, a page of tick boxes
-  (`IoriPickApps.kt`), ahead of Theme and home apps so that what is got there can be put on the
-  home screen: the core apps that are missing come ticked, GET fetches the ticked ones one
-  after the other (`IoriApps.installAll`),
-  and an install question put away without an answer is given up when the page is back in
-  front (`IoriApps.resumed`), so the ones behind it are not held up.
+- **Your apps** (one page since 19 Nov, "decisions": the earlier Ecosystem apps page and its
+  GitHub-based installer are gone, merged into this one). Settings → Apps → Your apps
+  (`IoriYourApps.kt` the page, `IoriAppInstaller.kt` the work, `IoriAppsManifest.kt` the list and
+  the two decisions, pure Kotlin with its tests; `IoriApps.kt` Home's own list): the house's apps
+  from `https://wanderthe.dev/apps.json` (made by `tools/apps-manifest.py` in the site's
+  repository; a copy is kept in Home's files for when there is no connection), in a folder for
+  each section (Core, then Outdoors, On the road, Daily life, Music, Reading and writing, Games
+  and oracles, Tools). The sections come from Home's own list, `assets/iori_apps.json` (from
+  `tools/make-apps-list.py`, `SECTIONS` there, which stops on an app with no section); an app
+  that list does not name goes under Core when the site marks it core, else under the last
+  heading. A folder row says how many of its apps are on the phone ("3 of 5"), or in bold how
+  many can be updated or are being got. In a folder each app has what it is, its version or
+  "Not installed", how an install is going or why it failed, and Install / Update / Up to date.
+  An app is downloaded to Home's cache and handed to Android's PackageInstaller only when its
+  size, SHA-256, package and version code are the list's, it is signed with the list's
+  certificate and no other, that certificate is the one Home pins for the app
+  (`assets/iori_apps.json` and `IoriAccount.CALLERS`; an app with no pin is not shown and never
+  installed, so the list on the site cannot swap a key or bring in a new app), and an update is
+  signed like the app on the phone. Android 12+ updates apps Home installed with no question. The
+  file is deleted after; one left by a killed download is cleared when the list is next read.
+  This is Home's only installer: the first run, the hand-off offer (`IoriHandOff`) and the lines
+  list's Get (`LinesDialog`) call `IoriAppInstaller.install(context, pkg)`, which reads the list
+  first when it is not in hand and fails with "Not in the list" for an app it does not have.
+  No upstream file changes: the permissions and the receiver were already there;
+  `IoriInstallReceiver` (now in `IoriAppInstaller.kt`) hands every answer to `IoriAppInstaller`.
+  The first run (`IoriFirstRun.kt`) has the same apps as its third page, Ecosystem, a page of
+  tick boxes (`IoriPickApps.kt`, from Home's own list, so nothing is asked of the network until
+  GET), ahead of Theme and home apps so that what is got there can be put on the home screen:
+  the core apps that are missing come ticked, GET installs the ticked ones one after the other
+  through the same checked path (`IoriAppInstaller.installAll`), and an install question put
+  away without an answer is given up when the page is back in front (`IoriAppInstaller.resumed`),
+  so the ones behind it are not held up.
 
 - **House style on what Home adds, inkOS underneath** (14 Nov): inkOS's home, drawer, A-Z
   letters, Settings pages and first-run look stay inkOS's. Home's own dialogs take the house type
@@ -182,24 +226,10 @@ Not hooks, but carried on top of v0.6:
   Glide's and protobuf's own BSD files; `IoriAbout.textsFor`). What Gradle cannot see is in
   `config/libraries`: MMD's chevrons, and inkOS's nine OFL fonts (`font-*.json`, the copyright
   line from each font file as its author line; the full text is inkOS's own
-  `res/raw/ofl_license.txt`). Hoog (`hoog.ttf`, hooge 05_53 by Craig Kroeger) is left out: it
-  came with no licence and is not OFL. `CREDITS.md` lists all of it, with the pictures that
-  came with inkOS.
-- **Your apps** (19 Nov, makeover piece 4; `IoriYourApps.kt` the page, `IoriAppInstaller.kt` the
-  work, `IoriAppsManifest.kt` the list and the two decisions, pure Kotlin with its tests): the
-  house's apps from `https://wanderthe.dev/apps.json` (made by `tools/apps-manifest.py` in the
-  site's repository; a copy is kept in Home's files for when there is no connection), core apps
-  first, each with what it is, its version or "Not installed", and Install / Update / Up to date.
-  Opened from its Settings row under Apps, after Ecosystem apps.
-  An app is downloaded to Home's cache and handed to Android's PackageInstaller only when its
-  size, SHA-256, package and version code are the list's, it is signed with the list's
-  certificate and no other, that certificate is the one Home pins for the app
-  (`assets/iori_apps.json` and `IoriAccount.CALLERS`; an app with no pin is not shown and never
-  installed, so the list on the site cannot swap a key or bring in a new app), and an update is
-  signed like the app on the phone. Android 12+ updates apps Home installed with no question. The
-  file is deleted after; one left by a killed download is cleared when the list is next read.
-  No upstream file changes: the permission and the receiver were already there;
-  `IoriInstallReceiver` hands answers marked `your_apps` to `IoriAppInstaller`.
+  `res/raw/ofl_license.txt`). Hoog (`hoog.ttf`, hooge 05_53 by Craig Kroeger) came with no
+  licence and is not OFL: since 19 Nov it is not in Home at all (see the removed files above),
+  nor are the picture wallpapers and store pictures that came with inkOS without one.
+  `CREDITS.md` lists all of it.
 - **README** (19 Nov): Home's own. Upstream's is kept, links fixed for its place, as
   `docs/README-inkOS.md`, so a merge that touches upstream's README conflicts only in
   `README.md`: take ours, and copy upstream's new one there.
@@ -264,6 +294,14 @@ they are keeps those files out of the carried diff. Everywhere else it is an ord
 
 - reads upstream's `defaultConfig.versionCode` first and keeps it as
   `BuildConfig.UPSTREAM_VERSION_CODE`, so the field always equals the base it was built on;
+  `app/build.gradle.kts` therefore keeps upstream's own `versionCode` and `versionName`
+  (101013, "0.6" at v0.6) and is never bumped for Home. An unmarked bump to 101014 / "0.6.1"
+  (bf44981, with a v0.6.1 entry in upstream's `CHANGELOG.md` and a fastlane changelog) was undone
+  on 19 Nov; `CHANGELOG.md` is upstream's again. No guard was needed for a phone that ran a
+  101014 build: the only reader is `Migration.migratePreferencesOnVersionUpdate`, run at each
+  start, whose cleanups fire only for versions in `saved + 1 .. current` (empty when 101014 goes
+  back to 101013) and whose first-open step only for a saved code up to 101004; it then writes
+  101013 back, so upstream's real next migrations fire as they should;
 - sets `applicationId` `com.wanderwildwood.iori` (debug keeps upstream's `.debug` suffix),
   `versionCode` 1, `versionName` 0.1.0, and `app_name` "Home" ("Home Debug");
 - adds `src/iori/java` to main, `src/iori/res` to the debug and release resources, and

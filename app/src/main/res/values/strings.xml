@@ -271,7 +271,7 @@
 
     <!-- Fonts -->
     <string name="settings_font_section">Settings Font</string>
-    <string name="settings_font_hoog">Hoog</string>
+    <!-- // iori: settings_font_hoog removed with the Hoog font -->
     <string name="apps_font">Apps Font</string>
     <string name="clock_font">Clock Font</string>
     <string name="date_font">Date Font</string>

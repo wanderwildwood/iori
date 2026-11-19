@@ -51,6 +51,5 @@ Fonts bundled in this app under the OFL:
 - Plus Jakarta Sans
 - Shortstack
 - Manrope
-- Hoog
 - Iosevka
 - Zalando Sans Expanded

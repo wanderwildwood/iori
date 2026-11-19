@@ -2,19 +2,14 @@
   inkOS's own README, as gezimos wrote it for inkOS v0.6 (upstream tag v0.6), kept here for
   reference. Home's README is the one at the top of this repository. Only the links to files
   were changed, so they work from docs/; screenshots 3 to 7 were never in the repository and
-  are left out.
+  are left out. inkOS's store pictures (fastlane/) and its Buy Me a Coffee button are not in
+  this repository (no licence came with them), so the screenshots and the button are links.
 -->
 
 <div style="text-align: center;">
 	<img src="img/inkos.svg" alt="inkOS logo" height="48">
 	<h2>inkOS - Text based & E-ink friendly Android Launcher </h2>
-    <table>
-        <tr>
-            <td><img src='../fastlane/metadata/android/en-US/images/phoneScreenshots/0.png' height='300' alt=""></td>
-            <td><img src='../fastlane/metadata/android/en-US/images/phoneScreenshots/1.png' height='300' alt=""></td>
-            <td><img src='../fastlane/metadata/android/en-US/images/phoneScreenshots/2.png' height='300' alt=""></td>
-        </tr>
-    </table>
+    <p>Screenshots: <a href="https://github.com/gezimos/inkos">in inkOS's repository</a></p>
 
 </div>
 
@@ -162,6 +157,6 @@ Originally forked from [mLauncher](https://github.com/DroidWorksStudio/mLauncher
 ## Support the project
 
 <table><tr>
-<td><a href="https://buymeacoffee.com/gezimos"><img src="../others/bmc-button.png" alt="Buy me a coffee" height="40" style="max-width:200px;"></a></td>
+<td><a href="https://buymeacoffee.com/gezimos">Buy me a coffee</a></td>
 <td valign="middle">inkOS is free, open source, and ad-free forever. If it's made your phone better, consider supporting development.</td>
 </tr></table>

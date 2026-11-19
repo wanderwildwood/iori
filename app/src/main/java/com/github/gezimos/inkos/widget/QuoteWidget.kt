@@ -92,7 +92,7 @@ class QuoteWidget : GlanceAppWidget() {
         private fun mapFontFamily(name: String): FontFamily = when (name) {
             "Vollkorn", "Merriweather" -> FontFamily.Serif
             "Shortstack" -> FontFamily.Cursive
-            "Hoog" -> FontFamily.Monospace
+            // iori: no Hoog
             else -> FontFamily.SansSerif
         }
 

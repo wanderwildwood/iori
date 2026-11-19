@@ -30,8 +30,8 @@ import com.github.gezimos.inkos.ui.dialogs.ComposeDialogManager
  * inkOS's own rows only on the Home screen sub-page, which [Foot] closes.
  *
  *  - **Phone-wide**: Dark mode, Nextcloud account, Default apps. Font and size come here later.
- *  - **Apps**: Ecosystem apps (the house's apps in their section folders) and Your apps, which
- *    opens [IoriYourApps].
+ *  - **Apps**: Your apps, the one page for the house's apps (their section folders, install and
+ *    update): [IoriYourApps].
  *  - **Home**: Home screen (inkOS's Home, App drawer, Fonts, Notifications, Extras, then Folders
  *    and Home lines), Look & feel, Gestures, Advanced: inkOS's own pages.
  *  - **Setup and about**: Run setup again (the first run from its first page; nothing is reset)
@@ -52,7 +52,6 @@ object IoriSettings {
             IoriDefaults.SettingsRow(titleFontSize)
 
             SettingsTitle(text = stringResource(R.string.iori_settings_apps), fontSize = titleFontSize)
-            IoriAppsRow.SettingsRow(titleFontSize)
             YourAppsRow(titleFontSize)
 
             SettingsTitle(text = stringResource(R.string.iori_settings_home_group), fontSize = titleFontSize)
@@ -102,7 +101,7 @@ object IoriSettings {
         IoriAbout.LinesRow(titleFontSize)
     }
 
-    /** Your apps: the one row for the family's apps; it opens [IoriYourApps]. */
+    /** Your apps: the one row for the house's apps; it opens [IoriYourApps]. */
     @Composable
     private fun YourAppsRow(titleFontSize: TextUnit) {
         var open by remember { mutableStateOf(false) }

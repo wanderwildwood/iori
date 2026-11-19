@@ -1,9 +1,5 @@
 # Changelog
 
-## v0.6.1
-
-- Home lines from Music Box K are noticed as well as from Music Box: either one playing changes the Music Box line.
-
 ## v0.6 - June 2026
 
 ### Fixes
