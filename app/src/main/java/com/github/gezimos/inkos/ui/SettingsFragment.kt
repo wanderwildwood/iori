@@ -667,6 +667,7 @@ class SettingsFragment : Fragment() {
                     fontSize = titleFontSize,
                     description = stringResource(R.string.desc_eink_mode),
                     onClick = {
+                        if (dialogBuilder.iori.einkMode(getString(R.string.eink_auto_mode), uiState.einkHelperMode) { m -> viewModel.setEinkHelperMode(m); (requireActivity() as? com.github.gezimos.inkos.MainActivity)?.setMeinkMode(m) }) return@SettingsSelect // iori: a house list of the choices, not a cycle in place
                         val newMode = EinkHelper.nextMode(uiState.einkHelperMode)
                         viewModel.setEinkHelperMode(newMode)
                         (requireActivity() as? com.github.gezimos.inkos.MainActivity)?.setMeinkMode(newMode)
@@ -889,7 +890,7 @@ class SettingsFragment : Fragment() {
                 optionAlignment = homeUiState.homeAlignment,
                 fontSize = titleFontSize,
                 description = stringResource(R.string.desc_home_alignment),
-                onClick = { viewModel.setHomeAlignment((homeUiState.homeAlignment + 1) % 3) }
+                onClick = { dialogBuilder.iori.choose(getString(R.string.home_apps_alignment), alignmentLabels, homeUiState.homeAlignment) { viewModel.setHomeAlignment(it) } } // iori: a house list of the choices, not a cycle in place
             )
             // Clock Section
             SettingsTitle(text = stringResource(R.string.clock_section), fontSize = titleFontSize)
@@ -903,7 +904,7 @@ class SettingsFragment : Fragment() {
             SettingsSelect(title = stringResource(R.string.clock_format),
                 option = clockModeLabels.getOrElse(homeUiState.clockMode) { stringResource(R.string.option_system) },
                 description = stringResource(R.string.desc_clock_format),
-                fontSize = titleFontSize, onClick = { viewModel.setClockMode((homeUiState.clockMode + 1) % 4) })
+                fontSize = titleFontSize, onClick = { dialogBuilder.iori.choose(getString(R.string.clock_format), clockModeLabels, homeUiState.clockMode) { viewModel.setClockMode(it) } }) // iori: a house list of the choices, not a cycle in place
             val clockStyleOrder = intArrayOf(0, 2, 6, 1, 3, 8, 9, 10, 4, 5, 7)
             val clockStyleNameByValue = mapOf(
                 0 to stringResource(R.string.option_default),
@@ -923,6 +924,7 @@ class SettingsFragment : Fragment() {
                 option = clockStyleNameByValue[homeUiState.clockStyle] ?: stringResource(R.string.option_default),
                 description = stringResource(R.string.desc_clock_style),
                 fontSize = titleFontSize, onClick = {
+                    if (dialogBuilder.iori.choose(getString(R.string.clock_style), clockStyleOrder.map { clockStyleNameByValue[it].orEmpty() }, clockStyleOrder.indexOf(homeUiState.clockStyle)) { viewModel.setClockStyle(clockStyleOrder[it]) }) return@SettingsSelect // iori: a house list of the choices, not a cycle in place
                     val nextDisplayIndex = (currentStyleDisplayIndex + 1) % clockStyleOrder.size
                     viewModel.setClockStyle(clockStyleOrder[nextDisplayIndex])
                 })
@@ -950,7 +952,7 @@ class SettingsFragment : Fragment() {
                 option = alignmentLabels.getOrElse(homeUiState.clockAlignment) { stringResource(R.string.left) },
                 optionAlignment = homeUiState.clockAlignment,
                 description = stringResource(R.string.desc_clock_alignment),
-                fontSize = titleFontSize, onClick = { viewModel.setHomeClockAlignment((homeUiState.clockAlignment + 1) % 3) })
+                fontSize = titleFontSize, onClick = { dialogBuilder.iori.choose(getString(R.string.home_clock_alignment), alignmentLabels, homeUiState.clockAlignment) { viewModel.setHomeClockAlignment(it) } }) // iori: a house list of the choices, not a cycle in place
             // Date Row Section
             SettingsTitle(text = stringResource(R.string.date_row_section), fontSize = titleFontSize)
             SettingsSwitch(text = stringResource(R.string.show_date), fontSize = titleFontSize,
@@ -960,7 +962,7 @@ class SettingsFragment : Fragment() {
             SettingsSelect(title = stringResource(R.string.date_format),
                 option = dateFormatLabels.getOrElse(homeUiState.dateFormatStyle) { dateFormatLabels[0] },
                 description = stringResource(R.string.desc_date_format),
-                fontSize = titleFontSize, onClick = { viewModel.setDateFormatStyle((homeUiState.dateFormatStyle + 1) % 5) })
+                fontSize = titleFontSize, onClick = { dialogBuilder.iori.choose(getString(R.string.date_format), dateFormatLabels, homeUiState.dateFormatStyle) { viewModel.setDateFormatStyle(it) } }) // iori: a house list of the choices, not a cycle in place
             SettingsSwitch(text = stringResource(R.string.show_battery), fontSize = titleFontSize,
                 description = stringResource(R.string.desc_show_battery),
                 defaultState = homeUiState.showDateBatteryCombo, onCheckedChange = { viewModel.setShowDateBatteryCombo(it) })
@@ -972,13 +974,13 @@ class SettingsFragment : Fragment() {
                 SettingsSelect(title = stringResource(R.string.desc_notification_style),
                     option = countSourceLabels.getOrElse(homeUiState.notificationCountSource) { "SimpleTray" },
                     description = stringResource(R.string.desc_notification_style),
-                    fontSize = titleFontSize, onClick = { viewModel.setNotificationCountSource((homeUiState.notificationCountSource + 1) % 3) })
+                    fontSize = titleFontSize, onClick = { dialogBuilder.iori.choose(getString(R.string.desc_notification_style), countSourceLabels.toList(), homeUiState.notificationCountSource) { viewModel.setNotificationCountSource(it) } }) // iori: a house list of the choices, not a cycle in place
             }
             SettingsSelect(title = stringResource(R.string.home_date_alignment),
                 option = alignmentLabels.getOrElse(homeUiState.dateAlignment) { stringResource(R.string.left) },
                 optionAlignment = homeUiState.dateAlignment,
                 description = stringResource(R.string.desc_date_alignment),
-                fontSize = titleFontSize, onClick = { viewModel.setHomeDateAlignment((homeUiState.dateAlignment + 1) % 3) })
+                fontSize = titleFontSize, onClick = { dialogBuilder.iori.choose(getString(R.string.home_date_alignment), alignmentLabels, homeUiState.dateAlignment) { viewModel.setHomeDateAlignment(it) } }) // iori: a house list of the choices, not a cycle in place
             // Bottom Widgets Section
             SettingsTitle(text = stringResource(R.string.bottom_widgets), fontSize = titleFontSize)
             SettingsSwitch(text = stringResource(R.string.show_audio_widget), fontSize = titleFontSize,
@@ -1132,7 +1134,7 @@ class SettingsFragment : Fragment() {
                     option = alignmentLabels.getOrElse(homeUiState.quoteAlignment) { stringResource(R.string.left) },
                     optionAlignment = homeUiState.quoteAlignment,
                     description = stringResource(R.string.desc_quote_alignment),
-                    fontSize = titleFontSize, onClick = { viewModel.setHomeQuoteAlignment((homeUiState.quoteAlignment + 1) % 3) })
+                    fontSize = titleFontSize, onClick = { dialogBuilder.iori.choose(getString(R.string.home_quote_alignment), alignmentLabels, homeUiState.quoteAlignment) { viewModel.setHomeQuoteAlignment(it) } }) // iori: a house list of the choices, not a cycle in place
             }
             if (homeUiState.bottomWidgetType == Constants.BottomWidgetType.AndroidWidget.value) {
                 val widgetLabel = remember(homeUiState.androidWidgetId) {
@@ -1331,7 +1333,7 @@ class SettingsFragment : Fragment() {
                 option = alignmentLabels.getOrElse(uiState.appDrawerAlignment) { stringResource(R.string.left) },
                 optionAlignment = uiState.appDrawerAlignment,
                 fontSize = titleFontSize, description = stringResource(R.string.desc_drawer_alignment),
-                onClick = { viewModel.setAppDrawerAlignment((uiState.appDrawerAlignment + 1) % 3) }
+                onClick = { dialogBuilder.iori.choose(getString(R.string.app_drawer_alignment), alignmentLabels, uiState.appDrawerAlignment) { viewModel.setAppDrawerAlignment(it) } } // iori: a house list of the choices, not a cycle in place
             )
             SettingsSwitch(text = stringResource(R.string.show_icons), fontSize = titleFontSize,
                 description = stringResource(R.string.desc_drawer_icons),
@@ -1344,7 +1346,7 @@ class SettingsFragment : Fragment() {
             SettingsSelect(title = stringResource(R.string.sort_order),
                 option = sortOrderLabels.getOrElse(drawerState.appDrawerSortOrder.coerceIn(0, 2)) { "A-Z" },
                 description = stringResource(R.string.desc_drawer_sort),
-                fontSize = titleFontSize, onClick = { viewModel.setAppDrawerSortOrder((drawerState.appDrawerSortOrder + 1) % 3) })
+                fontSize = titleFontSize, onClick = { dialogBuilder.iori.choose(getString(R.string.sort_order), sortOrderLabels, drawerState.appDrawerSortOrder) { viewModel.setAppDrawerSortOrder(it) } }) // iori: a house list of the choices, not a cycle in place
             SettingsSwitch(text = stringResource(R.string.hide_home_apps), fontSize = titleFontSize,
                 description = stringResource(R.string.desc_hide_home_apps),
                 defaultState = uiState.hideHomeApps, onCheckedChange = { viewModel.setHideHomeApps(!uiState.hideHomeApps) })
@@ -1489,6 +1491,7 @@ class SettingsFragment : Fragment() {
                     title = stringResource(R.string.ui_scale), option = displayLabel, fontSize = titleFontSize,
                     description = "All in one UI Scaling",
                     onClick = {
+                        if (dialogBuilder.iori.uiScale(prefs, viewModel, getString(R.string.ui_scale))) return@SettingsSelect // iori: a house list of the scales, not inkOS's own sheet
                         dialogBuilder.showSheet {
                             val baseSettingsSize = 16f
                             SheetTitle("UI Scale")
@@ -1641,7 +1644,7 @@ class SettingsFragment : Fragment() {
                 val iconShapeLabels = listOf(stringResource(R.string.option_pill), stringResource(R.string.option_rounded), stringResource(R.string.option_square))
                 SettingsSelect(title = stringResource(R.string.icon_shape), option = iconShapeLabels.getOrElse(uiState.iconShape) { "Pill" },
                     description = stringResource(R.string.desc_icon_shape),
-                    fontSize = titleFontSize, onClick = { viewModel.setIconShape((uiState.iconShape + 1) % 3) })
+                    fontSize = titleFontSize, onClick = { dialogBuilder.iori.choose(getString(R.string.icon_shape), iconShapeLabels, uiState.iconShape) { viewModel.setIconShape(it) } }) // iori: a house list of the choices, not a cycle in place
                 if (uiState.iconSourceMode == 4) {
                     SettingsSelect(
                         title = stringResource(R.string.icon_tint_contrast),
@@ -1661,7 +1664,7 @@ class SettingsFragment : Fragment() {
                 }
                 SettingsSelect(title = stringResource(R.string.button_corners), option = iconShapeLabels.getOrElse(uiState.textIslandsShape) { "Pill" },
                     description = stringResource(R.string.desc_button_corners),
-                    fontSize = titleFontSize, onClick = { viewModel.setTextIslandsShape((uiState.textIslandsShape + 1) % 3) })
+                    fontSize = titleFontSize, onClick = { dialogBuilder.iori.choose(getString(R.string.button_corners), iconShapeLabels, uiState.textIslandsShape) { viewModel.setTextIslandsShape(it) } }) // iori: a house list of the choices, not a cycle in place
                 SettingsTitle(text = stringResource(R.string.text_islands_section), fontSize = titleFontSize)
                 SettingsSwitch(text = stringResource(R.string.text_islands), fontSize = titleFontSize, description = stringResource(R.string.desc_text_islands), defaultState = uiState.textIslands, onCheckedChange = { viewModel.setTextIslands(it) })
                 SettingsSwitch(text = stringResource(R.string.invert_islands), fontSize = titleFontSize, description = stringResource(R.string.desc_invert_islands), defaultState = uiState.textIslandsInverted, onCheckedChange = { viewModel.setTextIslandsInverted(it) })
@@ -2068,7 +2071,7 @@ class SettingsFragment : Fragment() {
             val appNameModeLabels = listOf(stringResource(R.string.app_name_mode_normal), stringResource(R.string.small_caps_apps), stringResource(R.string.app_name_mode_all_caps))
             SettingsSelect(title = stringResource(R.string.app_name_mode), option = appNameModeLabels[appNameMode], fontSize = titleFontSize,
                 description = stringResource(R.string.desc_app_name_mode),
-                onClick = { val nextMode = (appNameMode + 1) % 3; viewModel.setSmallCapsApps(nextMode == 1); viewModel.setAllCapsApps(nextMode == 2) })
+                onClick = { dialogBuilder.iori.choose(getString(R.string.app_name_mode), appNameModeLabels, appNameMode) { m -> viewModel.setSmallCapsApps(m == 1); viewModel.setAllCapsApps(m == 2) } }) // iori: a house list of the choices, not a cycle in place
             SettingsSelect(title = stringResource(R.string.clock_font), option = getFontDisplayName(homeUiState.clockFont, "clock"), fontSize = titleFontSize,
                 description = stringResource(R.string.desc_clock_font),
                 onClick = { if (!universalFontEnabledState) { showFontSelectionDialogWithCustoms(R.string.clock_font, "clock") { newFont, customPath -> viewModel.setClockFont(newFont); customPath?.let { viewModel.setCustomFontPath("clock", it) } } } },
