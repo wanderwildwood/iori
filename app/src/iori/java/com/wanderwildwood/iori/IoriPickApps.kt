@@ -28,6 +28,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.gezimos.inkos.R
 import com.github.gezimos.inkos.data.Prefs
+import com.github.gezimos.inkos.helper.ShapeHelper
 import com.github.gezimos.inkos.style.SettingsTheme
 import com.github.gezimos.inkos.style.Theme
 import com.github.gezimos.inkos.style.rememberScreenScale
@@ -173,35 +176,47 @@ object IoriPickApps {
                     }
                 }
 
-                // With apps ticked the left button passes them by; the back key still goes back a page.
+                // GET is a button of its own, at the left under the list, never in the place of
+                // NEXT: the bar stays BACK and NEXT, so a press meant for NEXT (or one press too
+                // many from the page before) cannot start a download and Android's install screen.
                 val canGet = !running && wanted.isNotEmpty()
-                with(IoriFirstRun) {
-                    Footer(
-                        left = stringResource(if (canGet) R.string.btn_skip else R.string.btn_back_upper),
-                        // While apps are being got, how far along; with apps ticked, how many; else the page.
-                        middle = when {
-                            running -> "${total - queue.size + 1}/$total"
-                            canGet -> wanted.size.toString()
-                            else -> pageLabel
-                        },
-                        right = stringResource(if (canGet) R.string.iori_pick_get else R.string.btn_next),
+                if (canGet) {
+                    val shape = remember(prefs.textIslandsShape) {
+                        ShapeHelper.getRoundedCornerShape(textIslandsShape = prefs.textIslandsShape, pillRadius = 16.dp)
+                    }
+                    Text(
+                        text = pluralStringResource(R.plurals.iori_pick_get_count, wanted.size, wanted.size),
+                        style = SettingsTheme.typography.title,
                         fontSize = sizes.title,
-                        textColor = textColor,
-                        onLeft = { leave(if (canGet) onNext else onBack) },
-                        onRight = {
-                            when {
-                                running || wanted.isEmpty() -> leave(onNext)
+                        color = textColor,
+                        modifier = Modifier
+                            .padding(horizontal = 32.dp.scaled(screenScale), vertical = 12.dp.scaled(screenScale))
+                            .clip(shape)
+                            .border(1.5.dp.scaled(screenScale), textColor, shape)
+                            .clickable {
                                 // Android's own switch first; nothing is downloaded without it.
-                                !IoriAppInstaller.allowed(context) -> {
+                                if (!IoriAppInstaller.allowed(context)) {
                                     askedToAllow = true
                                     IoriAppInstaller.askToAllow(context)
-                                }
-                                else -> {
+                                } else {
                                     total = wanted.size
                                     IoriAppInstaller.installAll(context, wanted.map { it.pkg })
                                 }
                             }
-                        },
+                            .padding(horizontal = 24.dp.scaled(screenScale), vertical = 10.dp.scaled(screenScale)),
+                    )
+                }
+                with(IoriFirstRun) {
+                    Footer(
+                        left = stringResource(R.string.btn_back_upper),
+                        // While apps are being got, how far along; else the page.
+                        middle = if (running) "${total - queue.size + 1}/$total" else pageLabel,
+                        right = stringResource(R.string.btn_next),
+                        fontSize = sizes.title,
+                        textColor = textColor,
+                        onLeft = { leave(onBack) },
+                        // NEXT goes on without getting what is ticked; one being got is let through.
+                        onRight = { leave(onNext) },
                     )
                 }
             }

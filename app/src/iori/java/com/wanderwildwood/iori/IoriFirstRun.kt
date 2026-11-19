@@ -29,6 +29,9 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Android
 import androidx.compose.material.icons.rounded.DarkMode
@@ -55,6 +58,9 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
@@ -64,6 +70,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
+import androidx.navigation.NavController
 import com.github.gezimos.inkos.MainViewModel
 import com.github.gezimos.inkos.R
 import com.github.gezimos.inkos.data.Constants
@@ -81,6 +88,7 @@ import com.github.gezimos.inkos.ui.compose.ThemePresetPicker
 import com.github.gezimos.inkos.ui.compose.inkOsSafeDrawingPadding
 import com.github.gezimos.inkos.ui.dialogs.ComposeDialogManager
 import kotlinx.coroutines.delay
+import kotlin.reflect.KProperty
 
 /**
  * Home's first run, six pages in place of inkOS's seven, drawn the way inkOS draws its own:
@@ -121,6 +129,45 @@ object IoriFirstRun {
         Constants.Theme.System -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
     }
 
+    /**
+     * Whether MainActivity should open the first run now. Not when the activity is made again
+     * with its pages still in the back stack (a font, size or language change in Android's
+     * settings, or the process ended while the person was away): a second copy would be put on
+     * top, and FINISH would then land on the first page of the one underneath.
+     */
+    fun notShown(navController: NavController, savedInstanceState: android.os.Bundle?): Boolean =
+        savedInstanceState == null ||
+            runCatching { navController.getBackStackEntry(R.id.onboardingFragment) }.isFailure
+
+    /**
+     * Called by [Iori.Guard] when iori's own code crashed. During a first run the page that was
+     * up is passed by on the next start, and a crash on the last page ends the first run, so one
+     * broken page cannot bring the launcher back to itself for ever. Run setup again in
+     * Settings gives the pages another go. Written with commit: the process is about to end.
+     */
+    internal fun tripped(context: Context) {
+        val prefs = Prefs(context)
+        if (!prefs.firstOpen) return
+        val crashed = prefs.onboardingPage.coerceIn(0, PAGES - 1)
+        if (crashed >= PAGES - 1) {
+            prefs.onboardingPage = 0
+            prefs.commitFirstOpen(false)
+        } else {
+            prefs.onboardingPage = crashed + 1
+            prefs.commitFirstOpen(true)
+        }
+    }
+
+    /** The page in hand, saved the moment it changes, before the new page is drawn (see [tripped]). */
+    private class SavedPage(private val prefs: Prefs) {
+        private val state = mutableIntStateOf(prefs.onboardingPage.coerceIn(0, PAGES - 1))
+        operator fun getValue(thisRef: Any?, property: KProperty<*>): Int = state.intValue
+        operator fun setValue(thisRef: Any?, property: KProperty<*>, value: Int) {
+            state.intValue = value
+            prefs.onboardingPage = value
+        }
+    }
+
     private fun notificationAccess(context: Context) =
         NotificationManagerCompat.getEnabledListenerPackages(context).contains(context.packageName)
 
@@ -140,12 +187,14 @@ object IoriFirstRun {
             Constants.Theme.System -> systemDark
         }
         // A page number kept from inkOS's seven pages lands on the last of these.
-        var page by remember { mutableIntStateOf(prefs.onboardingPage.coerceIn(0, PAGES - 1)) }
-        LaunchedEffect(page) { prefs.onboardingPage = page }
+        val savedPage = remember { SavedPage(prefs) }
+        var page by savedPage
+        // Run setup again in Settings: agreed to before, and left again by BACK on the first page.
+        val rerun = remember { !prefs.firstOpen }
 
         var showThemePicker by remember { mutableStateOf(false) }
-        var privacyAgreed by remember { mutableStateOf(page > WELCOME) }
-        var settingsRead by remember { mutableStateOf(page > SETUP) }
+        var privacyAgreed by remember { mutableStateOf(rerun || page > WELCOME) }
+        var settingsRead by remember { mutableStateOf(rerun || page > SETUP) }
         var privacyToastShown by remember { mutableStateOf(false) }
         var settingsToastShown by remember { mutableStateOf(false) }
 
@@ -169,6 +218,7 @@ object IoriFirstRun {
         fun back() {
             if (page == LOOK && showThemePicker) showThemePicker = false
             else if (page > 0) page--
+            else if (rerun) onFinish()
         }
 
         if (page == ECOSYSTEM) {
@@ -208,7 +258,8 @@ object IoriFirstRun {
             }
             fun Dp.s() = scaled(screenScale)
 
-            // On the first page the back key is swallowed: a first run is not left by it.
+            // On the first page of a first run the back key is swallowed: a first run is not left
+            // by it. Run setup again is left by it, back to Settings.
             BackHandler(enabled = true) { back() }
 
             var einkMode by remember { mutableStateOf(DeviceHelper.isEinkDevice()) }
@@ -294,10 +345,13 @@ object IoriFirstRun {
                         selectAction = themeSelectAction,
                     )
                 } else {
+                    // The words scroll at any text size; the tick under them stays on screen.
+                    val scroll = remember(page) { ScrollState(0) }
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
+                            .verticalScroll(scroll)
                             .padding(horizontal = 32.dp.s())
                             .padding(top = 32.dp.s(), bottom = 16.dp.s()),
                     ) {
@@ -350,15 +404,6 @@ object IoriFirstRun {
                                 Button(R.string.onboarding_read_policy) {
                                     activity?.let { ComposeDialogManager(context, it).showPrivacyPolicySheet() }
                                 }
-                                Spacer(Modifier.weight(1f))
-                                Tick(
-                                    text = stringResource(R.string.onboarding_agree_policy),
-                                    checked = privacyAgreed,
-                                    fontSize = sizes.title,
-                                    textColor = textColor,
-                                    bgColor = bgColor,
-                                    shape = buttonShape,
-                                ) { privacyAgreed = !privacyAgreed }
                             }
 
                             SETUP -> {
@@ -384,31 +429,18 @@ object IoriFirstRun {
                                 }
                                 Spacer(Modifier.height(16.dp.s()))
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    var pinchFrame by remember { mutableIntStateOf(0) }
-                                    LaunchedEffect(Unit) {
-                                        while (true) {
-                                            delay(600)
-                                            pinchFrame = (pinchFrame + 1) % 2
-                                        }
+                                    // The pinch's two frames side by side, still: no animation on e-ink.
+                                    for (frame in listOf(R.drawable.pinch1, R.drawable.pinch2)) {
+                                        Image(
+                                            painter = painterResource(frame),
+                                            contentDescription = null,
+                                            colorFilter = ColorFilter.tint(textColor),
+                                            modifier = Modifier.size(32.dp.s()),
+                                        )
                                     }
-                                    Image(
-                                        painter = painterResource(if (pinchFrame == 0) R.drawable.pinch1 else R.drawable.pinch2),
-                                        contentDescription = null,
-                                        colorFilter = ColorFilter.tint(textColor),
-                                        modifier = Modifier.size(40.dp.s()),
-                                    )
                                     Spacer(Modifier.width(12.dp.s()))
                                     Column(Modifier.weight(1f)) { Body(R.string.iori_first_settings_body) }
                                 }
-                                Spacer(Modifier.weight(1f))
-                                Tick(
-                                    text = stringResource(R.string.iori_first_settings_read),
-                                    checked = settingsRead,
-                                    fontSize = sizes.title,
-                                    textColor = textColor,
-                                    bgColor = bgColor,
-                                    shape = buttonShape,
-                                ) { settingsRead = !settingsRead }
                             }
 
                             else -> {
@@ -422,12 +454,29 @@ object IoriFirstRun {
                             }
                         }
                     }
+                    if (page == WELCOME || page == SETUP) Tick(
+                        text = stringResource(
+                            if (page == WELCOME) R.string.onboarding_agree_policy else R.string.iori_first_settings_read
+                        ),
+                        checked = if (page == WELCOME) privacyAgreed else settingsRead,
+                        fontSize = sizes.title,
+                        textColor = textColor,
+                        bgColor = bgColor,
+                        shape = buttonShape,
+                        modifier = Modifier.padding(horizontal = 20.dp.s()).padding(bottom = 8.dp.s()),
+                    ) {
+                        if (page == WELCOME) {
+                            privacyAgreed = !privacyAgreed
+                        } else {
+                            settingsRead = !settingsRead
+                        }
+                    }
                 }
 
                 val blocked = (page == WELCOME && !privacyAgreed) || (page == SETUP && !settingsRead)
                 Footer(
                     left = stringResource(R.string.btn_back_upper),
-                    leftStruck = page == 0,
+                    leftStruck = page == 0 && !rerun,
                     middle = "${page + 1}/$PAGES",
                     right = stringResource(
                         when {
@@ -437,6 +486,12 @@ object IoriFirstRun {
                         }
                     ),
                     rightStruck = blocked,
+                    // Said by TalkBack on every visit to NEXT, where the toast is shown only once.
+                    rightWhy = when {
+                        page == WELCOME && !privacyAgreed -> stringResource(R.string.iori_first_privacy_toast)
+                        page == SETUP && !settingsRead -> stringResource(R.string.iori_first_settings_toast)
+                        else -> null
+                    },
                     fontSize = sizes.title,
                     textColor = textColor,
                     onLeft = { back() },
@@ -476,15 +531,17 @@ object IoriFirstRun {
         textColor: Color,
         bgColor: Color,
         shape: Shape,
+        modifier: Modifier = Modifier,
         onToggle: () -> Unit,
     ) {
         val screenScale = rememberScreenScale()
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp.scaled(screenScale)),
-            modifier = Modifier
+            // A tick box to TalkBack too: its role and whether it is ticked.
+            modifier = modifier
                 .clip(shape)
-                .clickable(onClick = onToggle)
+                .toggleable(value = checked, role = Role.Checkbox, onValueChange = { onToggle() })
                 .padding(horizontal = 12.dp.scaled(screenScale), vertical = 8.dp.scaled(screenScale)),
         ) {
             CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
@@ -520,6 +577,7 @@ object IoriFirstRun {
         textColor: Color,
         leftStruck: Boolean = false,
         rightStruck: Boolean = false,
+        rightWhy: String? = null,
         onLeft: () -> Unit,
         onRight: () -> Unit,
     ) {
@@ -541,7 +599,7 @@ object IoriFirstRun {
                 )
             }
             Box(Modifier.width(line).fillMaxHeight().background(textColor))
-            FooterButton(right, fontSize, textColor, rightStruck, Modifier.weight(1f), onRight)
+            FooterButton(right, fontSize, textColor, rightStruck, Modifier.weight(1f), onRight, rightWhy)
         }
         // A closing line when Android's own navigation bar is shown under the page.
         if (WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() > 0.dp) {
@@ -557,9 +615,14 @@ object IoriFirstRun {
         struck: Boolean,
         modifier: Modifier,
         onClick: () -> Unit,
+        why: String? = null,
     ) {
         Box(
-            modifier = modifier.fillMaxHeight().clickable(onClick = onClick),
+            modifier = modifier
+                .fillMaxHeight()
+                .clickable(onClick = onClick)
+                // A struck button is not only a line through the word: TalkBack says why.
+                .then(if (struck && why != null) Modifier.semantics { stateDescription = why } else Modifier),
             contentAlignment = Alignment.Center,
         ) {
             Text(

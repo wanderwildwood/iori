@@ -514,7 +514,7 @@ class MainActivity : AppCompatActivity() {
 
         navController = this.findNavController(R.id.nav_host_fragment)
 
-        if (prefs.firstOpen) {
+        if (prefs.firstOpen && com.wanderwildwood.iori.IoriFirstRun.notShown(navController, savedInstanceState)) { // iori: not again when the first run is already in the restored back stack
             if (com.github.gezimos.inkos.helper.device.DeviceHelper.isEinkDevice() && !com.wanderwildwood.iori.IoriDark.systemHasDarkSetting(this)) { // iori: not where the system has a dark setting; Home took the system's above
                 prefs.appTheme = Constants.Theme.Light
             }

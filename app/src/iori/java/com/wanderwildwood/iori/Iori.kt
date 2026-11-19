@@ -81,7 +81,8 @@ object Iori {
     /**
      * Notes a crash from iori's code, synchronously because the process is about to die, then
      * hands the crash on unchanged. inkOS's CrashHandler still shows its report every time;
-     * what changes is the next start, where home draws with its lines turned off.
+     * what changes is the next start, where home draws with its lines turned off, and a first
+     * run starts past the page it crashed on ([IoriFirstRun.tripped]).
      */
     class Guard(
         private val context: Context,
@@ -92,6 +93,8 @@ object Iori {
                 if (fromOwnCode(error)) {
                     context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                         .edit().putBoolean(KEY_TRIPPED, true).commit()
+                    // During a first run, the next start passes by the page that was up.
+                    IoriFirstRun.tripped(context)
                 }
             } catch (_: Throwable) {
             }
