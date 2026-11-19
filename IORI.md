@@ -438,7 +438,8 @@ it conflicts in the merge; port it into `IoriSettingsPages` when it does.
   back to 101013) and whose first-open step only for a saved code up to 101004; it then writes
   101013 back, so upstream's real next migrations fire as they should;
 - sets `applicationId` `com.wanderwildwood.iori` (debug keeps upstream's `.debug` suffix),
-  `versionCode` 1, `versionName` 0.1.0, and `app_name` "Home" ("Home Debug");
+  `versionCode` 2, `versionName` 1.0.0 (test builds on phones were 1 / 0.1.0), and `app_name`
+  "Home" ("Home Debug");
 - adds `src/iori/java` to main, `src/iori/res` to the debug and release resources, and
   `src/iori/test/java` to the unit tests;
 - keeps iori's classes unrenamed in release (`src/iori/proguard-iori.pro`), because the crash
@@ -477,8 +478,9 @@ the tree, switched off; deleting them would conflict on every merge.
 
 ## Publishing (first time)
 
-Not done yet: there is no `wanderwildwood/iori` on GitHub, though `origin` already points
-there. Nothing has been pushed or tagged. What is left, in this order:
+Staged, not done: `wanderwildwood/iori` exists on GitHub but is private, with Actions off
+(`"enabled": false`), Issues on, Wiki off, the four topics set, and only an older `main`
+pushed. No tag has been pushed and there is no release. What is left, in this order:
 
 **Before anything reaches GitHub**
 
@@ -489,41 +491,50 @@ Builds are local; GitHub must never run upstream's workflows. This clone carries
 - `release.yml` ("Build and Release APK"): runs on any `v*` tag, and by hand. It would build
   with upstream's settings and publish a release of its own.
 
-This clone also holds upstream's tags `v0.1` to `v0.6`, so a stray `--tags` would set
-`release.yml` off six times.
+This clone also holds upstream's tags `v0.1` to `v0.6`, so a stray `--tags` (or `--mirror`)
+would set `release.yml` off six times once Actions is on.
 
-1. `gh repo create wanderwildwood/iori --public --description "inkOS with lines from Glance on
-   home and music on the lock screen, for the Mudita Kompakt"` (no `--source`, no push).
-2. `gh api -X PUT repos/wanderwildwood/iori/actions/permissions -F enabled=false`: Actions off
-   for the whole repository before anything reaches it. Check with
-   `gh api repos/wanderwildwood/iori/actions/permissions` (`"enabled": false`).
+1. The `main` already on GitHub holds an unscrubbed line, and GitHub keeps a force-pushed-over
+   commit reachable by its SHA, so the private repository is deleted and made again before the
+   push: `gh repo delete wanderwildwood/iori --yes`, `gh repo create wanderwildwood/iori
+   --private` with the same description, then at once `gh api -X PUT
+   repos/wanderwildwood/iori/actions/permissions -F enabled=false` (check: `"enabled": false`)
+   and the settings of step 6.
+2. The personal-data scrub: older commits still carry personal comments that the tree no
+   longer has, so the history is rewritten with `git filter-repo` on a copy, checked, and
+   that copy is what is pushed (the staged copy and its exact commands are with the release
+   staging). `gitleaks detect` over the tree and the history, and `git log upstream/main..main`
+   read once more for anything that should not go out. After the rewrite every local branch
+   and worktree is re-pointed at the rewritten commits or made again from them.
 
 **Pushing**
 
-3. The personal-data scrub and `gitleaks detect` over the tree and the history, and
-   `git log upstream/main..main` read once more for anything that should not go out.
-4. `git push origin main`, then `git push origin upstream-fixes`. Never `--tags`,
-   `--follow-tags` or `--all`; iori's own tags go one by one, by name.
+3. `main` is fast-forwarded to the release commit, in the rewritten copy. Then `git push
+   origin main`, and any other public branch by name. Never `--tags`, `--follow-tags`, `--all`
+   or `--mirror`; iori's own tags go one by one, by name.
+4. `gh api -X PATCH repos/wanderwildwood/iori -f visibility=public`.
 5. `gh workflow disable build.yml -R wanderwildwood/iori` and the same for `release.yml`,
    now that GitHub knows them. The files stay in the tree, so merges stay clean.
-6. Repository settings: Issues on, Wiki and Projects off, topics `mudita-kompakt`, `eink`,
-   `launcher`, `inkos`. There is no Sponsor button: upstream's `.github/FUNDING.yml` is
-   removed here, and the cup in Settings is where gezimos's Buy Me a Coffee lives.
+6. Repository settings: Issues on, Wiki and Projects off, topics
+   `mudita-kompakt`, `eink`, `launcher`, `inkos`. There is no Sponsor button: upstream's
+   `.github/FUNDING.yml` is removed here, and the cup in Settings is where gezimos's Buy Me a
+   Coffee lives.
 
 **The release**
 
 7. Build the release locally at the pushed `main`. Check the APK is signed with iori's
    release key (SHA-256 `fb06881da0a2c7b0…`, the one Glance's `PanelForHome` knows) and that
-   `aapt2 dump badging` says `com.wanderwildwood.iori`, `versionName='0.1.0'`,
-   `versionCode='1'`.
-8. Assets, named as the other apps' releases are (hanauta v0.1.0: `hanauta.apk`,
-   `hanauta.apk.sha256`, `hanauta-v0.1.0.apk`, `hanauta-v0.1.0.apk.sha256`):
-   `iori.apk`, `iori.apk.sha256`, `iori-v0.1.0.apk`, `iori-v0.1.0.apk.sha256`. Each `.sha256`
+   `aapt2 dump badging` says `com.wanderwildwood.iori`, `versionName='1.0.0'`,
+   `versionCode='2'`. The APK built from the commit before the rewrite has the same tree, so
+   it stands.
+8. Assets, named as the other apps' releases are (kotozute v1.35.45: `kotozute.apk`,
+   `kotozute.apk.sha256`, `kotozute-v1.35.45.apk`, `kotozute-v1.35.45.apk.sha256`):
+   `iori.apk`, `iori.apk.sha256`, `iori-v1.0.0.apk`, `iori-v1.0.0.apk.sha256`. Each `.sha256`
    is `sha256sum` output naming its own file. The README's download link is
    `releases/latest/download/iori.apk`, so `iori.apk` must be there.
-9. `git tag -a v0.1.0 -m "Home 0.1.0"` on that commit, `git push origin v0.1.0`
-   (that one tag, by name), then `gh release create v0.1.0 --repo wanderwildwood/iori
-   --title v0.1.0 --notes-file <notes>` with the four assets. Notes below.
+9. `git tag -a v1.0.0 -m "Home 1.0.0"` on that commit, `git push origin v1.0.0`
+   (that one tag, by name), then `gh release create v1.0.0 --repo wanderwildwood/iori
+   --title "Home 1.0.0" --notes-file <notes>` with the four assets. Notes below.
 
 **After**
 
@@ -549,18 +560,50 @@ This clone also holds upstream's tags `v0.1` to `v0.6`, so a stray `--tags` woul
     wanderthe.dev for the list.
 12. Glance's README already says it hands its lines to Home; once the repository is up,
     link the name there to it.
-13. Upstream fixes: the two commits on `upstream-fixes` can go to gezimos as issue patches,
-    each on its own.
+13. Upstream fixes: the two fix commits (all-day events by their date; honour
+    `canShowBadge()`) can go to gezimos as issue patches, each on its own.
 
-### Draft release notes, v0.1.0
+### Release notes, v1.0.0
 
-> First release. inkOS by gezimos, as its own app beside inkOS, with a few additions for the
-> Kompakt. Up to three lines under the home apps from Glance (0.1.24 or later): today's
-> events, the weather, what is unread, following the switches chosen there; a long press shows
-> each source and what it is doing. Music controls on the lock screen for any player, above
-> the padlock. A contact found in search opens in Contacts. All-day events show on their own
-> date, and service notifications no longer badge their apps. Everything inkOS does still
-> works, and a backup from inkOS restores into it. No internet permission.
+> # Home 1.0.0
+>
+> Home is a plain, quiet home screen for E Ink phones, made on the Mudita Kompakt. It is
+> [inkOS](https://github.com/gezimos/inkos) by gezimos, as its own app beside inkOS, with what
+> the apps made to work with it need. Everything inkOS does still works, and a backup from inkOS
+> restores into Home.
+>
+> - **One Nextcloud account for the whole phone.** Sign in once, in the first run or in
+>   Settings → Nextcloud account. The apps that sign in to Nextcloud get a row "Use the phone's
+>   Nextcloud account": one tap there, and nothing to type. The password is locked on the phone
+>   and handed only to those apps, checked by their signing key. Signing out in Home signs them
+>   out too and deletes the password on the server.
+> - **Your apps.** Settings → Your apps lists the apps made to work with Home, in folders (Core
+>   first), each one installed or missing, with Install and Update. A download is installed only
+>   if its size, checksum, package, version and signing key are the right ones.
+> - **Settings in groups**: Phone, Apps, Home screen, Setup and about, in the same plain look as
+>   the other apps. inkOS's own pages and rows are all still there.
+> - **Dark mode for all the apps.** On MuditaOS, Settings → Dark mode turns Home dark, and the
+>   other apps follow it. On other phones, Home follows the phone's own dark setting.
+> - **A first run of its own**: welcome and privacy, setup, your apps, default apps, Nextcloud,
+>   theme and home apps. Settings → Run setup again opens it again; nothing is reset.
+> - **Default apps.** One row for each kind of thing the apps open: calls, texts, contacts,
+>   calendar, alarms, gallery, maps, text files, passwords and more. Each row says what Android
+>   does today.
+> - **Lines on home.** Up to three lines under the home apps from
+>   [Glance](https://github.com/wanderwildwood/hitome) 0.1.24 or later: today's events, the
+>   weather, what is unread. A press opens the app the line came from; a long press shows each
+>   source and what it is doing. The lines can sit at the top or at the bottom.
+> - Also: music on the lock screen for any player, folders in the app drawer, E-ink mode per app
+>   on MuditaOS 2.0 and later, a contact found in search opens in Connections, all-day events
+>   show on their own date, and service notifications no longer badge their apps.
+>
+> Unlike inkOS, Home has the internet permission, used only for Your apps and for your own
+> Nextcloud server. Home has no server of its own and sends nothing about you.
+>
+> 1.0.0 installs over a 0.1.0 test build and keeps its settings.
+>
+> Nearly all of Home is inkOS, by [gezimos](https://github.com/gezimos), under the GPL-3.0.
+> Thank you. For plain inkOS, go to [gezimos's repository](https://github.com/gezimos/inkos).
 
 ## Testing the lines
 
