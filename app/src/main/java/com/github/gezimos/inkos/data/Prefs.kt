@@ -368,7 +368,7 @@ class Prefs(val context: Context) {
         val root = gson.fromJson(json, Map::class.java) as? Map<String, Any?>
             ?: throw IllegalArgumentException("Invalid theme file")
         val prefsMap = root["prefs"] as? Map<String, Any?> ?: emptyMap()
-        val filtered = prefsMap.filterKeys { it in themeExportKeys && !(it == APP_THEME && com.wanderwildwood.iori.IoriDark.systemHasDarkSetting(context)) } // iori: theme mode follows the system where it has a dark setting
+        val filtered = prefsMap.filterKeys { it in themeExportKeys && !(it == APP_THEME && com.wanderwildwood.iori.IoriDark.systemHasDarkSetting(context)) && !com.wanderwildwood.iori.IoriRemoved.removedWallpaper(it, prefsMap[it]) } // iori: theme mode follows the system where it has a dark setting; a picture wallpaper inkOS had is not imported
         loadThemeFromMap(filtered, useCommit = true)
         loadCustomThemeFromMap(filtered)
         appTheme = appTheme

@@ -374,7 +374,7 @@ object Constants {
         Merriweather,
         Shortstack,
         Manrope,
-        Hoog,
+        // iori: no Hoog (hoog.ttf came with no licence); a stored Hoog becomes Public Sans (IoriRemoved)
         System,
         Custom;
 
@@ -405,7 +405,7 @@ object Constants {
                 PlusJakarta -> ResourcesCompat.getFont(context, R.font.plusjakartasansaitalic)
                 Merriweather -> ResourcesCompat.getFont(context, R.font.merriweather)
                 Manrope -> ResourcesCompat.getFont(context, R.font.manropemedium)
-                Hoog -> ResourcesCompat.getFont(context, R.font.hoog)
+                // iori: no Hoog
                 Iosevka -> ResourcesCompat.getFont(context, R.font.iosevka)
                 ZalandoExp -> ResourcesCompat.getFont(context, R.font.zalandosansexpandedregular)
             }
@@ -421,7 +421,7 @@ object Constants {
                 PlusJakarta -> "Plus Jakarta"
                 Merriweather -> context.getString(R.string.settings_font_merriweather)
                 Manrope -> "Manrope Medium"
-                Hoog -> context.getString(R.string.settings_font_hoog)
+                // iori: no Hoog
                 Iosevka -> "Iosevka"
                 ZalandoExp -> "Zalando Expanded"
                 Custom -> "Custom Font"
@@ -449,7 +449,7 @@ object Constants {
                 PlusJakarta -> "Plus Jakarta"
                 Merriweather -> stringResource(R.string.settings_font_merriweather)
                 Manrope -> "Manrope Medium"
-                Hoog -> stringResource(R.string.settings_font_hoog)
+                // iori: no Hoog
                 Iosevka -> "Iosevka"
                 ZalandoExp -> "Zalando Expanded"
                 Custom -> "Custom Font"

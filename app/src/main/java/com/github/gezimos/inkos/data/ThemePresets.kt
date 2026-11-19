@@ -181,8 +181,8 @@ object ThemePresets {
             homePagesNum = 3,
             appSize = 28,
             appDrawerSize = 26,
-            backgroundOpacity = 175,
-            wallpaperResourceId = R.drawable.sf_left,
+            backgroundOpacity = 255, // iori: no picture under it, so a solid background (inkOS: 175)
+            wallpaperResourceId = null, // iori: inkOS's picture (sf_left.png) is not in Home: no licence came with it
         ),
         // 8. Leaf
         ThemePreset(
@@ -204,8 +204,8 @@ object ThemePresets {
             appDrawerSize = 26,
             homeAppsNum = 5,
             homePagesNum = 1,
-            backgroundOpacity = 160,
-            wallpaperResourceId = R.drawable.leaf,
+            backgroundOpacity = 255, // iori: no picture under it, so a solid background (inkOS: 160)
+            wallpaperResourceId = null, // iori: inkOS's picture (leaf.png) is not in Home: no licence came with it
         ),
         // 9. Bold
         ThemePreset(
@@ -343,8 +343,8 @@ object ThemePresets {
             homePagesNum = 1,
             appSize = 24,
             appDrawerSize = 24,
-            backgroundOpacity = 10,
-            wallpaperResourceId = R.drawable.nyc_left,
+            backgroundOpacity = 255, // iori: no picture under it, so a solid background (inkOS: 10)
+            wallpaperResourceId = null, // iori: inkOS's picture (nyc_left.png) is not in Home: no licence came with it
         ),
         // 14. Woods
         ThemePreset(
@@ -366,8 +366,8 @@ object ThemePresets {
             appDrawerSize = 28,
             homeAppsNum = 0,
             homePagesNum = 0,
-            backgroundOpacity = 160,
-            wallpaperResourceId = R.drawable.forrest,
+            backgroundOpacity = 255, // iori: no picture under it, so a solid background (inkOS: 160)
+            wallpaperResourceId = null, // iori: inkOS's picture (forrest.png) is not in Home: no licence came with it
         )
     )
 }

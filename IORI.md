@@ -97,7 +97,7 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!*.md'` must list exactly these: 165 lines (11-19, after the Settings restructure, the words moved from code to strings, after the Settings house pass, the house dialogs, the phone-test fixes, the e-ink mode row, Theme mode hidden, the pinch menu without About, the dark fixes and imports that keep the system's theme; the rows below give each file's lines; the older rows were last counted at 32, so recheck them at the next merge).
+'!app/src/iori/**' --glob '!*.md'` must list exactly these: 180 lines (19 Nov, decisions: 165 before, and 15 for what came from inkOS without a licence, below; 11-19, after the Settings restructure, the words moved from code to strings, after the Settings house pass, the house dialogs, the phone-test fixes, the e-ink mode row, Theme mode hidden, the pinch menu without About, the dark fixes and imports that keep the system's theme; the rows below give each file's lines; the older rows were last counted at 32, so recheck them at the next merge).
 
 | File:line | Purpose |
 |---|---|
@@ -106,7 +106,7 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/build.gradle.kts:186` | `apply(from = "iori.gradle")`: identity, iori sources and strings |
 | `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt:8` | migrations run on `UPSTREAM_VERSION_CODE`, so upstream's thresholds still fire; line 258 writes back the same value |
 | `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt:152` | migrated internal slots point at `BuildConfig.APPLICATION_ID`, not `app.inkos` |
-| `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt:371` | a theme import leaves Theme mode (`APP_THEME`) alone where the system has a dark setting (`IoriDark.systemHasDarkSetting`): Home's theme follows the system's there; line 718 does the same for a full backup restore |
+| `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt:371` | a theme import leaves Theme mode (`APP_THEME`) alone where the system has a dark setting (`IoriDark.systemHasDarkSetting`): Home's theme follows the system's there; line 718 does the same for a full backup restore. Since 19 Nov the same line also leaves out a theme's `INKOS_WALLPAPER_RESOURCE_ID` when it is a picture (a positive resource number: `IoriRemoved.removedWallpaper`), which in this build would name another resource |
 | `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt:714` | imports pass through `IoriBackup.rewrite`, so an inkOS backup restores into iori |
 | `app/src/main/java/com/github/gezimos/inkos/ui/RecentsFragment.kt:672` | iori is left out of its own Recents |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/SettingsComposable.kt` (16 lines) | the house look on every Settings page, through `IoriSettingsLook`: no row icons, value under the label, plain bold headings with no line, house sizes that follow inkOS's Settings text size, the house switch, an emptied note takes no line. inkOS's English Settings strings are overridden in `app/src/iori/res/values/iori_upstream_settings.xml` (sentence case; notes that only restate their label emptied) |
@@ -151,6 +151,29 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt:1080` | the gesture sheet's "inkOS" tab title through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt:1618` | the shortcut sheet's "inkOS" tab title through `IoriNames.named` |
 | `app/src/main/java/com/github/gezimos/inkos/ui/dialogs/ComposeBottomSheet.kt:2292` | "What is inkOS Wallpaper?" reads `what_is_inkos_wallpaper` (upstream's same words), which iori overrides |
+| `app/src/main/java/com/github/gezimos/inkos/data/Constants.kt` (4 lines: 377, 408, 424, 452) | 19 Nov: no Hoog font. The `FontFamily.Hoog` entry and its three `when` branches are each replaced by a marker comment; a stored `Hoog` (inkOS reads an unknown name as the system font, so nothing crashes) is made Public Sans at each start by `IoriRemoved.migrate`, called from `Iori.guardCrashes` |
+| `app/src/main/java/com/github/gezimos/inkos/widget/QuoteWidget.kt:95` | 19 Nov: the quote widget's `"Hoog" -> Monospace` mapping, replaced by a marker comment |
+| `app/src/main/res/values/strings.xml:274` | 19 Nov: `settings_font_hoog` removed; the XML comment in its place carries the marker |
+| `app/src/main/java/com/github/gezimos/inkos/helper/WallpaperUtility.kt:27` | 19 Nov: the fourteen picture wallpapers (Japan, Japan 2, NYC, SF, Trees, Bamboo, Blossom, Building, Forrest, Leaf, Liberty, Urban, Halfdots, Halfdots Two) are gone from `PRESET_WALLPAPERS`; one marker comment stands for the fourteen lines. White, Black and the generated patterns stay |
+| `app/src/main/java/com/github/gezimos/inkos/data/ThemePresets.kt` (8 lines: 184, 185, 207, 208, 346, 347, 369, 370) | 19 Nov: the four themes that set a picture (SF, Leaf, NYC, Forrest) set none (`wallpaperResourceId = null`, which clears Home's wallpaper when the theme is applied) and a solid background (`backgroundOpacity = 255`, inkOS's 175, 160, 10, 160 in the comments). A stored picture is taken away at the next start by `IoriRemoved.migrate` (its saved copy deleted, background solid) |
+
+Upstream files removed whole on 19 Nov (decisions), so there is no line to mark: each came with
+inkOS with no licence (see `CREDITS.md`). At the next merge, a conflict on any of these is
+resolved by keeping it deleted, and a new upstream file of the same kind is checked the same way.
+
+| Removed | What it was |
+|---|---|
+| `app/src/main/res/font/hoog.ttf` | the Hoog font ("hooge 05_53", Craig Kroeger; no licence, not OFL) |
+| `app/src/main/res/raw/ofl_license.txt` (one line) | `- Hoog` taken out of its list of OFL fonts, which it never was; not marked, since the file is shown as it is in the app |
+| `app/src/main/res/drawable/{bamboo,blossom3,building,forrest,halfdots,halfdots_two,japan2,japan_left,leaf,liberty,nyc_left,sf_left,trees_left,urban}.png` | the fourteen picture wallpapers packed in the APK |
+| `app/src/main/res/play_store.png`, `play_store_features.png` | inkOS's store pictures |
+| `fastlane/` | inkOS's store listing: texts, screenshots, icon, changelogs (with the unmarked `101014.txt`) |
+| `wallpapers/` | inkOS's wallpaper pictures, not packed in the APK |
+| `others/bmc-button.png` | inkOS's Buy Me a Coffee button picture |
+| `docs/img/**/*.png`, `*.jpg`, `*.mp4` | inkOS's website screenshots, mockups and videos; the website's HTML under `docs/` is kept and its pictures no longer load; `docs/README-inkOS.md` links to inkOS's repository for screenshots instead |
+
+`Gemfile` and `Gemfile.lock` (fastlane's Ruby tooling) are kept unchanged: they are not pictures,
+and removing them would conflict on every merge for no gain.
 
 Not hooks, but carried on top of v0.6:
 
@@ -203,9 +226,10 @@ Not hooks, but carried on top of v0.6:
   Glide's and protobuf's own BSD files; `IoriAbout.textsFor`). What Gradle cannot see is in
   `config/libraries`: MMD's chevrons, and inkOS's nine OFL fonts (`font-*.json`, the copyright
   line from each font file as its author line; the full text is inkOS's own
-  `res/raw/ofl_license.txt`). Hoog (`hoog.ttf`, hooge 05_53 by Craig Kroeger) is left out: it
-  came with no licence and is not OFL. `CREDITS.md` lists all of it, with the pictures that
-  came with inkOS.
+  `res/raw/ofl_license.txt`). Hoog (`hoog.ttf`, hooge 05_53 by Craig Kroeger) came with no
+  licence and is not OFL: since 19 Nov it is not in Home at all (see the removed files above),
+  nor are the picture wallpapers and store pictures that came with inkOS without one.
+  `CREDITS.md` lists all of it.
 - **README** (19 Nov): Home's own. Upstream's is kept, links fixed for its place, as
   `docs/README-inkOS.md`, so a merge that touches upstream's README conflicts only in
   `README.md`: take ours, and copy upstream's new one there.

@@ -183,7 +183,8 @@ inkOS's, and inkOS is gezimos's work.
   gezimos, GPL-3.0.
 - The scrollbar chevrons of Home's own lists are from
   [Mudita Mindful Design](https://github.com/mudita/MMD), Apache-2.0.
-- The fonts, wallpapers and pictures that came with inkOS, and their licences, are listed in
+- The fonts and pictures that came with inkOS, their licences, and what was left out because it
+  came with none (the Hoog font, the picture wallpapers, inkOS's store pictures), are listed in
   [CREDITS.md](CREDITS.md).
 
 In the app, **Settings → About Home → Licenses** lists every library and font with its
