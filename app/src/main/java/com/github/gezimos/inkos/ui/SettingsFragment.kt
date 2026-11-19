@@ -153,6 +153,7 @@ sealed interface SettingsRoute {
     data object Advanced : SettingsRoute
     data object Support : SettingsRoute
     data object Extras : SettingsRoute
+    data object IoriHomeScreen : SettingsRoute // iori: inkOS's own rows, as the Home screen sub-page of Home's top page
 
     fun title(context: Context): String = when (this) {
         Home -> context.getString(R.string.settings_name)
@@ -163,8 +164,9 @@ sealed interface SettingsRoute {
         Fonts -> context.getString(R.string.fonts_settings_title)
         Notifications -> context.getString(R.string.notification_section)
         Advanced -> context.getString(R.string.advanced_settings_title)
-        Support -> "Support"
-        Extras -> "Extras"
+        Support -> context.getString(R.string.iori_upstream_about_title) // iori: words in strings, not in code
+        Extras -> context.getString(R.string.extra_features) // iori: words in strings, not in code
+        IoriHomeScreen -> context.getString(R.string.iori_settings_home) // iori: the Home screen sub-page
     }
 }
 
@@ -459,6 +461,7 @@ class SettingsFragment : Fragment() {
             SettingsRoute.Advanced -> AdvancedContent(fontSize)
             SettingsRoute.Support -> SupportContent(fontSize)
             SettingsRoute.Extras -> ExtrasContent(fontSize)
+            SettingsRoute.IoriHomeScreen -> SettingsHomeContent(fontSize) // iori: inkOS's own rows, under Home's top page
         }
     }
 
@@ -475,9 +478,9 @@ class SettingsFragment : Fragment() {
     @Composable
     private fun SettingsHomeContent(fontSize: TextUnit) {
         val titleFontSize = if (fontSize.isSpecified) (fontSize.value * 1.5).sp else fontSize
+        if (currentRoute == SettingsRoute.Home) return com.wanderwildwood.iori.IoriSettings.Top(titleFontSize, { viewModel.setAppTheme(it) }, { navigateTo(when (it) { com.wanderwildwood.iori.IoriSettings.Sub.HomeScreen -> SettingsRoute.IoriHomeScreen; com.wanderwildwood.iori.IoriSettings.Sub.LookFeel -> SettingsRoute.LookFeel; com.wanderwildwood.iori.IoriSettings.Sub.Gestures -> SettingsRoute.Gestures; com.wanderwildwood.iori.IoriSettings.Sub.Advanced -> SettingsRoute.Advanced; com.wanderwildwood.iori.IoriSettings.Sub.UpstreamAbout -> SettingsRoute.Support }) }) { prefs.onboardingPage = 0; findNavController().navigate(R.id.onboardingFragment) } // iori: Home's own top page (Phone-wide, Apps, Home, Setup and about); the rows below are its Home screen sub-page
         val privateSpaceManager = remember { ProfileManager(requireContext()) }
         Column(modifier = Modifier.fillMaxWidth()) {
-            com.wanderwildwood.iori.IoriSettings.Top(titleFontSize) { viewModel.setAppTheme(it) } // iori: the phone-wide rows first (dark mode, Nextcloud, apps), then a heading over inkOS's own
             SettingsHomeItem(
                 title = stringResource(R.string.settings_home_title),
                 imageVector = Icons.Rounded.Widgets,
@@ -499,6 +502,7 @@ class SettingsFragment : Fragment() {
                 titleFontSize = titleFontSize,
                 onClick = { navigateTo(SettingsRoute.Fonts) },
             )
+            if (false) // iori: a row of Home's top page, not of the Home screen sub-page
             SettingsHomeItem(
                 title = stringResource(R.string.settings_look_feel_title),
                 imageVector = Icons.Filled.InvertColors,
@@ -506,6 +510,7 @@ class SettingsFragment : Fragment() {
                 titleFontSize = titleFontSize,
                 onClick = { navigateTo(SettingsRoute.LookFeel) },
             )
+            if (false) // iori: a row of Home's top page, not of the Home screen sub-page
             SettingsHomeItem(
                 title = stringResource(R.string.settings_gestures_title),
                 imageVector = Icons.Rounded.SwipeVertical,
@@ -548,11 +553,12 @@ class SettingsFragment : Fragment() {
                     }
                 )
             }
+            if (false) // iori: a row of Home's top page, not of the Home screen sub-page
             SettingsHomeItem(
                 title = stringResource(R.string.settings_advanced_title) +
-                        if (false && !isinkosDefault(requireContext())) "*" else "", // iori: said in words below, not with a star
+                        if (!isinkosDefault(requireContext())) "*" else "",
                 imageVector = Icons.Rounded.Settings,
-                description = if (!isinkosDefault(requireContext())) stringResource(R.string.iori_not_default) else stringResource(R.string.desc_advanced_settings), // iori
+                description = stringResource(R.string.desc_advanced_settings),
                 titleFontSize = titleFontSize,
                 onClick = { navigateTo(SettingsRoute.Advanced) },
             )
@@ -571,7 +577,7 @@ class SettingsFragment : Fragment() {
                 titleFontSize = titleFontSize,
                 onClick = { navigateTo(SettingsRoute.Support) },
             )
-            com.wanderwildwood.iori.IoriSettings.Foot(titleFontSize, dialogBuilder, onUpstreamAbout = { navigateTo(SettingsRoute.Support) }) { prefs.onboardingPage = 0; findNavController().navigate(R.id.onboardingFragment) } // iori: Folders and Home lines close the home screen's rows; then Run setup again and the one About
+            com.wanderwildwood.iori.IoriSettings.Foot(titleFontSize, dialogBuilder) // iori: Folders and Home lines close the Home screen sub-page
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
@@ -764,7 +770,7 @@ class SettingsFragment : Fragment() {
             )
             SettingsHomeItem(
                 title = stringResource(changeLauncherText), // iori: said in words below, not with a star
-                description = if (!isinkosDefault(requireContext())) stringResource(R.string.iori_not_default) else "Choose which launcher to use as your home screen", // iori
+                description = if (!isinkosDefault(requireContext())) stringResource(R.string.iori_not_default) else stringResource(R.string.iori_desc_change_launcher), // iori: said in words below, not with a star; words in strings
                 titleFontSize = titleFontSize,
                 onClick = { requireContext().startActivity(Intent(android.provider.Settings.ACTION_HOME_SETTINGS)) }
             )
@@ -782,19 +788,19 @@ class SettingsFragment : Fragment() {
             )
             SettingsHomeItem(
                 title = stringResource(R.string.guide),
-                description = "Learn gestures and interactions",
+                description = stringResource(R.string.iori_desc_guide), // iori: words in strings, not in code
                 titleFontSize = titleFontSize,
                 onClick = { findNavController().navigate(R.id.guideFragment) }
             )
             SettingsHomeItem(
                 title = stringResource(R.string.advanced_settings_restart_title),
-                description = com.wanderwildwood.iori.IoriNames.named("Restart inkOS without rebooting the device"), // iori: this app's name
+                description = stringResource(R.string.iori_desc_restart), // iori: this app's name, in strings
                 titleFontSize = titleFontSize,
                 onClick = { AppReloader.restartApp(requireContext()) }
             )
             SettingsHomeItem(
                 title = stringResource(R.string.settings_exit_inkos_title),
-                description = "Switch to a different launcher",
+                description = stringResource(R.string.iori_desc_exit), // iori: words in strings, not in code
                 titleFontSize = titleFontSize,
                 onClick = { exitLauncher() }
             )
@@ -1493,7 +1499,7 @@ class SettingsFragment : Fragment() {
                 }
                 SettingsSelect(
                     title = stringResource(R.string.ui_scale), option = displayLabel, fontSize = titleFontSize,
-                    description = "All in one UI Scaling",
+                    description = stringResource(R.string.iori_desc_ui_scale), // iori: words in strings, not in code
                     onClick = {
                         if (dialogBuilder.iori.uiScale(prefs, viewModel, getString(R.string.ui_scale))) return@SettingsSelect // iori: a house list of the scales, not inkOS's own sheet
                         dialogBuilder.showSheet {
@@ -1930,10 +1936,10 @@ class SettingsFragment : Fragment() {
                 }
             )
             SettingsSelect(
-                title = "Gesture vs page conflict",
+                title = stringResource(R.string.iori_gesture_conflict), // iori: words in strings, not in code
                 option = "", // iori: no "Read more"; the row opens the explanation
                 fontSize = titleFontSize,
-                description = "How short vs long swipes work with home pages",
+                description = stringResource(R.string.iori_desc_gesture_conflict), // iori: words in strings, not in code
                 onClick = { dialogBuilder.showGestureVsPageConflictSheet() }
             )
             SettingsSelect(

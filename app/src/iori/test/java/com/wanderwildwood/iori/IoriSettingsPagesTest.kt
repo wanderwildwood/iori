@@ -74,6 +74,32 @@ class IoriSettingsPagesTest {
     }
 
     @Test
+    fun aRowTallerThanThePageIsReadAPageAtATime() {
+        // A, then R taller than the 450 px page, then B; the content ends at 1200.
+        val spans = listOf(Span(0, 100), Span(100, 1100), Span(1100, 1200))
+        // R does not fit under A: the next page opens on R.
+        assertEquals(100, IoriSettingsPages.forward(spans, 0, page, 1200))
+        // On R's own page nothing whole follows it there: the next page is the next part of R,
+        // not B (which skipped R's rest), and the one after that shows R's end with B.
+        assertEquals(550, IoriSettingsPages.forward(spans, 100, page, 1200))
+        assertEquals(1000, IoriSettingsPages.forward(spans, 550, page, 1200))
+        assertNull(IoriSettingsPages.forward(spans, 1000, page, 1200))
+        // Back from part-way down R lands on R's top.
+        assertEquals(100, IoriSettingsPages.back(spans, 550, page))
+    }
+
+    @Test
+    fun aTallRowUnderItsHeadingIsNotCutAtItsTop() {
+        val spans = listOf(Span(0, 40, heading = true, key = "h"), Span(40, 1000), Span(1000, 1100))
+        // Cut at its top, the page would hold the heading alone; it is drawn as far as it goes.
+        assertNull(IoriSettingsPages.foot(spans, 0, page))
+        assertEquals(450, IoriSettingsPages.forward(spans, 0, page, 1100))
+        // A tall row with an ordinary row above it on the page is still cut at its top.
+        val under = listOf(Span(0, 100), Span(100, 1000))
+        assertEquals(100, IoriSettingsPages.foot(under, 0, page))
+    }
+
+    @Test
     fun aHeadingWithNothingUnderItFolds() {
         val a = "a"; val b = "b"; val c = "c"
         // a heads two rows; b heads nothing (c follows at once); c heads nothing (the end).
