@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -145,8 +146,11 @@ object IoriYourApps {
                             }
                         }
                         // A folder opens on its first page.
+                        // At most the screen less a margin above and below, as the choice dialogs
+                        // are: a long folder (Core) turns in pages inside a card, never a full screen.
+                        val room = LocalConfiguration.current.screenHeightDp.dp - 200.dp
                         androidx.compose.runtime.key(open) {
-                            FittedPages(rows, Modifier.fillMaxWidth().weight(1f, fill = false))
+                            FittedPages(rows, Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(max = room.coerceAtLeast(200.dp)))
                         }
                     }
                 }
