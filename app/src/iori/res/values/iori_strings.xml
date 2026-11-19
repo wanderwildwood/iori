@@ -75,7 +75,6 @@
     <string name="iori_settings_home_group">Home</string>
     <string name="iori_settings_home">Home screen</string>
     <string name="iori_settings_home_desc">Widgets, app drawer, fonts, notifications, folders and lines</string>
-    <string name="iori_your_apps_title">Your apps</string>
     <string name="iori_your_apps_desc">Installed or missing, get and update</string>
     <string name="iori_settings_setup">Setup and about</string>
     <string name="iori_setup_again">Run setup again</string>
