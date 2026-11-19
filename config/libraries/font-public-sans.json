@@ -1,0 +1,12 @@
+{
+  "uniqueId": "font:public-sans",
+  "name": "Public Sans font",
+  "description": "One of the fonts inkOS ships, version 2.001. Copyright 2015 The Public Sans Project Authors. Designed by U.S. Web Design System; Libre Franklin by Pablo Impallari and Rodrigo Fuenzalida.",
+  "organization": {
+    "name": "Copyright 2015 The Public Sans Project Authors"
+  },
+  "website": "https://github.com/uswds/public-sans",
+  "licenses": [
+    "OFL-1.1"
+  ]
+}

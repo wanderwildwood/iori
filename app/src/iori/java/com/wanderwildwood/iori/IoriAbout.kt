@@ -153,12 +153,15 @@ object IoriAbout {
     /**
      * The full texts a library's license line calls for. Apache-2.0 is one text for all; the two
      * BSD texts are the libraries' own files (Glide's, protobuf's), since a BSD license names its
-     * holder. A license with no text here shows its name and the library's address only.
+     * holder. The fonts inkOS ships (config/libraries) are OFL-1.1 and take inkOS's own copy of
+     * the OFL; each font's copyright line is its author line. A license with no text here shows
+     * its name and the library's address only.
      */
     internal fun textsFor(licence: String): List<Int> = buildList {
         if ("BSD-2-Clause" in licence) add(R.raw.glide_license)
         if ("BSD-3-Clause" in licence) add(R.raw.protobuf_license)
         if ("Apache" in licence) add(R.raw.apache_2_0)
+        if ("OFL" in licence) add(R.raw.ofl_license)
     }
 
     private fun paragraphs(context: Context, raw: Int): List<String> = try {

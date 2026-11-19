@@ -1,0 +1,12 @@
+{
+  "uniqueId": "font:vollkorn",
+  "name": "Vollkorn font",
+  "description": "One of the fonts inkOS ships, version 5.001. Copyright 2018 The Vollkorn Project Authors. Designed by Friedrich Althausen.",
+  "organization": {
+    "name": "Copyright 2018 The Vollkorn Project Authors"
+  },
+  "website": "https://github.com/FAlthausen/Vollkorn-Typeface",
+  "licenses": [
+    "OFL-1.1"
+  ]
+}

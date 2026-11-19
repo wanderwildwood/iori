@@ -180,7 +180,11 @@ Not hooks, but carried on top of v0.6:
   one small drawer per library from `res/raw/aboutlibraries.json` (`ui/LicencesJson.kt`, the
   shop's reader), with its license, address and full text (`src/iori/res/raw`: Apache-2.0, and
   Glide's and protobuf's own BSD files; `IoriAbout.textsFor`). What Gradle cannot see is in
-  `config/libraries` (MMD's chevrons). inkOS's bundled fonts are not listed there yet.
+  `config/libraries`: MMD's chevrons, and inkOS's nine OFL fonts (`font-*.json`, the copyright
+  line from each font file as its author line; the full text is inkOS's own
+  `res/raw/ofl_license.txt`). Hoog (`hoog.ttf`, hooge 05_53 by Craig Kroeger) is left out: it
+  came with no licence and is not OFL. `CREDITS.md` lists all of it, with the pictures that
+  came with inkOS.
 - **Your apps** (19 Nov, makeover piece 4; `IoriYourApps.kt` the page, `IoriAppInstaller.kt` the
   work, `IoriAppsManifest.kt` the list and the two decisions, pure Kotlin with its tests): the
   house's apps from `https://wanderthe.dev/apps.json` (made by `tools/apps-manifest.py` in the
@@ -196,6 +200,9 @@ Not hooks, but carried on top of v0.6:
   file is deleted after; one left by a killed download is cleared when the list is next read.
   No upstream file changes: the permission and the receiver were already there;
   `IoriInstallReceiver` hands answers marked `your_apps` to `IoriAppInstaller`.
+- **README** (19 Nov): Home's own. Upstream's is kept, links fixed for its place, as
+  `docs/README-inkOS.md`, so a merge that touches upstream's README conflicts only in
+  `README.md`: take ours, and copy upstream's new one there.
 - **Default apps** (14 Nov, `IoriDefaults.kt`): a first-run page after Ecosystem (the first run
   is five pages now) and a Settings row. One row for each kind of thing one of Home's apps is
   meant to open (calls and texts, which are roles, and filling in passwords; contacts, calendar, email, alarms and timers,

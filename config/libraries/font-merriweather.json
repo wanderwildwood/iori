@@ -1,0 +1,12 @@
+{
+  "uniqueId": "font:merriweather",
+  "name": "Merriweather font",
+  "description": "One of the fonts inkOS ships, version 2.002. Copyright 2016 The Merriweather Project Authors, with Reserved Font Name \"Merriweather\". Designed by Eben Sorkin.",
+  "organization": {
+    "name": "Copyright 2016 The Merriweather Project Authors, with Reserved Font Name \"Merriweather\""
+  },
+  "website": "https://github.com/EbenSorkin/Merriweather",
+  "licenses": [
+    "OFL-1.1"
+  ]
+}

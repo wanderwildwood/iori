@@ -1,0 +1,12 @@
+{
+  "uniqueId": "font:space-grotesk",
+  "name": "Space Grotesk font",
+  "description": "One of the fonts inkOS ships, version 2.000. Copyright 2020 The Space Grotesk Project Authors. Designed by Florian Karsten.",
+  "organization": {
+    "name": "Copyright 2020 The Space Grotesk Project Authors"
+  },
+  "website": "https://github.com/floriankarsten/space-grotesk",
+  "licenses": [
+    "OFL-1.1"
+  ]
+}

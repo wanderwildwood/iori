@@ -1,0 +1,12 @@
+{
+  "uniqueId": "font:zalando-sans-expanded",
+  "name": "Zalando Sans Expanded font",
+  "description": "One of the fonts inkOS ships, version 1.700. Copyright 2025 The Zalando Sans Expanded Project Authors. Designed by Kurppa Hosk, KH Type, Jakob Ekelund.",
+  "organization": {
+    "name": "Copyright 2025 The Zalando Sans Expanded Project Authors"
+  },
+  "website": "https://github.com/zalando/sans",
+  "licenses": [
+    "OFL-1.1"
+  ]
+}

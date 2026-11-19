@@ -1,174 +1,187 @@
 # 庵 iori — Home
 
-inkOS, the text launcher for e-ink phones, with a few additions for the
-[Mudita Kompakt](https://mudita.com/products/mudita-kompakt): a few lines under the home apps
-from the phone's other apps, music controls on the lock screen for any player, and contacts
-that open in Contacts.
+Home is a plain, quiet home screen for E Ink phones. It is a fork of
+[inkOS](https://github.com/gezimos/inkos), the text launcher by
+[gezimos](https://github.com/gezimos), with a few things added for the
+[Mudita Kompakt](https://mudita.com/products/mudita-kompakt) and for a family of apps made to
+work together.
 
-*Iori* is 庵 — a hermitage, a small hut: one room, a roof, little in it. It is the kind of place
-a home screen with a handful of words on it is meant to be.
+*Iori* (庵) is a small hut: one room, a roof, little in it. That is what a home screen with a
+handful of words on it is meant to be.
 
-Based on [inkOS](https://github.com/gezimos/inkos) by [gezimos](https://github.com/gezimos).
-Everything inkOS does still works here, and inkOS's [documentation](DOCUMENTATION.md) applies
-as written. Home is its own app (`com.wanderwildwood.iori`), so it installs beside inkOS
-rather than replacing it, and either can be the home app. For plain inkOS, go to
-[gezimos's repository](https://github.com/gezimos/inkos); it is also on
+Everything inkOS does still works here. inkOS's [documentation](DOCUMENTATION.md) applies as
+written, and inkOS's own README is kept in [docs/README-inkOS.md](docs/README-inkOS.md). For
+plain inkOS, go to [gezimos's repository](https://github.com/gezimos/inkos) or
 [IzzyOnDroid](https://apt.izzysoft.de/fdroid/index/apk/app.inkos).
 
 | | |
 |---|---|
 | ![Home, with lines from Glance under the apps](screenshots/1-home.png) | ![Home lines: each source and what it is doing](screenshots/2-home-lines.png) |
-| ![Settings, with a cup for inkOS's author and a llama for this app](screenshots/3-settings.png) | ![About Home](screenshots/4-about.png) |
 
-## Lines on home
+## Which phones
 
-Up to three lines under the home apps, in the quote's font, size and alignment: today's events,
-the weather, what is unread, and whatever else [Glance](https://github.com/wanderwildwood/hitome)
-shows on the lock screen. They come from Glance, so **lines need Glance 0.1.24 or later**, and
-they keep to the choices made there: the same apps, in the same order, each following its own
-lock-screen switch. An app whose lock-screen line is off has no line on home either. Other
-apps' notifications are never part of it.
+- **Mudita Kompakt**, on Mudita's own system (MuditaOS K) and on
+  [KompaktOS](https://github.com/gezimos/KompaktOS). This is the phone it is made on and
+  tried on.
+- **Other Android phones from Android 10 on.** Home installs on Android 8 and 9 too, but it is
+  not tried there.
 
-Pressing a line opens the app it came from. A long press opens **Home lines**, a list of the
-sources and what each is doing: on, off here, not installed, needs an update, nothing now or off
-in the app, off in Glance, did not answer. Pressing one there turns it on or off on home only,
-and leaves the lock screen as it was. When Glance itself is the trouble, the list says so
-instead: not installed, needs 0.1.24, does not know this build, or did not answer.
+Home is its own app (`com.wanderwildwood.iori`), so it installs beside inkOS rather than
+replacing it, and either one can be the home app.
 
-With no lines to press, the same list is under **Settings → Home screen → Home lines**, and home shows a
-"Home lines" row while it is being edited. The list turns its pages on whole rows, with Close
-always on screen, at any text size.
+## What it does that inkOS does not
 
-Apps are named as the Kompakt's launcher names them ("Medicine", "Wallet"), installed or not.
+- **A first run of its own.** Six pages: welcome and privacy; setup (make Home the home app,
+  notification access); your apps; default apps; Nextcloud; theme and home apps.
+  **Settings → Run setup again** opens it again. Nothing is reset.
+- **One Nextcloud account** for the whole phone. See below.
+- **Ecosystem apps** (the "Your apps" of the plan): the apps made to work with Home, installed
+  or missing, with Get and Update. See below.
+- **Default apps.** One row for each kind of thing an app of the family opens: calls, texts,
+  contacts, calendar, alarms, gallery, maps, text files, passwords and more. Each row says what
+  Android does today. Press a row that is not chosen, pick the app, then Always.
+- **Lines on home.** Up to three lines under the home apps: today's events, the weather, what
+  is unread. They come from [Glance](https://github.com/wanderwildwood/hitome) 0.1.24 or later
+  and follow the choices made there. A press opens the app the line came from. A long press
+  lists each source and what it is doing. The lines can sit at the bottom or at the top.
+- **Music on the lock screen** for any player, above the padlock. The Kompakt's own widget
+  shows only Mudita's player.
+- **Dark mode for the whole family.** On MuditaOS, Settings → Dark mode turns Home dark, and
+  the other apps of the family follow it. On KompaktOS and other phones, Home follows the
+  phone's own dark setting.
+- **E-ink mode per app** on MuditaOS 2.0 and later: hold an app in the drawer, then E-ink mode.
+  It writes the same table as Mudita's own E-ink Modes screen.
+- **Folders in the app drawer.** Hold an app, then Folder.
+- **Hand-offs.** With no app picked for the clock or the date, a press opens Time or Datebook.
+  A contact found in search opens in Connections. If that app is not on the phone, Home offers
+  to get it, or to keep using the phone's own.
+- **Settings in groups**: Phone, Apps, Home screen, Setup and about, in the same plain look as
+  the other apps of the family. inkOS's own pages and rows are all still there.
+- **Two small fixes.** All-day events show on their own date. A notification its app marked
+  as not to badge, such as a running service, no longer puts a dot on the app.
+- **Backups from inkOS** restore into Home, with hidden apps and internal shortcuts still
+  working.
 
-If this app's own code ever crashes, inkOS's crash report still comes up, and home then draws
-without its lines and says "Home lines turned off after a crash". A long press on that row
-turns them back on.
+In English, Home's words say Home wherever they mean this app, so two launchers on one phone can
+be told apart. Credits to inkOS and gezimos stay as they are. Other languages still say inkOS.
 
-## Music on the lock screen
+## One Nextcloud account
 
-The Kompakt's own lock-screen music widget is wired to Mudita's player and shows nothing else.
-Home draws a strip above the padlock for whatever else is playing, in the place Music Box
-and Audio Reading draw theirs, and stands aside when the playing app has its own strip turned
-on, so only one ever shows. It shows only while the phone is locked with the screen on, the PIN
-pad is not up and no call is ringing or live.
+Sign in to your Nextcloud once, in the first run or in **Settings → Nextcloud account**. Home
+uses Nextcloud's own login in the browser. On a phone with no browser you can type an app
+password, or your login password: a login password is used once to get an app password and is
+not kept.
 
-It is part of inkOS's own accessibility service, shown here as **Home actions**, the one
-that already performs the system actions given to gestures. The way it works comes from
-gezimos's [Katapult](https://github.com/gezimos/Katapult).
+Home keeps one app password, locked with a key in the phone's keystore, in a file left out of
+backups. Nextcloud's device list shows it as one entry, so revoking it there signs out every
+app at once. Signing out in Home also asks the server to delete it.
 
-## Smaller things
+The apps of the family that use Nextcloud get a row **Use the phone's Nextcloud account**.
+Home hands the account only to those apps, checked by package name and by the certificate
+their releases are signed with. Anything else gets nothing. Each app still works without Home,
+with its own login.
 
-- **Contacts.** A contact found in search opens on its page in
-  [Contacts](https://github.com/wanderwildwood/enishi) when that is installed, and in inkOS's
-  own chooser otherwise.
-- **All-day events** in the Events widget show on their own date.
-- **Badges.** A notification its app has marked as not to badge, such as a running service,
-  no longer puts a dot on the app.
-- **Settings header.** Where inkOS has its Buy Me a Coffee button there are two: a cup, which
-  still opens gezimos's Buy Me a Coffee, and a llama, which feeds the llamas for this one.
-  gezimos's Support page under About is unchanged.
-- **Names.** Accessibility, the widget picker, first run and Settings say Home wherever
-  they mean this app, so the two launchers can be told apart when both are on one phone.
-  Credits to inkOS and gezimos stay as they are.
-- **Backups.** A backup exported from inkOS restores into Home, with its internal slots
-  (the app drawer, notifications and the rest) and hidden apps still working.
+For developers: the account is at `content://com.wanderwildwood.iori.accounts/nextcloud`. It is
+read-only, with one row (`server`, `user`, `password`, `stamp`) while signed in and no row
+while signed out, and a change notice goes out on that address when the account changes. The
+callers allowed are `CALLERS` in
+[`IoriAccount.kt`](app/src/iori/java/com/wanderwildwood/iori/IoriAccount.kt).
 
-## Two launchers on one phone
+## Ecosystem apps
 
-Each launcher is its own app to Android. Accessibility, notification access, widgets, pinned
-shortcuts and private space are granted to each one separately and do not carry over.
+**Settings → Ecosystem apps** lists the apps made to work with Home, in groups (Core first),
+each one installed, missing or with an update. Get downloads an app from its own GitHub
+release; Update gets the newer one. The first run has the same list as a page of tick boxes,
+with the core apps that are missing already ticked.
 
-Installed from a file on Android 13 or later, KompaktOS among them, Android may grey out the
-accessibility and notification access switches at first. Open App info, tap ⋮, then **Allow
-restricted settings**, and try again.
+A download is installed only if it is signed with the key listed for that app inside Home.
+Android asks once before each first install. On Android 12 and later, an app Home installed
+can then be updated without asking again.
+
+## What it sends
+
+Nothing about you. Home has no server of its own. Unlike inkOS, it has the internet
+permission, for these things only:
+
+- **Ecosystem apps**: when you open the list in Settings, or press Get or Update, it asks
+  GitHub for the latest release of each app and downloads the ones you ask for. The first
+  run's page reaches nothing until you press GET.
+- **Your apps**: when you open it in Settings, it reads the list of the house's apps from
+  <https://wanderthe.dev/apps.json> and downloads from GitHub the ones you ask for. Each
+  download is installed only if its checksum, version and signing key match the list and the
+  key Home already holds for that app.
+- **Nextcloud**: only the server you sign in to, to sign in and to sign out.
+
+Settings, usage counts and everything shown on home stay on the phone. A crash report is sent
+only if you choose to, as an email from your own mail app, to this app's address and not to
+gezimos. Home lines come from Glance on the phone and do not leave it either.
+
+The permissions are inkOS's, plus four: internet, asking Android to install an app, updating
+an app Home installed, and setting an alarm (to ask which app opens alarms). Two services stay
+off until you turn them on in Android's settings: **Home actions**, an accessibility service
+for the gesture actions and the lock-screen music strip, which watches only the lock screen;
+and **notification access**, for badges, Letters and the music widget.
 
 ## Installing
 
-Android 8 (API 26) or newer. Download
-<https://github.com/wanderwildwood/iori/releases/latest/download/iori.apk> and open it. That
-address always points at the newest release, with a `.sha256` beside it. Every release is
-signed with the same key, so later ones install over it and keep your settings.
+Download <https://github.com/wanderwildwood/iori/releases/latest/download/iori.apk> and open
+it. That address always points at the newest release, with a `.sha256` file beside it. Every
+release is signed with the same key, so a later one installs over it and keeps your settings.
 
 For updates, add this repository to [Obtainium](https://github.com/ImranR98/Obtainium):
 
     https://github.com/wanderwildwood/iori
 
-For the lines on home, install [Glance](https://github.com/wanderwildwood/hitome) 0.1.24 or
-later too. Glance hands its lines only to Home, checked by package name and by the
-certificate its releases are signed with.
+For lines on home, install [Glance](https://github.com/wanderwildwood/hitome) 0.1.24 or later
+too.
 
-## What it sends
+### Two launchers on one phone
 
-Nothing about you. Unlike inkOS, Home has the internet permission, for one thing: **Your apps**
-(in Settings, and as the Ecosystem page of a first run). When you open the page in Settings it asks
-GitHub for the latest release of each of the apps you have, and when you press Get or Update,
-or GET on the first run's page, it downloads that app from its GitHub release. The first run's
-page reaches nothing until GET is pressed.
-A download is installed only if it is signed with the key listed for that app inside Home.
-GitHub sees the request, as it would from a browser; Home sends nothing else, and has no
-server of its own. Settings, usage counts and everything shown on home stay on the phone. A crash report is sent
-only if you choose to send it, as an email from your own mail app, to this app's address and
-not to gezimos.
+To Android, Home and inkOS are two separate apps. Accessibility, notification access, widgets,
+pinned shortcuts and private space are given to each one on its own and do not carry over.
 
-The permissions are inkOS's, plus three for Ecosystem apps (internet, asking Android to install an
-app, and updating an app Home installed without asking again). Each belongs to a feature you
-can leave off:
+On Android 13 and later (KompaktOS among them), an app installed from a file may find its
+accessibility and notification access switches greyed out. Open App info, tap ⋮, then
+**Allow restricted settings**, and try again. Apps that Home installs are not blocked this
+way.
 
-- **Seeing and managing apps:** the list of installed apps, uninstalling, app usage (for
-  "most used" and Total Usage), pinned shortcuts and widgets, and private space.
-- **Contacts and calendar**, read only, for search and the Events widget, and **music files**,
-  for music search. Android asks before any of them can be read.
-- **Quick settings in the launcher:** Wi-Fi and Bluetooth on and off, brightness (system
-  settings), the camera for the torch, phone state for the signal level, volume, and the
-  status bar.
-- **The rest:** fingerprint or PIN for locked apps and Settings, vibration, the wallpaper, and
-  what Android's background work library needs (network state, starting after a restart, a
-  foreground service, a wake lock). None of these opens a connection.
+## Building
 
-Two services, both off until you turn them on in Android's settings:
-
-- **Home actions**, an accessibility service. It performs the system actions given to
-  gestures (lock the screen, Recents, quick settings, the power menu) and draws the lock-screen
-  music strip. For the strip it watches only the system lock screen, to know when it is showing
-  and whether the PIN pad is up. It reads no other app.
-- **Notification access**, for inkOS's notification badges, Letters and the music widget, and
-  to find what is playing for the lock-screen strip.
-
-Home lines come from Glance on the phone: Home asks it, and Glance answers from the apps
-that hand it their lines. Nothing in that goes off the phone either.
-
-## For developers
-
-Android Studio, JDK 17 or newer, and a device or emulator on Android 8 (API 26) or newer.
+You need JDK 17 or newer and the Android SDK (compile SDK 36). Android Studio works too.
 
 ```sh
-./gradlew :app:assembleDebug     # or :app:assembleRelease
-./gradlew :app:installDebug
+./gradlew assembleDebug testDebugUnitTest   # debug build and unit tests
+./gradlew assembleRelease                   # release build
 ```
 
+The debug build is `com.wanderwildwood.iori.debug` ("Home Debug"), so it installs beside a
+release. A release is signed only when `KEYSTORE_FILE`, `KEYSTORE_PASSWORD`, `KEY_ALIAS` and
+`KEY_PASSWORD` are set; without them it comes out unsigned. There is no fallback key, and the
+release key is not in this repository. Releases are built locally; the GitHub workflows that
+came with inkOS are switched off.
+
 Everything that makes this build Home rather than inkOS is in `app/iori.gradle` and
-`app/src/iori/`. Upstream files change only at lines marked `// iori:`, apart from the
-lock-screen music and the two fixes below, which are whole commits of their own.
-[IORI.md](IORI.md) lists each of them, how upstream is merged, and how the lines can be tested.
+`app/src/iori/`. An upstream file changes only at lines marked `// iori:`, apart from a few
+whole commits (folders, lock-screen music, the two fixes). [IORI.md](IORI.md) lists each one
+and how upstream is merged in. The two fixes that are not particular to Home are one commit
+each, so they can be offered back to inkOS.
 
-A release is signed by a keystore in `signing/`, which is not in this repository. Without it
-the release APK builds **unsigned**; there is no fallback key. Releases are built locally; the
-GitHub Actions workflows inherited from inkOS are switched off.
+## Licence and credits
 
-The branch `upstream-fixes` holds the fixes that are not particular to this app (badges,
-all-day events), one commit each, so they can be offered back to inkOS.
+Home is free software under the GNU General Public License, version 3 only. See
+[LICENSE](LICENSE). Home's additions are copyright © wander wildwood. Everything else is
+inkOS's, and inkOS is gezimos's work.
 
-## Credits
-
-- [inkOS](https://github.com/gezimos/inkos) by gezimos, GPL-3.0, which is nearly all of this.
-  inkOS was itself forked from mLauncher and Olauncher; see inkOS's own credits under
-  Settings → About Home → inkOS's own About.
+- [inkOS](https://github.com/gezimos/inkos) by gezimos, GPL-3.0. Nearly all of this app is
+  inkOS. inkOS was first forked from [mLauncher](https://github.com/DroidWorksStudio/mLauncher),
+  itself a fork of [Olauncher](https://github.com/tanujnotes/Olauncher), both GPL-3.0.
 - The lock-screen music strip follows [Katapult](https://github.com/gezimos/Katapult) by
   gezimos, GPL-3.0.
+- The scrollbar chevrons of Home's own lists are from
+  [Mudita Mindful Design](https://github.com/mudita/MMD), Apache-2.0.
+- The fonts, wallpapers and pictures that came with inkOS, and their licences, are listed in
+  [CREDITS.md](CREDITS.md).
 
-## Licence
-
-GPL-3.0, the same as upstream inkOS. See [LICENSE](LICENSE).
-
-Copyright © wander wildwood, for the additions; inkOS is gezimos's.
+In the app, **Settings → About Home → Licenses** lists every library and font with its
+licence, and **inkOS's own About**, a row of About Home, keeps gezimos's credits and links. If
+inkOS has made your phone better, the coffee cup in About Home opens gezimos's Buy Me a Coffee.
