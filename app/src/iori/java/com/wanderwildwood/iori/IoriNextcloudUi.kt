@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -160,9 +162,12 @@ object IoriNextcloudUi {
         Problem.NO_APP_PASSWORD -> R.string.iori_nc_no_app_password
     }
 
-    /** The rows themselves, the same in the page and in the dialog. */
+    /**
+     * The rows themselves, the same in the page and in the dialog. [fitted]: the list is as tall as
+     * its rows and no taller (the dialog), not the whole room it is given (the first-run page).
+     */
     @Composable
-    private fun Rows(look: Look, modifier: Modifier) {
+    private fun Rows(look: Look, modifier: Modifier, fitted: Boolean = false) {
         val context = LocalContext.current
         LaunchedEffect(Unit) { IoriNextcloud.load(context) }
         OnResume { IoriNextcloud.load(context) }
@@ -186,15 +191,16 @@ object IoriNextcloudUi {
         val busy = phase is Phase.Asking || phase is Phase.Waiting || phase is Phase.Checking
         val browser = remember { IoriNextcloud.hasBrowser(context) }
 
-        PagedColumn(
-            modifier.pointerInput(Unit) {
-                awaitPointerEventScope {
-                    while (true) {
-                        if (awaitPointerEvent(PointerEventPass.Initial).type == PointerEventType.Press) presses++
-                    }
+        val counted = modifier.pointerInput(Unit) {
+            awaitPointerEventScope {
+                while (true) {
+                    if (awaitPointerEvent(PointerEventPass.Initial).type == PointerEventType.Press) presses++
                 }
-            },
-        ) {
+            }
+        }
+        val rows = mutableListOf<Pair<String, @Composable () -> Unit>>()
+        fun item(key: String, row: @Composable () -> Unit) { rows += key to row }
+        run {
             if (shown != null) {
                 item(key = "who") {
                     Text(
@@ -218,7 +224,7 @@ object IoriNextcloudUi {
                         }
                     }
                 }
-                return@PagedColumn
+                return@run
             }
             item(key = "server") {
                 Field(
@@ -298,6 +304,13 @@ object IoriNextcloudUi {
                     }
                 }
             }
+        }
+        if (fitted) {
+            // At most the screen less a margin above and below, as the choice dialogs are.
+            val room = LocalConfiguration.current.screenHeightDp.dp - 200.dp
+            FittedPages(rows, counted.heightIn(max = room.coerceAtLeast(200.dp)))
+        } else {
+            PagedColumn(counted) { rows.forEach { (key, row) -> item(key = key) { row() } } }
         }
     }
 
@@ -395,7 +408,7 @@ object IoriNextcloudUi {
                     MaterialTheme.typography.bodyMedium, MaterialTheme.typography.bodySmall,
                     Color.Black, Color.White, RoundedCornerShape(0.dp), wide = true,
                 )
-                Rows(look, Modifier.fillMaxWidth().weight(1f, fill = false)) // as tall as its rows, not the whole screen
+                Rows(look, Modifier.fillMaxWidth().weight(1f, fill = false), fitted = true) // as tall as its rows, not the whole screen
                 Spacer(Modifier.height(16.dp))
                 Text(
                     text = stringResource(R.string.iori_close),
