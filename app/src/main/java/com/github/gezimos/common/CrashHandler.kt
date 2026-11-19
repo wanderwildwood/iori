@@ -15,10 +15,7 @@ import java.io.FileInputStream
 import java.io.FileWriter
 import java.io.InputStreamReader
 import java.io.PrintWriter
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
-import java.util.concurrent.LinkedBlockingQueue
 import kotlin.system.exitProcess
 
 class CrashHandler(private val context: Context) : Thread.UncaughtExceptionHandler {
@@ -30,13 +27,11 @@ class CrashHandler(private val context: Context) : Thread.UncaughtExceptionHandl
         private const val CRASH_WINDOW_MS = 30_000L
         private const val CRASH_THRESHOLD = 3
 
-        private val userActions = LinkedBlockingQueue<String>(50) // Stores last 50 user actions
-
-        fun logUserAction(action: String) {
-            val timeStamp = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
-            userActions.offer("$timeStamp - $action")
-            if (userActions.size > 50) userActions.poll() // Remove oldest if over limit
-        }
+        // iori: nothing of what the person did is kept. The callers log each app and shortcut
+        // opened from home (package name, shortcut id, time), and that went into the crash report
+        // emailed to the developer; the privacy text says app information stays on the phone.
+        @Suppress("UNUSED_PARAMETER")
+        fun logUserAction(action: String) = Unit
 
         fun customReportSender(context: Context): Uri? {
             val logFile: File = try {
@@ -159,8 +154,7 @@ class CrashHandler(private val context: Context) : Thread.UncaughtExceptionHandl
                     printWriter.println("Thread: ${Thread.currentThread().name}")
                     printWriter.println("\n=== Device Info ===")
                     printWriter.println(getDeviceInfo())
-                    printWriter.println("\n=== Recent User Actions ===")
-                    userActions.forEach { printWriter.println(it) }
+                    // iori: no "Recent User Actions" section (see logUserAction).
                     printWriter.println("\n=== Crash Stack Trace ===")
                     exception.printStackTrace(printWriter)
                 }

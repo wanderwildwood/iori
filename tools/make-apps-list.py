@@ -4,8 +4,10 @@
 One entry per app in the master list (apps.tsv, named by the APPS_TSV environment variable), never
 typed by hand:
 its shown name, package, GitHub repo, the release file to download, the SHA-256 of the
-certificate its releases are signed with (read from the release APK on this machine), and
-which section it is listed in. Home installs nothing whose certificate differs from this.
+certificate its releases are signed with (read from the release APK on this machine), which
+section it is listed in, and minVersionCode: that APK's versionCode, the oldest release Home
+will install (so an old, genuinely signed release cannot be passed off on a new phone). Run it
+again before each Home release, after the apps' releases are out. Home installs nothing whose certificate differs from this.
 Home installs from the list on wanderthe.dev; this file gives Your apps its section folders and
 the first run its tick boxes, and pins each app's certificate. Home no longer reads the repo and
 file fields; they are kept for --check.
@@ -49,6 +51,15 @@ def cert_of(apk):
     raise SystemExit(f"no certificate in {apk}")
 
 
+def version_code_of(apk):
+    tools = sorted(glob.glob(f"{HOME}/Android/Sdk/build-tools/*"), key=lambda p: [int(x) if x.isdigit() else 0 for x in os.path.basename(p).split(".")])[-1]
+    out = subprocess.run([f"{tools}/aapt2", "dump", "badging", apk], capture_output=True, text=True, check=True).stdout
+    for part in out.split():
+        if part.startswith("versionCode='"):
+            return int(part.split("'")[1])
+    raise SystemExit(f"no versionCode in {apk}")
+
+
 def main():
     rows = [r for r in csv.DictReader((l for l in open(TSV) if not l.startswith("#")), delimiter="\t")]
     names = {r["name"] for r in rows}
@@ -74,6 +85,7 @@ def main():
             "file": f"{repo}.apk",
             "cert": cert_of(apk),
             "section": "core" if r["name"] in CORE else SECTION_OF[r["name"]],
+            "minVersionCode": version_code_of(apk),
         })
     apps.sort(key=lambda a: (ORDER.index(a["section"]), CORE.index(a["name"]) if a["section"] == "core" else 0, a["name"].lower()))
     if "--check" in sys.argv:

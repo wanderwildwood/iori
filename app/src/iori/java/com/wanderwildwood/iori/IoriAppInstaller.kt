@@ -36,12 +36,15 @@ import java.util.concurrent.ConcurrentHashMap
  * tick boxes ([installAll]), the hand-off offer and the lines list (`install(context, pkg)`) come
  * here too, so every app Home gets passes the same checks.
  *
- * An app is downloaded to Home's cache (no storage permission), and handed to Android only when
+ * An app is downloaded only from a GitHub release of wanderwildwood's own (the list may name no
+ * other address, [IoriAppsManifest.isReleaseDownload]), with a User-Agent of "Home" and nothing
+ * about the phone, to Home's cache (no storage permission), and handed to Android only when
  * its size and SHA-256 are the ones in the list, it is the package and version the list names,
  * it is signed with the list's certificate and no other, that certificate is the one Home itself
  * carries for the app (assets/iori_apps.json and [IoriAccount.CALLERS]; an app Home carries no
  * key for is not shown at all), and, for an update, the app on the phone is signed with the same
- * one. The file is deleted afterwards, whatever happened; one left by a download that Android
+ * one, and it is not older than the release out when this Home was built ([IoriApps.App.minVersionCode]).
+ * The file is deleted afterwards, whatever happened; one left by a download that Android
  * stopped (Home's process killed) is cleared the next time the list is read or an app is got.
  *
  * Android 12 and later let an update of an app Home installed go through without a question
@@ -53,6 +56,12 @@ object IoriAppInstaller {
     private const val TAG = "IoriYourApps"
     private const val CACHE_FILE = "your-apps.json"
     private const val DOWNLOADS = "your-apps"
+
+    /** All Home says of itself to wanderthe.dev and GitHub. */
+    private const val USER_AGENT = "Home"
+
+    /** A download's progress is told in steps this big, so an e-ink row redraws ten times, not a hundred. */
+    private const val PERCENT_STEP = 10
 
     /** Where the list stands. */
     sealed class ListState {
@@ -103,7 +112,9 @@ object IoriAppInstaller {
                     fetchText(IoriAppsManifest.URL, 2L * 1024 * 1024)
                 } catch (e: Exception) {
                     Log.w(TAG, "the list could not be fetched", e)
-                    val why = app.getString(R.string.iori_your_apps_list_offline)
+                    // Reached, but no list handed over (404, 500, a page of the host's own) is not
+                    // "no connection"; only a failure to connect or read is.
+                    val why = app.getString(if (e is Unanswered) R.string.iori_your_apps_list_missing else R.string.iori_your_apps_list_offline)
                     _list.value = if (kept != null) ListState.Ready(kept, fromCopy = true, problem = why) else ListState.Failed(why)
                     return@launch
                 }
@@ -135,12 +146,15 @@ object IoriAppInstaller {
         return (_list.value as? ListState.Ready)?.apps
     }
 
+    /** The server was reached but did not hand over what was asked for. */
+    private class Unanswered(why: String) : IOException(why)
+
     private fun fetchText(url: String, max: Long): String {
         val c = open(url)
         try {
             c.useCaches = false
-            if (c.responseCode != 200) throw IOException("HTTP ${c.responseCode}")
-            if (!IoriAppsManifest.isHttps(c.url.toString())) throw IOException("left https")
+            if (c.responseCode != 200) throw Unanswered("HTTP ${c.responseCode}")
+            if (!IoriAppsManifest.isHttps(c.url.toString())) throw Unanswered("left https")
             val bytes = c.inputStream.use { input ->
                 val out = java.io.ByteArrayOutputStream()
                 val buffer = ByteArray(16 * 1024)
@@ -148,7 +162,7 @@ object IoriAppInstaller {
                     val n = input.read(buffer)
                     if (n < 0) break
                     out.write(buffer, 0, n)
-                    if (out.size() > max) throw IOException("too long")
+                    if (out.size() > max) throw Unanswered("too long")
                 }
                 out.toByteArray()
             }
@@ -166,6 +180,8 @@ object IoriAppInstaller {
         c.instanceFollowRedirects = true
         c.connectTimeout = 20_000
         c.readTimeout = 30_000
+        // Android's default names the phone's model, Android version and build; this names only Home.
+        c.setRequestProperty("User-Agent", USER_AGENT)
         return c
     }
 
@@ -261,6 +277,11 @@ object IoriAppInstaller {
             askToAllow(app)
             return
         }
+        // An older release than the one out when Home was built is not even downloaded.
+        if (entry.versionCode < floor(app, entry.pkg)) {
+            Log.w(TAG, "${entry.pkg}: refused (${Verdict.TOO_OLD}, before download)")
+            return fail(app, entry, why(Verdict.TOO_OLD))
+        }
         set(entry.pkg, Job(Step.DOWNLOADING))
         scope.launch {
             sweep(app)
@@ -354,6 +375,7 @@ object IoriAppInstaller {
         Verdict.WRONG_KEY, Verdict.NOT_PINNED -> R.string.iori_your_apps_why_key
         Verdict.KEY_CHANGED -> R.string.iori_your_apps_why_key_changed
         Verdict.NOT_NEWER -> R.string.iori_your_apps_why_not_newer
+        Verdict.TOO_OLD -> R.string.iori_your_apps_why_old_release
         Verdict.OK -> R.string.iori_your_apps_why_android
     }
 
@@ -362,7 +384,8 @@ object IoriAppInstaller {
         val c = open(entry.apk)
         try {
             if (c.responseCode != 200) throw IOException("HTTP ${c.responseCode}")
-            if (!IoriAppsManifest.isHttps(c.url.toString())) throw IOException("left https")
+            // GitHub hands a release download to its own file hosts; anywhere else is not followed.
+            if (!IoriAppsManifest.isDownloadHost(c.url.toString())) throw IOException("left GitHub")
             val total = if (entry.size > 0) entry.size else c.contentLengthLong
             var done = 0L
             var shown = -1
@@ -377,7 +400,7 @@ object IoriAppInstaller {
                         if (done > limit) throw IOException("longer than $limit bytes")
                         out.write(buffer, 0, n)
                         if (total > 0) {
-                            val percent = (done * 100 / total).toInt()
+                            val percent = (done * 100 / total).toInt() / PERCENT_STEP * PERCENT_STEP
                             if (percent != shown) { shown = percent; onPercent(percent) }
                         }
                     }
@@ -400,8 +423,12 @@ object IoriAppInstaller {
             installedSigners = installed?.let(::signers),
             installedVersionCode = installed?.let(::code),
             pinned = pinned(context)[entry.pkg],
+            floor = floor(context, entry.pkg),
         )
     }
+
+    /** The oldest release of [pkg] Home installs: the one out when this Home was built (assets/iori_apps.json). */
+    private fun floor(context: Context, pkg: String): Long = IoriApps.find(context, pkg)?.minVersionCode ?: 0L
 
     private fun sha256(file: File): String {
         val digest = MessageDigest.getInstance("SHA-256")

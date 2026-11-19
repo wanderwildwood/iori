@@ -60,11 +60,11 @@ class IoriAppsManifestTest {
                 app(pkg = "plain.http", apk = "http://example.com/a.apk"),
                 app(pkg = "file.url", apk = "file:///sdcard/a.apk"),
                 app(pkg = "no dots"),
-                """{"package":"short.sha","name":"X","apk":"https://x.y/a.apk","sha256":"abc","certSha256":"$cert","versionCode":1}""",
-                """{"package":"no.code","name":"X","apk":"https://x.y/a.apk","sha256":"$sha","certSha256":"$cert"}""",
-                """{"package":"zero.code","name":"X","apk":"https://x.y/a.apk","sha256":"$sha","certSha256":"$cert","versionCode":0}""",
-                """{"package":"huge.size","name":"X","apk":"https://x.y/a.apk","sha256":"$sha","certSha256":"$cert","versionCode":1,"size":999999999999}""",
-                """{"package":"no.name","apk":"https://x.y/a.apk","sha256":"$sha","certSha256":"$cert","versionCode":1}""",
+                """{"package":"short.sha","name":"X","apk":"https://github.com/wanderwildwood/x/releases/download/v1/a.apk","sha256":"abc","certSha256":"$cert","versionCode":1}""",
+                """{"package":"no.code","name":"X","apk":"https://github.com/wanderwildwood/x/releases/download/v1/a.apk","sha256":"$sha","certSha256":"$cert"}""",
+                """{"package":"zero.code","name":"X","apk":"https://github.com/wanderwildwood/x/releases/download/v1/a.apk","sha256":"$sha","certSha256":"$cert","versionCode":0}""",
+                """{"package":"huge.size","name":"X","apk":"https://github.com/wanderwildwood/x/releases/download/v1/a.apk","sha256":"$sha","certSha256":"$cert","versionCode":1,"size":999999999999}""",
+                """{"package":"no.name","apk":"https://github.com/wanderwildwood/x/releases/download/v1/a.apk","sha256":"$sha","certSha256":"$cert","versionCode":1}""",
                 "42",
                 "null",
                 "[1,2]",
@@ -93,7 +93,7 @@ class IoriAppsManifestTest {
     @Test
     fun missingOptionalFieldsTakeSafeValues() {
         val e = IoriAppsManifest.parse(
-            manifest("""{"package":"a.b","name":"X","apk":"https://x.y/a.apk","sha256":"$sha","certSha256":"$cert","versionCode":"7"}""")
+            manifest("""{"package":"a.b","name":"X","apk":"https://github.com/wanderwildwood/x/releases/download/v1/a.apk","sha256":"$sha","certSha256":"$cert","versionCode":"7"}""")
         )!!.single()
         assertEquals("", e.summary)
         assertFalse(e.core)
@@ -130,6 +130,41 @@ class IoriAppsManifestTest {
         assertFalse(IoriAppsManifest.isHttps("https://user@evil.example/a.apk"))
         assertFalse(IoriAppsManifest.isHttps("ftp://x.y/a.apk"))
         assertFalse(IoriAppsManifest.isHttps("content://x/a.apk"))
+    }
+
+    @Test
+    fun onlyReleaseDownloadsOfOurOwnRepositoriesAreFollowed() {
+        val good = "https://github.com/wanderwildwood/oboegaki/releases/download/v1.2.3/oboegaki.apk"
+        assertTrue(IoriAppsManifest.isReleaseDownload(good))
+        assertTrue(IoriAppsManifest.isReleaseDownload("https://GitHub.com/wanderwildwood/MuditaOS-K-Chess-opensource/releases/download/v1/chessplus.apk"))
+        listOf(
+            "https://evil.example/wanderwildwood/oboegaki/releases/download/v1/oboegaki.apk",
+            "https://github.com.evil.example/wanderwildwood/oboegaki/releases/download/v1/a.apk",
+            "https://github.com/someoneelse/oboegaki/releases/download/v1/oboegaki.apk",
+            "https://github.com/wanderwildwood/oboegaki/releases/latest/download/oboegaki.apk",
+            "https://github.com/wanderwildwood/oboegaki/raw/main/oboegaki.apk",
+            "https://github.com/wanderwildwood/../evil/releases/download/v1/a.apk",
+            "https://github.com/wanderwildwood/oboegaki/releases/download/v1/a.apk?x=1",
+            "https://github.com:8443/wanderwildwood/oboegaki/releases/download/v1/a.apk",
+            "https://u@github.com/wanderwildwood/oboegaki/releases/download/v1/a.apk",
+            "http://github.com/wanderwildwood/oboegaki/releases/download/v1/oboegaki.apk",
+            "https://objects.githubusercontent.com/wanderwildwood/oboegaki/releases/download/v1/a.apk",
+        ).forEach { assertFalse(it, IoriAppsManifest.isReleaseDownload(it)) }
+        // A list naming another address for an app leaves that app out.
+        assertEquals(
+            listOf("good.one"),
+            IoriAppsManifest.parse(manifest(app(pkg = "good.one"), app(pkg = "elsewhere", apk = "https://evil.example/a.apk")))!!.map { it.pkg },
+        )
+    }
+
+    @Test
+    fun aDownloadMayEndOnlyOnGitHubsOwnHosts() {
+        assertTrue(IoriAppsManifest.isDownloadHost("https://github.com/wanderwildwood/a/releases/download/v1/a.apk"))
+        assertTrue(IoriAppsManifest.isDownloadHost("https://objects.githubusercontent.com/github-production-release-asset/1?x=y"))
+        assertTrue(IoriAppsManifest.isDownloadHost("https://release-assets.githubusercontent.com/github-production-release-asset/1"))
+        assertFalse(IoriAppsManifest.isDownloadHost("https://evil.example/a.apk"))
+        assertFalse(IoriAppsManifest.isDownloadHost("https://objects.githubusercontent.com.evil.example/a.apk"))
+        assertFalse(IoriAppsManifest.isDownloadHost("http://objects.githubusercontent.com/a.apk"))
     }
 
     // --- Version comparison and the button ---
@@ -179,7 +214,8 @@ class IoriAppsManifestTest {
         installedSigners: List<String>? = null,
         installedVersionCode: Long? = null,
         pinned: String? = cert,
-    ) = Facts(size, sha256, pkg, versionCode, signers, installedSigners, installedVersionCode, pinned)
+        floor: Long = 0,
+    ) = Facts(size, sha256, pkg, versionCode, signers, installedSigners, installedVersionCode, pinned, floor)
 
     @Test
     fun aFileThatMatchesInEveryWayIsInstalled() {
@@ -237,6 +273,15 @@ class IoriAppsManifestTest {
         assertEquals(Verdict.KEY_CHANGED, IoriAppsManifest.verify(entry, facts(installedSigners = emptyList(), installedVersionCode = 1)))
         assertEquals(Verdict.NOT_NEWER, IoriAppsManifest.verify(entry, facts(installedSigners = listOf(cert), installedVersionCode = 123)))
         assertEquals(Verdict.NOT_NEWER, IoriAppsManifest.verify(entry, facts(installedSigners = listOf(cert), installedVersionCode = 200)))
+    }
+
+    @Test
+    fun aReleaseOlderThanTheOneHomeWasBuiltWithIsRefusedEvenOnANewPhone() {
+        // The list is not signed. A genuine, properly signed old release still passes every other
+        // check, so the floor Home carries is what stops it.
+        assertEquals(Verdict.TOO_OLD, IoriAppsManifest.verify(entry, facts(floor = 124)))
+        assertEquals(Verdict.OK, IoriAppsManifest.verify(entry, facts(floor = 123)))
+        assertEquals(Verdict.OK, IoriAppsManifest.verify(entry, facts(floor = 0)))
     }
 
     @Test

@@ -112,13 +112,22 @@ permission, for these things only:
 - **Your apps**: when you open it in Settings, it reads the list of the house's apps from
   <https://wanderthe.dev/apps.json>, and it downloads from GitHub the ones you ask for, there,
   on the first run's page (which reaches nothing until you press GET), or from the offer to get
-  a missing app. Each download is installed only if its size, checksum, package, version and
-  signing key match the list and the key Home already holds for that app.
+  a missing app. Only release downloads of wanderwildwood's own GitHub repositories are
+  followed; a list that names any other address for an app is not. Each download is installed
+  only if its size, checksum, package, version and signing key match the list and the key Home
+  already holds for that app, and it is not older than the release that was out when this Home
+  was built.
 - **Nextcloud**: only the server you sign in to, to sign in and to sign out.
 
-Settings, usage counts and everything shown on home stay on the phone. A crash report is sent
-only if you choose to, as an email from your own mail app, to this app's address and not to
-gezimos. Home lines come from Glance on the phone and do not leave it either.
+These requests name the app only as "Home", not the phone's model or Android build.
+
+Settings, usage counts and everything shown on home stay on the phone. Android's own backup
+(to Google) and phone-to-phone transfer take nothing of Home's; to move your layout, use Back
+up and restore in Home's settings. A crash report is sent only if you choose to, as an email
+from your own mail app, to this app's address and not to gezimos. It holds the error itself,
+Home's version, the app it was installed from, and the phone's maker, model, Android version
+and processor type: nothing about the apps you use. Home lines come from Glance on the phone,
+read only when Glance is signed with its own release key, and do not leave the phone either.
 
 The permissions are inkOS's, plus four: internet, asking Android to install an app, updating
 an app Home installed, and setting an alarm (to ask which app opens alarms). Two services stay

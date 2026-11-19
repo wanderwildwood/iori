@@ -37,6 +37,13 @@ import kotlinx.coroutines.withTimeoutOrNull
 object IoriLinesRepository {
 
     const val GLANCE = "com.wanderwildwood.hitome"
+
+    /**
+     * SHA-256 of the certificate Glance's releases are signed with: the one in
+     * assets/iori_apps.json (IoriAppsTest holds the two the same), read again from its v0.1.56
+     * release with apksigner. Lines are read only from a panel held by Glance signed with this.
+     */
+    const val GLANCE_CERT = "8b5ad77e1b6c23ad805c7aef9864967bfefbafd442e43a472ab212f0593248b8"
     val PANEL: Uri = Uri.parse("content://com.wanderwildwood.hitome.panel/lines")
 
     /** The version of Glance that first answers [PANEL], as it is said to the reader. */
@@ -141,7 +148,11 @@ object IoriLinesRepository {
             return
         }
         val rows = when (val answer = queryPanel(context)) {
-            is PanelAnswer.Rows -> answer.rows
+            // Asked again after the read: the panel could have changed hands while it ran.
+            is PanelAnswer.Rows -> if (glanceState(pm) == GlanceState.OK) answer.rows else {
+                publish(Snapshot(glance = GlanceState.NO_ANSWER), emptyList())
+                return
+            }
             PanelAnswer.Refused -> {
                 publish(Snapshot(glance = GlanceState.REFUSED), emptyList())
                 return
@@ -180,16 +191,35 @@ object IoriLinesRepository {
         _lines.value = lines
     }
 
+    /**
+     * Whether Glance is there and holds [PANEL]. The panel's holder must be Glance by name and
+     * signed with [GLANCE_CERT] alone: on a phone with an old Glance (no panel yet) any app can
+     * take the authority, and its lines would be drawn on home and open what they name.
+     */
     private fun glanceState(pm: PackageManager): GlanceState {
         return try {
             pm.getPackageInfo(GLANCE, 0)
-            if (pm.resolveContentProvider(PANEL.authority!!, 0) == null) GlanceState.NEEDS_UPDATE else GlanceState.OK
+            val owner = pm.resolveContentProvider(PANEL.authority!!, 0)?.packageName ?: return GlanceState.NEEDS_UPDATE
+            if (isGlance(owner, signers(pm, owner), BuildConfig.DEBUG)) GlanceState.OK else GlanceState.NO_ANSWER
         } catch (_: PackageManager.NameNotFoundException) {
             GlanceState.NOT_INSTALLED
         } catch (_: Exception) {
             GlanceState.NO_ANSWER
         }
     }
+
+    /** The SHA-256 of each certificate [pkg] is signed with, lower-case hex; none when it cannot be read. */
+    @Suppress("DEPRECATION")
+    private fun signers(pm: PackageManager, pkg: String): List<String> = runCatching {
+        val raw = if (android.os.Build.VERSION.SDK_INT >= 28) {
+            pm.getPackageInfo(pkg, PackageManager.GET_SIGNING_CERTIFICATES).signingInfo?.apkContentsSigners
+        } else {
+            pm.getPackageInfo(pkg, PackageManager.GET_SIGNATURES).signatures
+        }
+        raw.orEmpty().map { sig ->
+            java.security.MessageDigest.getInstance("SHA-256").digest(sig.toByteArray()).joinToString("") { "%02x".format(it) }
+        }
+    }.getOrDefault(emptyList())
 
     private class Row(val pkg: String, val lead: String, val text: String, val bold: Boolean, val status: String)
 
@@ -354,4 +384,15 @@ object HomeFault {
     /** Thrown with upstream frames only: the guard should leave lines alone. */
     const val UPSTREAM = "upstream"
     val CYCLE = listOf<String?>(null, OWN, UPSTREAM)
+}
+
+/**
+ * Whether the app [owner], signed with [signers], is Glance: its name, and Glance's release
+ * certificate and nothing else (a debug Home also takes Glance signed with a debug key). No
+ * certificate read is a refusal. Outside the object so the tests reach it without Android.
+ */
+internal fun isGlance(owner: String?, signers: List<String>, debugBuild: Boolean): Boolean {
+    if (owner != IoriLinesRepository.GLANCE || signers.isEmpty()) return false
+    val certs = if (debugBuild) IoriAccount.DEBUG_CERTS + IoriLinesRepository.GLANCE_CERT else setOf(IoriLinesRepository.GLANCE_CERT)
+    return signers.all { it.lowercase() in certs }
 }
