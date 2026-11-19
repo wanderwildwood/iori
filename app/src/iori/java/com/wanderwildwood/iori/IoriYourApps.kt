@@ -1,6 +1,8 @@
 package com.wanderwildwood.iori
 
 import android.os.Build
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -32,8 +34,10 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.github.gezimos.inkos.R
+import com.github.gezimos.inkos.ui.compose.SettingsComposable.SettingsHomeItem
 import com.wanderwildwood.iori.IoriAppInstaller.Job
 import com.wanderwildwood.iori.IoriAppInstaller.ListState
 import com.wanderwildwood.iori.IoriAppInstaller.Step
@@ -47,9 +51,23 @@ import com.wanderwildwood.iori.ui.monochrome
 /**
  * "Your apps": the house's apps from the list on wanderthe.dev (core apps first), each with
  * what it is, the version on the phone or "Not installed", and Install, Update or Up to date.
- * The work is [IoriAppInstaller]'s; this is only the page.
+ * The work is [IoriAppInstaller]'s; this is only the page and its Settings row (under Apps,
+ * after Ecosystem apps).
  */
 object IoriYourApps {
+
+    @Composable
+    fun SettingsRow(titleFontSize: TextUnit) {
+        var open by remember { mutableStateOf(false) }
+        SettingsHomeItem(
+            title = stringResource(R.string.iori_your_apps_title),
+            imageVector = Icons.Rounded.SystemUpdate,
+            description = stringResource(R.string.iori_your_apps_row_desc),
+            titleFontSize = titleFontSize,
+            onClick = { open = true },
+        )
+        if (open) Dialog(onClose = { open = false })
+    }
 
     @Composable
     fun Dialog(onClose: () -> Unit) {
@@ -88,8 +106,10 @@ object IoriYourApps {
                         }
                     }
                     is ListState.Ready -> {
-                        // `looked` is read so the rows ask the phone again after a resume.
-                        val installed = remember(now.apps, jobs, looked) {
+                        // The phone is asked again after a resume (`looked`) and when an install
+                        // ends, not at every download percent.
+                        val ended = jobs.filterValues { it.step == Step.INSTALLED }.keys
+                        val installed = remember(now.apps, ended, looked) {
                             now.apps.associate { it.pkg to IoriAppInstaller.installed(context, it.pkg) }
                         }
                         PagedColumn(Modifier.fillMaxWidth().weight(1f, fill = false)) {

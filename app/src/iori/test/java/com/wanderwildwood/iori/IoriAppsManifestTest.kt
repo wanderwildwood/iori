@@ -178,7 +178,7 @@ class IoriAppsManifestTest {
         signers: List<String> = listOf(cert),
         installedSigners: List<String>? = null,
         installedVersionCode: Long? = null,
-        pinned: String? = null,
+        pinned: String? = cert,
     ) = Facts(size, sha256, pkg, versionCode, signers, installedSigners, installedVersionCode, pinned)
 
     @Test
@@ -196,6 +196,30 @@ class IoriAppsManifestTest {
         assertEquals(Verdict.WRONG_APP, IoriAppsManifest.verify(entry, facts(pkg = "com.evil.app")))
         assertEquals(Verdict.WRONG_VERSION, IoriAppsManifest.verify(entry, facts(versionCode = 122)))
         assertEquals(Verdict.NOT_PINNED, IoriAppsManifest.verify(entry, facts(pinned = other)))
+    }
+
+    @Test
+    fun anAppHomeCarriesNoCertificateForIsNeverInstalled() {
+        // A list that names a new package with its own key and a matching file: every other check
+        // passes, and it is still refused, because Home itself does not know that app's key.
+        assertEquals(Verdict.NOT_PINNED, IoriAppsManifest.verify(entry, facts(pinned = null)))
+    }
+
+    @Test
+    fun onlyEntriesWithHomesOwnCertificateAreKept() {
+        val listed = IoriAppsManifest.parse(
+            manifest(
+                app(),
+                app(pkg = "com.wanderwildwood.newthing"),
+                app(pkg = "com.wanderwildwood.garo"),
+            )
+        )!!
+        val pins = mapOf(
+            "com.wanderwildwood.oboegaki" to cert.uppercase(),
+            "com.wanderwildwood.garo" to other,
+        )
+        assertEquals(listOf("com.wanderwildwood.oboegaki"), IoriAppsManifest.pinnedOnly(listed, pins).map { it.pkg })
+        assertEquals(emptyList<Any>(), IoriAppsManifest.pinnedOnly(listed, emptyMap()))
     }
 
     @Test

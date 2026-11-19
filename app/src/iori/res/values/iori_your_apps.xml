@@ -2,6 +2,7 @@
 <resources>
     <!-- "Your apps" (IoriYourApps.kt): the house's apps from the list on wanderthe.dev. -->
     <string name="iori_your_apps_title">Your apps</string>
+    <string name="iori_your_apps_row_desc">Install and update from wanderthe.dev</string>
     <string name="iori_your_apps_core">✓ Core app</string>
     <string name="iori_your_apps_not_installed">Not installed</string>
     <string name="iori_your_apps_installed_version">Installed: %1$s</string>

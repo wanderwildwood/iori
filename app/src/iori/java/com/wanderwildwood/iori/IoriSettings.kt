@@ -16,7 +16,7 @@ import com.github.gezimos.inkos.ui.dialogs.ComposeDialogManager
  * headings, and inkOS's own rows are untouched in the middle of it; Home adds what is around
  * them, in two calls from `SettingsFragment`:
  *
- *  - [Top]: **Phone** (Dark mode, Nextcloud account), **Apps** (Ecosystem apps, Default apps),
+ *  - [Top]: **Phone** (Dark mode, Nextcloud account), **Apps** (Ecosystem apps, Your apps, Default apps),
  *    then the heading **Home screen** over inkOS's rows.
  *  - [Foot]: Folders and Home lines, which belong to the home screen too, then **Setup and
  *    about**: Run setup again, and the one About.
@@ -33,6 +33,7 @@ object IoriSettings {
         IoriNextcloudUi.SettingsRow(titleFontSize)
         SettingsTitle(text = stringResource(R.string.iori_settings_apps), fontSize = titleFontSize)
         IoriAppsRow.SettingsRow(titleFontSize)
+        IoriYourApps.SettingsRow(titleFontSize)
         IoriDefaults.SettingsRow(titleFontSize)
         SettingsTitle(text = stringResource(R.string.iori_settings_home), fontSize = titleFontSize)
     }

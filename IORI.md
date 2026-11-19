@@ -177,12 +177,15 @@ Not hooks, but carried on top of v0.6:
   house's apps from `https://wanderthe.dev/apps.json` (made by `tools/apps-manifest.py` in the
   site's repository; a copy is kept in Home's files for when there is no connection), core apps
   first, each with what it is, its version or "Not installed", and Install / Update / Up to date.
+  Opened from its Settings row under Apps, after Ecosystem apps.
   An app is downloaded to Home's cache and handed to Android's PackageInstaller only when its
   size, SHA-256, package and version code are the list's, it is signed with the list's
-  certificate and no other, that certificate is the one `assets/iori_apps.json` pins for the
-  app where it names it (so the list on the site cannot swap a key), and an update is signed like
-  the app on the phone. Android 12+ updates apps Home installed with no question. The file is
-  deleted after. No upstream file changes: the permission and the receiver were already there;
+  certificate and no other, that certificate is the one Home pins for the app
+  (`assets/iori_apps.json` and `IoriAccount.CALLERS`; an app with no pin is not shown and never
+  installed, so the list on the site cannot swap a key or bring in a new app), and an update is
+  signed like the app on the phone. Android 12+ updates apps Home installed with no question. The
+  file is deleted after; one left by a killed download is cleared when the list is next read.
+  No upstream file changes: the permission and the receiver were already there;
   `IoriInstallReceiver` hands answers marked `your_apps` to `IoriAppInstaller`.
 - **Default apps** (14 Nov, `IoriDefaults.kt`): a first-run page after Ecosystem (the first run
   is five pages now) and a Settings row. One row for each kind of thing one of Home's apps is

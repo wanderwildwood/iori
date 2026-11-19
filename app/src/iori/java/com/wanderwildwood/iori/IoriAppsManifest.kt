@@ -153,7 +153,7 @@ object IoriAppsManifest {
         WRONG_VERSION,
         /** The file is not signed with the list's certificate alone (no certificate read counts as this). */
         WRONG_KEY,
-        /** The list's certificate is not the one built into Home for this app. */
+        /** Home carries no certificate for this app, or the list's is not the one it carries. */
         NOT_PINNED,
         /** The app on the phone is signed with another key: Android would refuse, and it may not be ours. */
         KEY_CHANGED,
@@ -173,7 +173,7 @@ object IoriAppsManifest {
         /** SHA-256 of every certificate the app on the phone is signed with; null when it is not installed. */
         val installedSigners: List<String>?,
         val installedVersionCode: Long?,
-        /** The certificate Home itself carries for this package (assets/iori_apps.json), if any. */
+        /** The certificate Home itself carries for this package; null when it carries none. */
         val pinned: String?,
     )
 
@@ -187,7 +187,9 @@ object IoriAppsManifest {
         if (facts.versionCode != entry.versionCode) return Verdict.WRONG_VERSION
         val signers = facts.signers.map { it.lowercase() }.toSet()
         if (signers != setOf(cert)) return Verdict.WRONG_KEY
-        if (facts.pinned != null && !facts.pinned.equals(cert, ignoreCase = true)) return Verdict.NOT_PINNED
+        // Only an app whose key Home itself carries is installed: a list from the network alone
+        // cannot bring in an app, however well its own fields agree with each other.
+        if (facts.pinned == null || !facts.pinned.equals(cert, ignoreCase = true)) return Verdict.NOT_PINNED
         val installed = facts.installedSigners
         if (installed != null) {
             if (installed.map { it.lowercase() }.toSet() != signers) return Verdict.KEY_CHANGED
@@ -196,6 +198,13 @@ object IoriAppsManifest {
         }
         return Verdict.OK
     }
+
+    /**
+     * The entries of [entries] whose package Home carries a certificate for in [pins] and whose
+     * certificate is that one. The rest are not shown at all: they could never be installed.
+     */
+    fun pinnedOnly(entries: List<Entry>, pins: Map<String, String>): List<Entry> =
+        entries.filter { pins[it.pkg]?.equals(it.certSha256, ignoreCase = true) == true }
 
     // --- A small strict JSON reader ----------------------------------------------------------
 

@@ -36,8 +36,10 @@ import java.util.concurrent.atomic.AtomicBoolean
  * An app is downloaded to Home's cache (no storage permission), and handed to Android only when
  * its size and SHA-256 are the ones in the list, it is the package and version the list names,
  * it is signed with the list's certificate and no other, that certificate is the one Home itself
- * carries for the app where it carries one (assets/iori_apps.json), and, for an update, the app
- * on the phone is signed with the same one. The file is deleted afterwards, whatever happened.
+ * carries for the app (assets/iori_apps.json and [IoriAccount.CALLERS]; an app Home carries no
+ * key for is not shown at all), and, for an update, the app on the phone is signed with the same
+ * one. The file is deleted afterwards, whatever happened; one left by a download that Android
+ * stopped (Home's process killed) is cleared the next time the list is read or an app is got.
  *
  * Android 12 and later let an update of an app Home installed go through without a question
  * (USER_ACTION_NOT_REQUIRED); a first install, or an app another installer put there, asks for
@@ -47,6 +49,7 @@ object IoriAppInstaller {
 
     private const val TAG = "IoriYourApps"
     private const val CACHE_FILE = "your-apps.json"
+    private const val DOWNLOADS = "your-apps"
 
     /** Where the list stands. */
     sealed class ListState {
@@ -80,8 +83,10 @@ object IoriAppInstaller {
         if (!fetching.compareAndSet(false, true)) return
         scope.launch {
             try {
+                sweep(app)
+                val pins = pinned(app)
                 val kept = runCatching { File(app.filesDir, CACHE_FILE).readText() }.getOrNull()
-                    ?.let { IoriAppsManifest.parse(it) }
+                    ?.let { IoriAppsManifest.parse(it) }?.let { IoriAppsManifest.pinnedOnly(it, pins) }
                 if (kept != null && _list.value !is ListState.Ready) _list.value = ListState.Ready(kept, fromCopy = true, problem = null)
                 val fresh = try {
                     fetchText(IoriAppsManifest.URL, 2L * 1024 * 1024)
@@ -91,7 +96,7 @@ object IoriAppInstaller {
                     _list.value = if (kept != null) ListState.Ready(kept, fromCopy = true, problem = why) else ListState.Failed(why)
                     return@launch
                 }
-                val parsed = IoriAppsManifest.parse(fresh)
+                val parsed = IoriAppsManifest.parse(fresh)?.let { IoriAppsManifest.pinnedOnly(it, pins) }
                 if (parsed == null) {
                     val why = app.getString(R.string.iori_your_apps_list_unreadable)
                     _list.value = if (kept != null) ListState.Ready(kept, fromCopy = true, problem = why) else ListState.Failed(why)
@@ -169,9 +174,35 @@ object IoriAppInstaller {
         }.onFailure { Log.w(TAG, "the install-apps screen could not be opened", it) }
     }
 
-    /** The certificates Home carries for its apps, by package: a list from the network cannot change these. */
-    private fun pinned(context: Context): Map<String, String> =
-        IoriApps.apps(context).associate { it.pkg to it.cert.lowercase() }
+    /**
+     * The certificates Home carries for its apps, by package: a list from the network cannot change
+     * these. The same pins the account uses ([IoriAccount.CALLERS]) and the Ecosystem list's
+     * (assets/iori_apps.json); `IoriAccountTest` holds the two to the same values, and a package
+     * they disagree on is left out, so it is never installed.
+     */
+    private fun pinned(context: Context): Map<String, String> {
+        val pins = HashMap<String, String>()
+        val clash = HashSet<String>()
+        val all = IoriAccount.CALLERS.map { (pkg, cert) -> pkg to cert } +
+            IoriApps.apps(context).map { it.pkg to it.cert }
+        all.forEach { (pkg, raw) ->
+            val cert = raw.lowercase()
+            val had = pins.putIfAbsent(pkg, cert)
+            if (had != null && had != cert) clash += pkg
+        }
+        clash.forEach { Log.w(TAG, "$it: two different pinned certificates, left out") }
+        return pins - clash
+    }
+
+    /**
+     * Deletes every downloaded file in the cache whose app has no install running. After Home's
+     * process was killed mid-download nothing is running, so everything there is left over.
+     */
+    private fun sweep(context: Context) {
+        File(context.cacheDir, DOWNLOADS).listFiles()?.forEach { file ->
+            if (!busy(_jobs.value[file.name.removeSuffix(".apk")]?.step)) file.delete()
+        }
+    }
 
     // --- Installing ---------------------------------------------------------------------------
 
@@ -188,7 +219,8 @@ object IoriAppInstaller {
         }
         set(entry.pkg, Job(Step.DOWNLOADING))
         scope.launch {
-            val dir = File(app.cacheDir, "your-apps").apply { mkdirs() }
+            sweep(app)
+            val dir = File(app.cacheDir, DOWNLOADS).apply { mkdirs() }
             val apk = File(dir, "${entry.pkg}.apk")
             try {
                 try {
