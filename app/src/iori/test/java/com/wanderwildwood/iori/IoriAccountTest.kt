@@ -61,7 +61,7 @@ class IoriAccountTest {
 
     @Test
     fun anAppThatIsNotOnTheListGetsNothingWhateverItIsSignedWith() {
-        assertFalse(allowed(false, "com.wanderwildwood.garo" to listOf(memoCert)))
+        assertFalse(allowed(false, "com.wanderwildwood.tokei" to listOf(memoCert)))
         assertFalse(allowed(false, "org.example.notes" to listOf(memoCert)))
         assertFalse(allowed(false, "$memo.debug" to listOf(memoCert)))
         assertFalse(allowed(true, "org.example.notes" to listOf(debugCert)))

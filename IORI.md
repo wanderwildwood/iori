@@ -47,7 +47,7 @@ only. Source: https://github.com/wanderwildwood/iori
   from an app password), sealed by a keystore key, in a file left out of backups
   (`IoriAccount.kt`). `IoriAccountProvider` (`content://<package>.accounts/nextcloud`: server,
   user, password, stamp) hands it only to callers whose package AND signing certificate are
-  pinned in `IoriAccount.CALLERS` (Memo and Recipes to begin with; the test holds the list to
+  pinned in `IoriAccount.CALLERS` (every Ecosystem app that signs in to a Nextcloud, eleven; the test holds the list to
   `iori_apps.json`), and a change notice goes out on sign-in and sign-out. Sign out also asks
   the server to delete the app password. https only; a debug build also takes plain http to a
   host on its own network, for a stand-in server (`app/src/debug/AndroidManifest.xml`). The

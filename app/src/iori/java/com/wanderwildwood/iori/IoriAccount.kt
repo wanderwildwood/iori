@@ -51,12 +51,21 @@ object IoriAccount {
     /**
      * The apps the account is handed to, each with the SHA-256 of the certificate its releases
      * are signed with (lower-case hex): the same values as in `assets/iori_apps.json`, which
-     * `IoriAccountTest` holds this list to. An app is added here when its row "Use the phone's
-     * Nextcloud account" is built.
+     * `IoriAccountTest` holds this list to. Every Ecosystem app that signs in to a Nextcloud is
+     * pinned (the owner's choice, 11-18), whether or not its row "Use the phone's Nextcloud account" is built yet.
      */
     val CALLERS = mapOf(
+        "com.wanderwildwood.enishi" to "def146af0a169328cee14b3cb40db62f8d352fadf1e20371dbcf68018c8a5c5b",
+        "com.wanderwildwood.koyomi" to "96f0e571a4e14ce861d40e4f6c536adac2026fa271b8a4ec932eb922351957bd",
         "com.wanderwildwood.oboegaki" to "20e289f7dcdd22e11dc4dfdb46ecd1b883615f3350904c7575afc1849632514e",
+        "com.wanderwildwood.garo" to "fb01c054c1e349eb5df5937c7e6c4968824dd719ada7566342dfcb1a562d96c5",
+        "com.wanderwildwood.tana" to "2b3995b71fe50c7514d975b8df753b1ea9695e695c3c4d1f1ed83d64c81afe86",
+        "com.wanderwildwood.kirinuki" to "bbbc92440c2333077deca468c24b98cec426626be04f49daef1a4f284fd464af",
         "com.wanderwildwood.kondate" to "f886bee796090ba4f97dd8babe7616b347c4a86cbab5954ab34dc43ed4072bd2",
+        "com.wanderwildwood.utahon" to "b6f04691f0e4a0b75bad3ec496a8503661fc96c830082e7861495c1499dd3ae8",
+        "com.wanderwildwood.mimidoku" to "dd932da2650dfc58b52ac6897648eb2a2e9ee8ae67d750c3869ddd3ca0d83f0e",
+        "com.wanderwildwood.yumecho" to "6ce096a3c48c12e1ef0d158e0d4eb3a8c355c74be8ac84c92697de2d84f9f62f",
+        "com.wanderwildwood.shoka" to "7479c85dab42dd4e97629ccff0b7eb62e1f09722b9da86ab781737286a5c6342",
     )
 
     /**
