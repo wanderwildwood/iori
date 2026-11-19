@@ -4694,7 +4694,7 @@ fun QuickMenuSheet(
         )
 
         // About
-        SettingsComposable.SettingsHomeItem(
+        if (false) SettingsComposable.SettingsHomeItem( // iori: not in this menu; About Home is in Settings, with inkOS's page as a row of it
             title = stringResource(R.string.about),
             imageVector = Icons.Rounded.Info,
             horizontalPadding = 0.dp,

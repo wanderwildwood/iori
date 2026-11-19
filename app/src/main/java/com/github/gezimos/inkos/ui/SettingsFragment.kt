@@ -1566,7 +1566,7 @@ class SettingsFragment : Fragment() {
                     description = stringResource(R.string.desc_theme_preset),
                     onClick = { navController.navigate(R.id.themePresetsFragment) }
                 )
-                SettingsSelect(
+                if (false) SettingsSelect( // iori: hidden; the one dark switch is Dark mode at the top of Settings, which sets Home's theme too
                     title = stringResource(id = R.string.theme_mode),
                     option = when (uiState.appTheme) { Dark -> "Dark"; Constants.Theme.Light -> "Light"; Constants.Theme.System -> "System" },
                     fontSize = titleFontSize,

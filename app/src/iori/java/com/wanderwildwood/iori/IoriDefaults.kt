@@ -357,7 +357,7 @@ object IoriDefaults {
                 Spacer(Modifier.height(8.dp))
                 Text(stringResource(R.string.iori_defaults_body), style = MaterialTheme.typography.bodySmall)
                 Spacer(Modifier.height(6.dp))
-                Rows(lines, MaterialTheme.typography.bodyMedium, MaterialTheme.typography.bodySmall, Modifier.fillMaxWidth().weight(1f))
+                Rows(lines, MaterialTheme.typography.bodyMedium, MaterialTheme.typography.bodySmall, Modifier.fillMaxWidth().weight(1f, fill = false)) // as tall as its rows
                 Spacer(Modifier.height(16.dp))
                 Text(
                     text = stringResource(R.string.iori_close),

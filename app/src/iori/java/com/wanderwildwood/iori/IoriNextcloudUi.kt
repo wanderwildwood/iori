@@ -389,7 +389,7 @@ object IoriNextcloudUi {
                     MaterialTheme.typography.bodyMedium, MaterialTheme.typography.bodySmall,
                     Color.Black, Color.White, RoundedCornerShape(0.dp), wide = true,
                 )
-                Rows(look, Modifier.fillMaxWidth().weight(1f))
+                Rows(look, Modifier.fillMaxWidth().weight(1f, fill = false)) // as tall as its rows, not the whole screen
                 Spacer(Modifier.height(16.dp))
                 Text(
                     text = stringResource(R.string.iori_close),

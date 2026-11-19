@@ -83,7 +83,7 @@ fun AppsDialog(onDismiss: () -> Unit) {
             // The list takes the room the title and the foot leave, and turns its pages on whole rows;
             // a folder opens on its first page.
             androidx.compose.runtime.key(open) {
-                PagedColumn(Modifier.fillMaxWidth().weight(1f)) {
+                PagedColumn(Modifier.fillMaxWidth().weight(1f, fill = false)) {
                     if (inFolder == null) {
                         sections.forEach { (head, inSection) ->
                             item(key = "folder:$head") { FolderRow(head, inSection, states) { open = head } }
