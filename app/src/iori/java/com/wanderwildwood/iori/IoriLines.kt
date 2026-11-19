@@ -6,6 +6,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -181,8 +184,56 @@ private fun Lines(state: HomeUiRenderState, showEditMode: Boolean) {
         )
     } else if (lines.isNotEmpty()) {
         Spacer(Modifier.height(12.dp.scaled(rememberScreenScale())))
+        val scale = rememberScreenScale()
+        val blockAlign = when (state.quoteAlignment) {
+            0 -> Alignment.Start
+            2 -> Alignment.End
+            else -> Alignment.CenterHorizontally
+        }
         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            lines.forEach { line ->
+            lineBlocks(lines).forEach { block ->
+                if (block.size > 1) {
+                    // A note and its items, as Glance draws them: the items' bullets set in under
+                    // the note's line, their text close after, the whole block placed as the
+                    // lines are aligned (Glance #1).
+                    Column(
+                        modifier = Modifier.fillMaxWidth().wrapContentWidth(blockAlign),
+                        horizontalAlignment = Alignment.Start,
+                    ) {
+                        block.forEach { line ->
+                            val open by rememberUpdatedState { openApp(context, line.pkg) }
+                            val weight = if (line.bold) FontWeight.Bold else FontWeight.Normal
+                            val itemStyle = style.copy(textAlign = TextAlign.Start, fontWeight = weight)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .combinedClickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null,
+                                        onClick = { if (editing) openDialog() else open() },
+                                        onLongClick = { openDialog() },
+                                    )
+                                    .padding(vertical = 2.dp),
+                            ) {
+                                if (isMark(line.lead)) {
+                                    Spacer(Modifier.width(MARK_INDENT.scaled(scale)))
+                                    Text(text = line.lead, style = itemStyle, maxLines = 1)
+                                    Spacer(Modifier.width(MARK_GAP.scaled(scale)))
+                                }
+                                Text(
+                                    text = if (isMark(line.lead) || line.lead.isEmpty()) line.text
+                                        else line.lead + "  " + line.text,
+                                    style = itemStyle,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f, fill = false),
+                                )
+                            }
+                        }
+                    }
+                    return@forEach
+                }
+                val line = block.first()
                 val open by rememberUpdatedState { openApp(context, line.pkg) }
                 Text(
                     text = buildAnnotatedString {
@@ -271,4 +322,27 @@ private fun homeFault(context: Context) {
             )
         }
     }
+}
+
+/**
+ * A lead that is only a mark, as Memo's "•" before a pinned note's items, not a time
+ * (the same test as Glance's panel).
+ */
+private fun isMark(lead: String) = lead.length == 1 && !lead[0].isLetterOrDigit()
+
+private val MARK_INDENT = 10.dp
+private val MARK_GAP = 5.dp
+
+/**
+ * The lines in blocks: a line followed by the item lines (a mark for a lead) from the same app
+ * makes one block, every other line is a block of its own.
+ */
+internal fun lineBlocks(lines: List<IoriLinesRepository.Line>): List<List<IoriLinesRepository.Line>> {
+    val blocks = mutableListOf<MutableList<IoriLinesRepository.Line>>()
+    for (line in lines) {
+        val last = blocks.lastOrNull()
+        if (last != null && isMark(line.lead) && last.first().pkg == line.pkg) last += line
+        else blocks += mutableListOf(line)
+    }
+    return blocks
 }
