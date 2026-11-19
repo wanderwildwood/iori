@@ -158,10 +158,186 @@ class IoriAccountTest {
         assertTrue(s.signOut())
         assertNull(s.account())
         assertNotEquals(before, s.stamp())
-        assertFalse(memory.text!!.contains("ada"))
-        assertFalse(memory.text!!.contains("cloud.example.org"))
         // Nothing left to forget: no second change is announced.
         assertFalse(s.signOut())
+        // Once the server has ended it, nothing of the account is left.
+        val waiting = s.pending().single()
+        assertTrue(s.revoked(waiting.id))
+        assertTrue(s.pending().isEmpty())
+        assertFalse(memory.text!!.contains("ada"))
+        assertFalse(memory.text!!.contains("cloud.example.org"))
+    }
+
+    @Test
+    fun aSignOutWaitsSealedUntilTheServerHasEndedIt() {
+        val memory = Memory()
+        val s = store(memory)
+        s.signIn(ada)
+        s.signOut()
+        // Not served any more, but kept to be ended on the server; never in the clear.
+        assertNull(s.account())
+        assertEquals(ada.copy(uid = null), s.pending().single().account)
+        assertFalse(memory.text!!.contains(ada.password))
+        // A new sign-in does not drop it: the old password is still live on the server.
+        assertTrue(s.signIn(ada.copy(password = "app-password-two")))
+        assertEquals("app-password-two", s.account()!!.password)
+        assertEquals(ada.password, s.pending().single().account.password)
+        // An unknown id changes nothing; the right one forgets it.
+        assertFalse(s.revoked("nothing-like-it"))
+        assertEquals(1, s.pending().size)
+        assertTrue(s.revoked(s.pending().single().id))
+        assertTrue(s.pending().isEmpty())
+        assertEquals("app-password-two", s.account()!!.password)
+    }
+
+    @Test
+    fun onlyTheLastFewSignOutsWait() {
+        val s = store()
+        repeat(IoriAccount.MAX_PENDING + 3) { i ->
+            s.signIn(ada.copy(password = "p$i"))
+            s.signOut()
+        }
+        val waiting = s.pending()
+        assertEquals(IoriAccount.MAX_PENDING, waiting.size)
+        assertEquals("p${IoriAccount.MAX_PENDING + 2}", waiting.last().account.password)
+        assertEquals(waiting.size, waiting.map { it.id }.toSet().size)
+    }
+
+    @Test
+    fun aSignOutWhosePasswordNoLongerOpensIsNotTriedAndGoesAtTheNextEnd() {
+        val memory = Memory()
+        store(memory).apply { signIn(ada); signOut(); signIn(ada.copy(password = "two")); signOut() }
+        val sealer = Reversing()
+        val s = store(memory, sealer)
+        assertEquals(2, s.pending().size)
+        sealer.canOpen = false
+        assertTrue(s.pending().isEmpty())
+        sealer.canOpen = true
+        val first = s.pending().first().id
+        // Ending one also drops any that no longer open (none here): exactly one goes.
+        assertTrue(s.revoked(first))
+        assertEquals(1, s.pending().size)
+    }
+
+    @Test
+    fun theSamePasswordTypedInAgainIsNotEndedOnTheServer() {
+        val s = store()
+        s.signIn(ada)
+        s.signOut()
+        assertEquals(1, s.pending().size)
+        // The server could not be reached at sign-out; the same app password is typed in again.
+        assertTrue(s.signIn(ada.copy(server = "HTTPS://Cloud.Example.org/")))
+        assertTrue(s.pending().isEmpty())
+        assertEquals(ada.password, s.account()!!.password)
+    }
+
+    @Test
+    fun aWaitingSignOutOnAnotherServerOrPasswordStays() {
+        val s = store()
+        s.signIn(ada)
+        s.signOut()
+        s.signIn(ada.copy(server = "https://other.example.org"))
+        assertEquals(1, s.pending().size)
+        s.signIn(ada.copy(password = "app-password-two"))
+        assertEquals(ada.password, s.pending().single().account.password)
+    }
+
+    @Test
+    fun aWaitingSignOutWithTheLivePasswordIsNeitherTriedNorKept() {
+        // A file written before sign-in dropped it: the live password also waits under revoke.
+        val memory = Memory()
+        store(memory).apply { signIn(ada); signOut(); signIn(ada.copy(password = "two")); signOut() }
+        val o = JsonParser.parseString(memory.text!!).asJsonObject
+        o.addProperty("server", ada.server)
+        o.addProperty("user", ada.user)
+        o.addProperty("sealed", "s:" + ada.password.reversed())
+        memory.text = o.toString()
+        val s = store(memory)
+        assertEquals(ada, s.account())
+        val waiting = s.pending().single()
+        assertEquals("two", waiting.account.password)
+        assertTrue(s.revoked(waiting.id))
+        assertFalse(memory.text!!.contains("\"revoke\""))
+        assertEquals(ada, s.account())
+    }
+
+    @Test
+    fun theAccountAndItsStampAreReadTogether() {
+        val s = store()
+        assertNull(s.held())
+        s.signIn(ada)
+        val held = s.held()!!
+        assertEquals(ada, held.account)
+        assertEquals(s.stamp(), held.stamp)
+        s.signOut()
+        assertNull(s.held())
+    }
+
+    // ---- the user id -----------------------------------------------------------------------------
+
+    @Test
+    fun theUserIdIsKeptBesideTheLoginName() {
+        val s = store()
+        val anna = Account("https://cloud.example.org", "anna@example.org", "app-password-one", "anna")
+        assertTrue(s.signIn(anna))
+        assertEquals(anna, s.account())
+        assertEquals("anna", s.account()!!.userId)
+        assertEquals("anna@example.org", s.account()!!.user)
+    }
+
+    @Test
+    fun anAccountKeptWithoutAUserIdReadsAsItsLoginNameUntilFilled() {
+        val s = store()
+        s.signIn(ada)
+        assertNull(s.account()!!.uid)
+        assertEquals("ada", s.account()!!.userId)
+        val stamp = s.stamp()
+        // Filled only for the account that was asked about.
+        assertFalse(s.fillUid("an-older-stamp", "Ada"))
+        assertTrue(s.fillUid(stamp, "Ada"))
+        assertEquals("Ada", s.account()!!.userId)
+        assertEquals("ada", s.account()!!.user)
+        assertEquals(ada.password, s.account()!!.password)
+        // A new stamp, so the apps read the row again.
+        assertNotEquals(stamp, s.stamp())
+        assertFalse(s.fillUid(s.stamp(), "Ada"))
+        assertFalse(s.fillUid(s.stamp(), " "))
+    }
+
+    @Test
+    fun noUserIdIsFilledIntoASignedOutPhone() {
+        val s = store()
+        s.signIn(ada)
+        val stamp = s.stamp()
+        s.signOut()
+        assertFalse(s.fillUid(stamp, "ada"))
+        assertFalse(s.fillUid(s.stamp(), "ada"))
+        assertNull(s.account())
+    }
+
+    @Test
+    fun aUserIdOnceKeptIsNeverWrittenOver() {
+        val s = store()
+        s.signIn(ada.copy(uid = "Ada"))
+        assertFalse(s.fillUid(s.stamp(), "someone-else"))
+        assertEquals("Ada", s.account()!!.uid)
+    }
+
+    @Test
+    fun theProviderRowHasTheUserIdFifth() {
+        assertEquals(listOf("server", "user", "password", "stamp", "uid"), IoriAccount.COLUMNS.toList())
+    }
+
+    @Test
+    fun anAccountNeverShowsItsPassword() {
+        assertFalse(ada.toString().contains(ada.password))
+    }
+
+    @Test
+    fun theServerIsKeptWrittenOneWay() {
+        val s = store()
+        s.signIn(ada.copy(server = "HTTPS://Cloud.Example.org:443/NextCloud/"))
+        assertEquals("https://cloud.example.org/NextCloud", s.account()!!.server)
     }
 
     @Test
@@ -281,26 +457,81 @@ class IoriAccountTest {
     @Test
     fun theServersFirstAnswerSaysWhereToSignInAndWhereToAsk() {
         val body = """{"poll":{"token":"tok","endpoint":"https://cloud.example.org/login/v2/poll"},"login":"https://cloud.example.org/login/v2/flow/abc"}"""
-        val started = IoriLogin.parseStart(body, false)
+        val started = IoriLogin.parseStart(body, "https://cloud.example.org", false)
         assertNotNull(started)
         assertEquals("tok", started!!.token)
         assertEquals("https://cloud.example.org/login/v2/poll", started.pollUrl)
         assertEquals("https://cloud.example.org/login/v2/flow/abc", started.loginUrl)
         // Not a Nextcloud's answer, or one that would send the token over plain http.
-        assertNull(IoriLogin.parseStart("<html>hello</html>", false))
-        assertNull(IoriLogin.parseStart("{}", false))
-        assertNull(IoriLogin.parseStart(body.replace("https://cloud.example.org/login/v2/poll", "http://cloud.example.org/login/v2/poll"), false))
+        assertNull(IoriLogin.parseStart("<html>hello</html>", "https://cloud.example.org", false))
+        assertNull(IoriLogin.parseStart("{}", "https://cloud.example.org", false))
+        assertNull(IoriLogin.parseStart(body.replace("https://cloud.example.org/login/v2/poll", "http://cloud.example.org/login/v2/poll"), "https://cloud.example.org", false))
+        // The typed host in another case is the same host.
+        assertNotNull(IoriLogin.parseStart(body, "https://Cloud.Example.org", false))
+    }
+
+    @Test
+    fun theServersFirstAnswerHasToStayOnTheTypedHost() {
+        val body = """{"poll":{"token":"tok","endpoint":"https://cloud.example.org/login/v2/poll"},"login":"https://cloud.example.org/login/v2/flow/abc"}"""
+        assertNull(IoriLogin.parseStart(body, "https://typed.example.org", false))
+        assertNull(IoriLogin.parseStart(body.replace("https://cloud.example.org/login/v2/poll", "https://other.example/login/v2/poll"), "https://cloud.example.org", false))
+        assertNull(IoriLogin.parseStart(body.replace("https://cloud.example.org/login/v2/flow", "https://other.example/login/v2/flow"), "https://cloud.example.org", false))
+        assertNull(IoriLogin.parseStart(body.replace("https://cloud.example.org/login/v2/poll", "https://cloud.example.org:8443/login/v2/poll"), "https://cloud.example.org", false))
+        assertNotNull(IoriLogin.parseStart(body.replace("https://cloud.example.org/login/v2/poll", "https://cloud.example.org:443/login/v2/poll"), "https://cloud.example.org", false))
     }
 
     @Test
     fun theServersSecondAnswerIsTheAccount() {
         val body = """{"server":"https://cloud.example.org/","loginName":"ada","appPassword":"app-password-one"}"""
-        assertEquals(ada, IoriLogin.parsePoll(body, "https://typed.example.org", false))
+        assertEquals(ada, IoriLogin.parsePoll(body, "https://cloud.example.org", false))
+        // A server on another host than the one typed is not kept: the typed one is.
+        assertEquals("https://typed.example.org", IoriLogin.parsePoll(body, "https://typed.example.org", false)!!.server)
+        // On the typed host it is, so its own path (and spelling) comes with it.
+        val under = body.replace("https://cloud.example.org/", "https://cloud.example.org/nextcloud")
+        assertEquals("https://cloud.example.org/nextcloud", IoriLogin.parsePoll(under, "https://Cloud.example.org", false)!!.server)
         // A server that names itself by plain http is kept at the address that was asked.
         val plain = body.replace("https://cloud.example.org/", "http://cloud.example.org")
         assertEquals("https://typed.example.org", IoriLogin.parsePoll(plain, "https://typed.example.org/", false)!!.server)
         assertNull(IoriLogin.parsePoll("""{"server":"https://cloud.example.org","loginName":"ada","appPassword":""}""", "https://typed.example.org", false))
         assertNull(IoriLogin.parsePoll("[]", "https://typed.example.org", false))
+    }
+
+    @Test
+    fun theUserIdIsReadFromTheServersAnswer() {
+        val body = """{"ocs":{"meta":{"status":"ok","statuscode":200},"data":{"id":"anna","displayname":"Anna","email":"anna@example.org"}}}"""
+        assertEquals("anna", IoriLogin.parseUserId(body))
+        assertNull(IoriLogin.parseUserId("""{"ocs":{"data":{"id":""}}}"""))
+        assertNull(IoriLogin.parseUserId("""{"ocs":{"data":[]}}"""))
+        assertNull(IoriLogin.parseUserId("<html>hello</html>"))
+        assertNull(IoriLogin.parseUserId(""))
+    }
+
+    @Test
+    fun anAppPasswordIsGoneOnlyWhenTheServerSaysSo() {
+        assertTrue(IoriLogin.revokedBy(200))
+        assertTrue(IoriLogin.revokedBy(401))
+        assertTrue(IoriLogin.revokedBy(404))
+        assertFalse(IoriLogin.revokedBy(403))
+        assertFalse(IoriLogin.revokedBy(500))
+        assertFalse(IoriLogin.revokedBy(502))
+    }
+
+    @Test
+    fun aServerIsWrittenAsTheAppsWriteIt() {
+        assertEquals("https://cloud.example.org", IoriLogin.canonical("HTTPS://Cloud.Example.ORG/"))
+        assertEquals("https://cloud.example.org/NextCloud", IoriLogin.canonical("https://cloud.example.org:443/NextCloud"))
+        assertEquals("http://10.0.2.2:8085", IoriLogin.canonical("http://10.0.2.2:8085"))
+        assertEquals("http://localhost", IoriLogin.canonical("http://LOCALHOST:80"))
+        assertEquals("http://[::1]:8080", IoriLogin.canonical("http://[::1]:8080/"))
+    }
+
+    @Test
+    fun theSameHostWhateverItsCaseAndDefaultPort() {
+        assertTrue(IoriLogin.sameHost("https://cloud.example.org/a", "https://CLOUD.example.org:443"))
+        assertTrue(IoriLogin.sameHost("http://10.0.2.2:8085/x", "http://10.0.2.2:8085"))
+        assertFalse(IoriLogin.sameHost("https://cloud.example.org", "https://cloud.example.org:8443"))
+        assertFalse(IoriLogin.sameHost("https://cloud.example.org", "https://other.example"))
+        assertFalse(IoriLogin.sameHost("not an address", "not an address"))
     }
 
     @Test

@@ -51,10 +51,19 @@ only. Source: https://github.com/wanderwildwood/iori
   it is. It keeps ONE app password (Nextcloud will not make an app password
   from an app password), sealed by a keystore key, in a file left out of backups
   (`IoriAccount.kt`). `IoriAccountProvider` (`content://<package>.accounts/nextcloud`: server,
-  user, password, stamp) hands it only to callers whose package AND signing certificate are
+  user, password, stamp, uid) hands it only to callers whose package AND signing certificate are
   pinned in `IoriAccount.CALLERS` (every Ecosystem app that signs in to a Nextcloud, eleven; the test holds the list to
-  `iori_apps.json`), and a change notice goes out on sign-in and sign-out. Sign out also asks
-  the server to delete the app password. https only; a debug build also takes plain http to a
+  `iori_apps.json`), and a change notice goes out on sign-in and sign-out. `user` is the login
+  name (basic auth); `uid` is the Nextcloud user id (`ocs.data.id` of `cloud/user`, asked once
+  after sign-in, and filled in later for an account kept without one; until then it reads as
+  the login name), which every app builds its DAV paths with. The server is kept written one
+  way (lower-case scheme and host, no default port), as the apps' `sameServer` writes it. Login
+  Flow v2's sign-in and poll addresses must be on the typed host, and the server it names is
+  kept only when it is. Sign out stops serving the account at once and asks the server to
+  delete the app password; until the server says it is gone (200, 401 or 404) the password
+  stays sealed under `revoke`, is tried again at each start of Home (the provider's
+  `onCreate`) and each time the account is shown, and the rows say so. A sign-in with that
+  same app password on the same server takes it off the list (it is live again, never ended). https only; a debug build also takes plain http to a
   host written as a number on its own network or the phone itself (127/8, 10/8, 172.16/12,
   192.168/16, ::1), or localhost; a name is never looked up, for a stand-in server (`app/src/debug/AndroidManifest.xml`). The
   apps' side is `sync/HomeAccount.kt`, the same file in each app that has the row "Use the

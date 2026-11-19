@@ -103,30 +103,94 @@ object IoriLogin {
         return inet.isLoopbackAddress || inet.isSiteLocalAddress
     }
 
-    /** The server's answer to `POST /index.php/login/v2`: where to sign in and where to ask afterwards. */
-    fun parseStart(body: String, debugBuild: Boolean): Started? = try {
+    /**
+     * [server] written one way only: scheme and host in lower case, no default port (443 for
+     * https, 80 for http), no slash at the end, its path as it is. The same rule as the apps'
+     * `HomeAccount.sameServer`, so signing in again, typed another way, is the same account.
+     */
+    fun canonical(server: String): String {
+        val t = server.trim().trimEnd('/')
+        val at = t.indexOf("://")
+        if (at < 0) return t
+        val scheme = t.substring(0, at).lowercase()
+        val rest = t.substring(at + 3)
+        val slash = rest.indexOf('/')
+        var host = (if (slash < 0) rest else rest.substring(0, slash)).lowercase()
+        val path = if (slash < 0) "" else rest.substring(slash)
+        val colon = host.lastIndexOf(':')
+        if (colon > host.lastIndexOf(']')) {
+            val port = host.substring(colon + 1)
+            if (port.isEmpty() || (scheme == "https" && port == "443") || (scheme == "http" && port == "80")) {
+                host = host.substring(0, colon)
+            }
+        }
+        return "$scheme://$host$path"
+    }
+
+    /** Host and port of [address] as one string (lower case, the scheme's port when none is written); null when it has none. */
+    private fun place(address: String): String? = try {
+        val u = URI(address.trim())
+        val host = u.host?.lowercase()?.takeIf { it.isNotEmpty() }
+        val port = if (u.port > 0) u.port else if (u.scheme.equals("http", true)) 80 else 443
+        host?.let { "$it:$port" }
+    } catch (_: Exception) {
+        null
+    }
+
+    /** Whether [a] and [b] are on the same host and port, whatever their case. */
+    fun sameHost(a: String, b: String): Boolean {
+        val pa = place(a) ?: return false
+        return pa == place(b)
+    }
+
+    /**
+     * The server's answer to `POST /index.php/login/v2`: where to sign in and where to ask
+     * afterwards. Both have to be on the host that was asked ([asked]), as the apps' own
+     * sign-in has it: Home hands what it gets to every app.
+     */
+    fun parseStart(body: String, asked: String, debugBuild: Boolean): Started? = try {
         val o = JsonParser.parseString(body).asJsonObject
         val poll = o.getAsJsonObject("poll")
         val started = Started(o.get("login").asString, poll.get("endpoint").asString, poll.get("token").asString)
-        if (started.token.isEmpty() || !usable(started.loginUrl, debugBuild) || !usable(started.pollUrl, debugBuild)) null else started
+        val good = started.token.isNotEmpty() &&
+            usable(started.loginUrl, debugBuild) && usable(started.pollUrl, debugBuild) &&
+            sameHost(started.loginUrl, asked) && sameHost(started.pollUrl, asked)
+        if (good) started else null
     } catch (_: Exception) {
         null
     }
 
     /**
      * The server's answer once the person has signed in: the account. The server names itself in
-     * it; where that name is one Home would not talk to, the address that was asked ([asked]) is kept.
+     * it, and that name is kept only when it is on the host that was asked ([asked]) and one Home
+     * would talk to; otherwise the address that was asked is kept. The person typed that host,
+     * and the app password was made by it.
      */
     fun parsePoll(body: String, asked: String, debugBuild: Boolean): Account? = try {
         val o = JsonParser.parseString(body).asJsonObject
         val named = o.get("server")?.asString?.trimEnd('/').orEmpty()
         val user = o.get("loginName").asString
         val password = o.get("appPassword").asString
-        if (user.isEmpty() || password.isEmpty()) null
-        else Account(if (named.isNotEmpty() && usable(named, debugBuild)) named else asked.trimEnd('/'), user, password)
+        val server = if (named.isNotEmpty() && usable(named, debugBuild) && sameHost(named, asked)) named else asked.trimEnd('/')
+        if (user.isEmpty() || password.isEmpty()) null else Account(server, user, password)
     } catch (_: Exception) {
         null
     }
+
+    /**
+     * The user id in the server's answer to `GET /ocs/v2.php/cloud/user?format=json`
+     * (`ocs.data.id`): the name the files are kept under, which can differ from the login name.
+     */
+    fun parseUserId(body: String): String? = try {
+        JsonParser.parseString(body).asJsonObject
+            .getAsJsonObject("ocs").getAsJsonObject("data").get("id").asString
+            .trim().takeIf { it.isNotEmpty() }
+    } catch (_: Exception) {
+        null
+    }
+
+    /** Whether the server's answer to deleting an app password means it is gone: deleted now, or not known any more. */
+    fun revokedBy(code: Int): Boolean = code in 200..299 || code == 401 || code == 404
 
     /**
      * The server's answer to `GET /ocs/v2.php/core/getapppassword`: the app password it made in
@@ -197,6 +261,13 @@ object IoriNextcloud {
     var shown by mutableStateOf<Shown?>(null)
         private set
 
+    /**
+     * True when an old sign-in could not be ended on the server at the last try: Home tries
+     * again each time it starts and each time the account is shown, and says so meanwhile.
+     */
+    var unrevoked by mutableStateOf(false)
+        private set
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var job: Job? = null
 
@@ -205,10 +276,55 @@ object IoriNextcloud {
 
     private fun cancelTry() = synchronized(storing) { job?.cancel() }
 
-    /** Reads who is signed in; called when a screen that shows it opens. */
+    /** Reads who is signed in; called when a screen that shows it opens. Then finishes what is left ([tidy]). */
     fun load(context: Context) {
         shown = IoriAccount.account(context)?.let { Shown(it.user, IoriLogin.host(it.server)) }
+        tidy(context)
     }
+
+    /** One tidy at a time, in order: two at once would end the same old sign-in twice. */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private val serial = Dispatchers.IO.limitedParallelism(1)
+
+    @Volatile
+    private var tidyQueued = false
+
+    /**
+     * Finishes in the background what an earlier sign-in or sign-out left: asks the server to
+     * delete every old app password still waiting ([IoriAccount.pending]), forgetting each once
+     * the server says it is gone, and asks for the user id of an account kept without one.
+     */
+    fun tidy(context: Context) {
+        val app = context.applicationContext
+        if (tidyQueued) return
+        tidyQueued = true
+        scope.launch(serial) {
+            tidyQueued = false
+            val waiting = IoriAccount.pending(app)
+            var left = false
+            for (p in waiting) {
+                // Signed in again with this very app password since the list was read: never end it.
+                val live = IoriAccount.account(app)
+                if (live != null && live.server == p.account.server && live.password == p.account.password) continue
+                val reply = call("DELETE", "${p.account.server}/ocs/v2.php/core/apppassword", account = p.account)
+                if (reply != null && IoriLogin.revokedBy(reply.code)) IoriAccount.revoked(app, p.id) else left = true
+            }
+            withContext(Dispatchers.Main) { unrevoked = left }
+            // The account and its stamp in one read: a sign-in between two reads would pair them wrong.
+            val held = IoriAccount.held(app)
+            if (held != null && held.account.uid == null) {
+                val uid = userId(held.account)
+                if (uid != null && IoriAccount.fillUid(app, held.stamp, uid)) withContext(Dispatchers.Main) {
+                    shown = IoriAccount.account(app)?.let { Shown(it.user, IoriLogin.host(it.server)) }
+                }
+            }
+        }
+    }
+
+    /** The user id of [account] as the server has it, asked with its own login name and password; null when no answer says. */
+    private fun userId(account: Account): String? =
+        call("GET", "${account.server}/ocs/v2.php/cloud/user?format=json", account = account)
+            ?.takeIf { it.code in 200..299 }?.let { IoriLogin.parseUserId(it.body) }
 
     private suspend fun set(next: Phase) = withContext(Dispatchers.Main) { phase = next }
 
@@ -271,7 +387,7 @@ object IoriNextcloud {
         phase = Phase.Asking
         job = scope.launch {
             val reply = call("POST", "$address/index.php/login/v2", form = "")
-            val started = reply?.takeIf { it.code in 200..299 }?.let { IoriLogin.parseStart(it.body, BuildConfig.DEBUG) }
+            val started = reply?.takeIf { it.code in 200..299 }?.let { IoriLogin.parseStart(it.body, address, BuildConfig.DEBUG) }
             if (started == null) {
                 set(Phase.Failed(if (reply == null) Problem.UNREACHABLE else Problem.NOT_NEXTCLOUD))
                 return@launch
@@ -292,7 +408,8 @@ object IoriNextcloud {
                 val answer = call("POST", started.pollUrl, form = "token=" + URLEncoder.encode(started.token, "UTF-8"))
                 val account = answer?.takeIf { it.code in 200..299 }?.let { IoriLogin.parsePoll(it.body, address, BuildConfig.DEBUG) }
                 if (account != null) {
-                    keep(app, account, made = true)
+                    // The user id the files are under, asked for now; if the server does not say, it is asked again later.
+                    keep(app, account.copy(uid = userId(account)), made = true)
                     return@launch
                 }
             }
@@ -315,8 +432,11 @@ object IoriNextcloud {
         cancelTry()
         phase = Phase.Checking
         job = scope.launch {
-            val typedAccount = Account(address, user.trim(), password.trim())
-            val reply = call("GET", "$address/ocs/v2.php/cloud/user?format=json", account = typedAccount)
+            // The password exactly as typed: one may begin or end with a space.
+            val asTyped = Account(address, user.trim(), password)
+            val reply = call("GET", "$address/ocs/v2.php/cloud/user?format=json", account = asTyped)
+            // That answer names the user id the files are under, which can differ from what was typed.
+            val typedAccount = asTyped.copy(uid = reply?.takeIf { it.code in 200..299 }?.let { IoriLogin.parseUserId(it.body) })
             when {
                 reply == null -> set(Phase.Failed(Problem.UNREACHABLE))
                 reply.code == 401 || reply.code == 403 -> set(Phase.Failed(Problem.WRONG_PASSWORD))
@@ -346,15 +466,15 @@ object IoriNextcloud {
 
     /**
      * Forgets the account and tells the apps, then asks the server to delete the app password,
-     * so the "Home" entry leaves its device list. The server is asked once; if it cannot be
-     * reached the entry stays there until it is removed on the server.
+     * so the "Home" entry leaves its device list. Until the server says it is gone, the password
+     * stays sealed on the phone (never handed to an app) and is tried again at every start of
+     * Home and every time the account is shown; meanwhile the account's rows say so.
      */
     fun signOut(context: Context) {
         val app = context.applicationContext
         stop()
-        val was = IoriAccount.signOut(app)
+        IoriAccount.signOut(app)
         load(app)
-        if (was != null) scope.launch { call("DELETE", "${was.server}/ocs/v2.php/core/apppassword", account = was) }
     }
 
     /** How long Login Flow v2 is asked about: the twenty minutes the server keeps it open. */
