@@ -434,14 +434,15 @@ private fun ChoiceDialog(title: String, rows: List<Choice>, close: () -> Unit) {
                     // it heads: with every row one height, every page holds the same number of rows,
                     // so a page after the first does not end over a blank band (19 Nov 2026).
                     is Choice.Head -> Box(
-                        Modifier.fillMaxWidth().heightIn(min = 48.dp).semantics { heading() },
+                        Modifier.fillMaxWidth().heightIn(min = 48.dp),
                         contentAlignment = Alignment.BottomStart,
                     ) {
                         Text(
                             row.text,
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 4.dp),
+                            // The flag sits on the Text: TalkBack lands on it, not on the Box.
+                            modifier = Modifier.padding(bottom = 4.dp).semantics { heading() },
                         )
                     }
                     is Choice.Pick -> PickRow(row, close)
