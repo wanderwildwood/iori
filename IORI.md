@@ -26,7 +26,10 @@ only. Source: https://github.com/wanderwildwood/iori
   its installed label, then by its package.
 - **If iori's own code ever crashes**, inkOS's crash report still comes up, and home then draws
   without its lines and says "Home lines turned off after a crash". A long press on that row
-  turns them back on.
+  turns them back on. A crash from iori's code during a first run also moves the first run past
+  the page that was up (`IoriFirstRun.tripped`; on the last page it ends the first run), so one
+  broken page cannot bring the launcher back to itself for ever; Run setup again gives it
+  another go.
 - **Dark mode for every app.** Settings → Dark mode turns Home dark (inkOS's own dark theme)
   and is the one switch the other apps follow: each asks Home's read-only provider
   (`IoriDarkProvider`, two numbers: dark or not, and when the switch was last pressed) when it
@@ -61,7 +64,7 @@ only. Source: https://github.com/wanderwildwood/iori
   Default apps; font and size come here later), **Apps** (Your apps, the one row and the one
   page for the house's apps, `IoriYourApps`; see below), **Home** (Home screen, Look & feel, Gestures, Advanced),
   and **Setup and about** (Run setup again, which opens the first run at its first page and
-  resets nothing; About Home, with the credit to gezimos and inkOS's own About as a row of it).
+  resets nothing; the two ticks come ticked, and BACK on the first page goes back to Settings; About Home, with the credit to gezimos and inkOS's own About as a row of it).
   Home screen is a sub-page holding inkOS's own home-page rows as they are (Home, App drawer,
   Fonts, Notifications, private space and work profile when there are any, Extras), then Folders
   and Home lines. Look & feel, Gestures and Advanced are inkOS's pages, opened from the top page;
@@ -97,7 +100,7 @@ restricted settings**, and try again.
 
 Upstream files change only at these lines, each marked `// iori:`. Everything else iori adds is
 in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' --glob
-'!app/src/iori/**' --glob '!*.md'` must list exactly these: 180 lines (19 Nov, decisions: 165 before, and 15 for what came from inkOS without a licence, below; 11-19, after the Settings restructure, the words moved from code to strings, after the Settings house pass, the house dialogs, the phone-test fixes, the e-ink mode row, Theme mode hidden, the pinch menu without About, the dark fixes and imports that keep the system's theme; the rows below give each file's lines; the older rows were last counted at 32, so recheck them at the next merge).
+'!app/src/iori/**' --glob '!*.md'` must list exactly these: 181 lines (19 Nov, first-run fixes: one more in MainActivity, line 517; decisions: 165 before, and 15 for what came from inkOS without a licence, below; 11-19, after the Settings restructure, the words moved from code to strings, after the Settings house pass, the house dialogs, the phone-test fixes, the e-ink mode row, Theme mode hidden, the pinch menu without About, the dark fixes and imports that keep the system's theme; the rows below give each file's lines; the older rows were last counted at 32, so recheck them at the next merge).
 
 | File:line | Purpose |
 |---|---|
@@ -125,6 +128,7 @@ in `app/iori.gradle` and `app/src/iori/`. After every merge, `rg -n '// iori:' -
 | `app/src/main/java/com/github/gezimos/inkos/helper/IconUtility.kt:280` | `isSyntheticPackage` accepts iori's package, and `app.inkos` only when this build is inkOS, so the real inkOS beside it is an ordinary app |
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:467` | `Iori.guardCrashes(this)`, right after onCreate puts CrashHandler back |
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:468` | `IoriDark.atStart(...)`, before onCreate reads the theme: where the system has a dark setting of its own, Home's theme is the system's |
+| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:517` | the first run is opened only when it is not already in the restored back stack (`IoriFirstRun.notShown`): a font, size or language change, or the process ended while away in Android's settings, put a second copy on top, and FINISH then landed on page 1 of the one underneath |
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:518` | on a first run, inkOS's e-ink Light theme is not set where the system has a dark setting (`IoriDark.systemHasDarkSetting`): Home took the system's at line 468, and Light would leave a light home in a night-mode window |
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt:644` | `IoriDark.systemChanged(...)` in `onConfigurationChanged`: the system's dark setting changed while Home was up, and Home turns with it |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/ThemePresetsUI.kt` (3 lines: 666, 705, 768) | Settings → Themes: the light/dark/system button in the header is not drawn, nor reached by the D-pad, where the system has a dark setting; Home's theme follows the system's there, which would undo the button |
@@ -209,7 +213,8 @@ Not hooks, but carried on top of v0.6:
   The first run (`IoriFirstRun.kt`) has the same apps as its third page, Ecosystem, a page of
   tick boxes (`IoriPickApps.kt`, from Home's own list, so nothing is asked of the network until
   GET), ahead of Theme and home apps so that what is got there can be put on the home screen:
-  the core apps that are missing come ticked, GET installs the ticked ones one after the other
+  the core apps that are missing come ticked, GET (a button under the list, never in the place of
+  NEXT, so a press meant for NEXT cannot start a download) installs the ticked ones one after the other
   through the same checked path (`IoriAppInstaller.installAll`), and an install question put
   away without an answer is given up when the page is back in front (`IoriAppInstaller.resumed`),
   so the ones behind it are not held up.
