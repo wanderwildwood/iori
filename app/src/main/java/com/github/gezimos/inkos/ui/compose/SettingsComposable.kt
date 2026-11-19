@@ -261,7 +261,7 @@ object SettingsComposable {
                     fontSize = IoriSettingsLook.label(titleFontSize), // iori: house sizes
                     color = if (isHighlighted) prefBackgroundColor else SettingsTheme.typography.title.color
                 )
-                if (description != null) {
+                if (!description.isNullOrEmpty()) { // iori: an emptied note takes no line
                     val descFontSize = IoriSettingsLook.value(titleFontSize) // iori: house sizes
                     Text(
                         text = description,
@@ -456,7 +456,7 @@ object SettingsComposable {
                         style = SettingsTheme.typography.title.copy(fontSize = IoriSettingsLook.label(fontSize)), // iori: house sizes
                         color = if (!enabled) prefTextColor.copy(alpha = 0.4f) else if (isHighlighted) prefBackgroundColor else SettingsTheme.typography.title.color
                     )
-                    if (description != null) {
+                    if (!description.isNullOrEmpty()) { // iori: an emptied note takes no line
                         val descFontSize = IoriSettingsLook.value(fontSize) // iori: house sizes
                         Text(
                             text = description,
@@ -532,7 +532,7 @@ object SettingsComposable {
                             color = if (!enabled) prefTextColor.copy(alpha = 0.4f) else if (isHighlighted) prefBackgroundColor else fontColor
                         )
                     }
-                    if (description != null) {
+                    if (!description.isNullOrEmpty()) { // iori: an emptied note takes no line
                         val descFontSize = IoriSettingsLook.value(fontSize) // iori: house sizes
                         Text(
                             text = description,
@@ -597,7 +597,7 @@ object SettingsComposable {
                         fontSize = IoriSettingsLook.label(fontSize), // iori: house sizes
                         color = if (!enabled) prefTextColor.copy(alpha = 0.4f) else if (isHighlighted) prefBackgroundColor else SettingsTheme.typography.title.color
                     )
-                    if (description != null) {
+                    if (!description.isNullOrEmpty()) { // iori: an emptied note takes no line
                         val descFontSize = IoriSettingsLook.value(fontSize) // iori: house sizes
                         Text(
                             text = description,

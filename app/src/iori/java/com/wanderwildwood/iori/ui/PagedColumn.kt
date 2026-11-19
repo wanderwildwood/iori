@@ -362,14 +362,23 @@ private fun PageBar(
                     }
                 },
         ) {
-            val sliderHeight = (size.height * visible / page.count).coerceAtLeast(max(size.height * 0.05f, 16f))
+            // A list that is one row taller than the page (Home's Settings pages, inkOS's one
+            // column) has no rows to count, so its thumb is measured in pixels: how much of the
+            // row the page shows, and how far down it the page is.
+            val tall = page.rows.singleOrNull()?.takeIf { page.count == 1 && it.bottom - it.top > page.height }
+            val tallLength = tall?.let { (it.bottom - it.top).toFloat() }
+            val sliderHeight = (if (tallLength != null) size.height * page.height / tallLength else size.height * visible / page.count)
+                .coerceAtLeast(max(size.height * 0.05f, 16f))
             val maxOffset = (size.height - sliderHeight).coerceAtLeast(0f)
             val denominator = (page.count - visible).coerceAtLeast(1)
-            val sliderOffset = (first.toFloat() / denominator * maxOffset).coerceIn(0f, maxOffset)
+            val sliderOffset = (
+                if (tall != null && tallLength != null) -tall.top / (tallLength - page.height) * maxOffset
+                else first.toFloat() / denominator * maxOffset
+            ).coerceIn(0f, maxOffset)
             val corner = CornerRadius(size.width / 2, size.width / 2)
             drawRoundRect(color = containerColor, topLeft = Offset.Zero, size = Size(size.width, size.height), cornerRadius = corner)
             drawRoundRect(
-                color = if (visible >= page.count) containerColor else sliderColor,
+                color = if (tall == null && visible >= page.count) containerColor else sliderColor,
                 topLeft = Offset(0f, sliderOffset),
                 size = Size(size.width, sliderHeight),
                 cornerRadius = corner,

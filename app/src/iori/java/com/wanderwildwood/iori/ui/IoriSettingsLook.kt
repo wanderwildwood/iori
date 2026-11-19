@@ -3,7 +3,10 @@ package com.wanderwildwood.iori.ui
 import android.graphics.Typeface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
@@ -99,6 +102,21 @@ object IoriSettingsLook {
         return remember(font, path) {
             val regular = font.getFont(context, path) ?: getTrueSystemFont()
             FontFamily(Typeface.create(regular, Typeface.BOLD))
+        }
+    }
+
+    /**
+     * A Settings page's rows in Home's [PagedColumn], so the page turns with the house scrollbar
+     * (chevrons, track, thumb) instead of inkOS's page dots. inkOS lays a page out as one column,
+     * so it is one item here, read a page at a time. [resetKey] changes when the page does, and
+     * the new page opens at its top.
+     */
+    @Composable
+    fun Pages(resetKey: Any, content: @Composable () -> Unit) {
+        val state = rememberLazyListState()
+        LaunchedEffect(resetKey) { state.scrollToItem(0) }
+        PagedColumn(modifier = Modifier.fillMaxSize(), state = state) {
+            item { content() }
         }
     }
 }

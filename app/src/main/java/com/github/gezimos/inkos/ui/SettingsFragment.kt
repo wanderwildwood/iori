@@ -395,9 +395,7 @@ class SettingsFragment : Fragment() {
                                 title = route.title(requireContext()),
                                 onClick = { navigateBack() },
                                 showStatusBar = uiState.showStatusBar,
-                                pageIndicator = {
-                                    PageIndicator(currentPage = currentPage, pageCount = pageCount)
-                                },
+                                pageIndicator = null, // iori: no page dots; the scrollbar shows the place
                                 titleFontSize = if (settingsSize > 0) (settingsSize * 1.5).sp else TextUnit.Unspecified
                             )
                         }
@@ -418,66 +416,9 @@ class SettingsFragment : Fragment() {
                 val settingsSize = (uiState.settingsSize - 3)
 
                 SettingsTheme(isDark) {
-                    val scrollState = rememberScrollState()
-                    val scope = rememberCoroutineScope()
-                    val overlapFraction = 0.2f
-
-                    // Reset scroll when route changes
-                    val resetTrigger = scrollResetTrigger
-                    LaunchedEffect(resetTrigger) {
-                        scrollState.scrollTo(0)
-                    }
-
-                    // Page calculation from scroll state
-                    val viewportHeightPx = remember { mutableIntStateOf(0) }
-                    LaunchedEffect(scrollState.value, scrollState.maxValue, viewportHeightPx.intValue) {
-                        val vp = viewportHeightPx.intValue
-                        if (vp <= 0) return@LaunchedEffect
-                        val overlap = (vp * overlapFraction).toInt()
-                        val step = (vp - overlap).coerceAtLeast(1)
-                        val maxScroll = scrollState.maxValue.coerceAtLeast(0)
-                        val pages = if (maxScroll <= 0) 1 else (1 + ((maxScroll + step - 1) / step))
-                        var bestPage = 0
-                        var bestDist = kotlin.math.abs(scrollState.value)
-                        for (i in 1 until pages) {
-                            val pageStart = (i * step).coerceAtMost(maxScroll)
-                            val dist = kotlin.math.abs(scrollState.value - pageStart)
-                            if (dist < bestDist) { bestPage = i; bestDist = dist }
-                        }
-                        if (bestPage != currentPage || pages != pageCount) {
-                            currentPage = bestPage
-                            pageCount = pages
-                            updateHeader()
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .onSizeChanged { viewportHeightPx.intValue = it.height }
-                            .gestureHelper(
-                                onVerticalPageMove = { delta ->
-                                    val vp = viewportHeightPx.intValue
-                                    if (vp <= 0) return@gestureHelper
-                                    val overlap = (vp * overlapFraction).toInt()
-                                    val step = (vp - overlap).coerceAtLeast(1)
-                                    val maxScroll = scrollState.maxValue.coerceAtLeast(0)
-                                    val pages = if (maxScroll <= 0) 1 else (1 + ((maxScroll + step - 1) / step))
-                                    val targetPage = (currentPage + delta).coerceIn(0, pages - 1)
-                                    if (targetPage != currentPage) {
-                                        val targetScroll = (targetPage * step).coerceAtMost(maxScroll)
-                                        scope.launch { scrollState.scrollTo(targetScroll) }
-                                    }
-                                }
-                            )
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .verticalScroll(scrollState, enabled = false)
-                        ) {
-                            SettingsRouteContent(settingsSize.sp)
-                        }
+                    // iori: the pages turn with the house scrollbar (PagedColumn), not inkOS's page dots
+                    com.wanderwildwood.iori.ui.IoriSettingsLook.Pages(resetKey = scrollResetTrigger) {
+                        SettingsRouteContent(settingsSize.sp)
                     }
                 }
             }
