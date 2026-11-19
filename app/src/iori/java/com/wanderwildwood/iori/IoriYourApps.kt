@@ -299,13 +299,16 @@ object IoriYourApps {
  * apps (the first run, the hand-off offer, the lines list); null when nothing is going on.
  */
 @Composable
-internal fun shortStatus(job: Job?): String? = when (job?.step) {
-    Step.DOWNLOADING -> stringResource(R.string.iori_apps_downloading, job.percent)
-    Step.CHECKING -> stringResource(R.string.iori_apps_checking)
-    Step.INSTALLING -> stringResource(R.string.iori_apps_installing)
-    Step.NEEDS_TAP -> stringResource(R.string.iori_apps_confirm)
-    Step.FAILED -> stringResource(job.short ?: R.string.iori_apps_failed_refused)
-    else -> null
+internal fun shortStatus(job: Job?): String? {
+    if (job == null) return null
+    return when (job.step) {
+        Step.DOWNLOADING -> stringResource(R.string.iori_apps_downloading, job.percent)
+        Step.CHECKING -> stringResource(R.string.iori_apps_checking)
+        Step.INSTALLING -> stringResource(R.string.iori_apps_installing)
+        Step.NEEDS_TAP -> stringResource(R.string.iori_apps_confirm)
+        Step.FAILED -> stringResource(job.short ?: R.string.iori_apps_failed_refused)
+        Step.IDLE, Step.INSTALLED -> null
+    }
 }
 
 /** Runs [block] each time the screen this is on comes back in front. */
