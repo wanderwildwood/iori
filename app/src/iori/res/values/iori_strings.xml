@@ -234,4 +234,12 @@
     <string name="iori_one_font">One font everywhere</string>
     <string name="iori_window_title">Window title</string>
     <string name="iori_show_window">Show the window</string>
+    <!-- 11-19 MuditaOS 2.0: an app's own e-ink mode, from its long-press menu -->
+    <string name="iori_eink_mode">E-ink mode</string>
+    <string name="iori_eink_phone_default">The phone\'s default</string>
+    <string name="iori_eink_auto">Auto</string>
+    <string name="iori_eink_fast">Fast</string>
+    <string name="iori_eink_fast_dither">Fast dither</string>
+    <string name="iori_eink_text">Text</string>
+    <string name="iori_eink_quality">Quality</string>
 </resources>

@@ -33,6 +33,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Contrast // iori: the e-ink mode row
 import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material.icons.rounded.DriveFileRenameOutline
 import androidx.compose.material.icons.rounded.Edit
@@ -1423,6 +1424,7 @@ fun AppContextMenuSheet(
         )
     }
 
+    val einkOffered = remember(app.activityPackage) { menuItemsEnabled[4] && com.wanderwildwood.iori.IoriEinkModes.offered(app.activityPackage) } // iori: only where the phone keeps per-app modes
     val deleteOrUnpinIcon = if (appTypeFlags.isPinnedShortcut || appTypeFlags.isAppShortcut)
         Icons.Rounded.PushPin else Icons.Rounded.Delete
     val displayName = if (app.customLabel.isNotEmpty()) app.customLabel else app.label
@@ -1456,6 +1458,7 @@ fun AppContextMenuSheet(
             stringResource(R.string.folder),
             { onFolder(app); onDismiss() }
         ))
+        if (einkOffered) add(AppSheetAction(Icons.Rounded.Contrast, stringResource(R.string.iori_eink_mode), { onDismiss(); com.wanderwildwood.iori.IoriEinkModes.choose(ctx, app.activityPackage, ctx.getString(R.string.iori_eink_mode)) })) // iori: the app's own e-ink mode (MuditaOS 2.0)
         if (menuItemsEnabled[4]) add(AppSheetAction(
             Icons.Rounded.Info,
             stringResource(R.string.app_info),
