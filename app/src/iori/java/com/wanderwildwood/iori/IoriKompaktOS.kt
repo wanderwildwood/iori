@@ -80,6 +80,18 @@ object IoriKompaktOS {
     }
 
     /**
+     * Whether a restored backup leaves this setting as KompaktOS has it. A backup made on
+     * MuditaOS carries the status bar off and a swipe down to inkOS's tray, which would undo
+     * [applyDefaultsOnce] on the move to KompaktOS. So there the status bar stays on, and a
+     * swipe down to the tray is not restored; every other setting restores as saved.
+     */
+    fun keepOnRestore(context: Context, key: String, value: Any?): Boolean {
+        if (!isKompaktOS(context)) return false
+        return key == "STATUS_BAR" ||
+            (key == "SWIPE_DOWN_ACTION" && value == Constants.Action.OpenSimpleTray.name)
+    }
+
+    /**
      * From Android 13 on, an app installed from a file is kept out of notification access and
      * Accessibility until App info, then ⋮, then Allow restricted settings. True on such a phone
      * for such an install; Android 12 (MuditaOS) has none of this. Whether it was already

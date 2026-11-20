@@ -716,6 +716,7 @@ class Prefs(val context: Context) {
             for ((key, value) in all) {
                 if (key in deprecatedImportKeys) continue
                 if (key == APP_THEME && com.wanderwildwood.iori.IoriDark.systemHasDarkSetting(context)) continue // iori: theme mode follows the system where it has a dark setting
+                if (com.wanderwildwood.iori.IoriKompaktOS.keepOnRestore(context, key, value)) continue // iori: on KompaktOS a backup from another phone keeps the real status bar and the system shade
                 if (key == "allowed_notification_apps" || key == "allowed_badge_notification_apps" ||
                     key == HIDDEN_APPS || key == LOCKED_APPS
                 ) {

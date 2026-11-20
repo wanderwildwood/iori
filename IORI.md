@@ -116,7 +116,7 @@ Upstream files change only at the lines below, each marked with `iori:` in a com
 else iori adds is in its own files: `app/iori.gradle`, `app/src/iori/`, `app/src/debug/`
 (debug's manifest overlay), and the new files of the carried commits. A run of changed lines is
 held between `iori: begin` and `iori: end` (written `6-15` below; both ends are markers, and every
-line between them counts as marked). The tree has **209** marker lines.
+line between them counts as marked). The tree has **210** marker lines.
 
 What Home adds to the merged manifest is the two `AndroidManifest.xml` blocks below (four
 permissions; two exported providers and a receiver) and, in debug builds only,
@@ -152,6 +152,7 @@ write the new line numbers into the table after a merge.
 | `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt` | 371 | a theme import leaves Theme mode (`APP_THEME`) alone where the system has a dark setting, and leaves out a theme's `INKOS_WALLPAPER_RESOURCE_ID` when it is a picture (`IoriRemoved.removedWallpaper`), which in this build would name another resource |
 | `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt` | 714 | imports pass through `IoriBackup.rewrite`, so an inkOS backup restores into Home |
 | `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt` | 718 | a full backup restore leaves Theme mode alone where the system has a dark setting |
+| `app/src/main/java/com/github/gezimos/inkos/data/Prefs.kt` | 719 | on KompaktOS a full backup restore keeps the status bar on and does not bring back a swipe down to inkOS's tray (`IoriKompaktOS.keepOnRestore`): a MuditaOS backup would undo the KompaktOS defaults on the move |
 | `app/src/main/java/com/github/gezimos/inkos/data/ThemePresets.kt` | 184, 185, 207, 208, 346, 347, 369, 370 | 19 Nov: the four themes that set a picture (SF, Leaf, NYC, Forrest) set none (`wallpaperResourceId = null`) and a solid background (`backgroundOpacity = 255`; inkOS's 175, 160, 10, 160 in the comments) |
 | `app/src/main/java/com/github/gezimos/inkos/helper/EditModeHelper.kt` | 992 | Edit mode → Background → Theme Mode is hidden where the system has a dark setting |
 | `app/src/main/java/com/github/gezimos/inkos/helper/IconUtility.kt` | 280 | `isSyntheticPackage` accepts Home's package, and `app.inkos` only when this build is inkOS, so the real inkOS beside it is an ordinary app |
