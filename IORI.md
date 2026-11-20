@@ -590,7 +590,8 @@ would set `release.yml` off six times once Actions is on.
 >   out too and deletes the password on the server.
 > - **Your apps.** Settings → Your apps lists the apps made to work with Home, in folders (Core
 >   first), each one installed or missing, with Install and Update. A download is installed only
->   if its size, checksum, package, version and signing key are the right ones.
+>   if its size, checksum, package, version and signing key are the right ones. With no
+>   connection it shows the list Home carries, without installing.
 > - **Settings in groups**: Phone, Apps, Home screen, Setup and about, in the same plain look as
 >   the other apps. inkOS's own pages and rows are all still there.
 > - **Dark mode for all the apps.** On MuditaOS, Settings → Dark mode turns Home dark, and the
