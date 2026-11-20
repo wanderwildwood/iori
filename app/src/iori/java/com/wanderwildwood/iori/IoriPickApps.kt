@@ -56,7 +56,8 @@ import com.wanderwildwood.iori.ui.monochrome
  * each. Theme and home apps come after it, so what was got here can be put on the home screen
  * there.
  *
- * Nothing is asked of the network until the person presses GET.
+ * Nothing is asked of the network until the person presses GET. When GET finds no list on
+ * wanderthe.dev (and none kept from before), the page says nothing can be got now; GET tries again.
  */
 object IoriPickApps {
 
@@ -67,6 +68,7 @@ object IoriPickApps {
         val apps = remember { IoriApps.apps(context) }
         val jobs by IoriAppInstaller.jobs.collectAsState()
         val queue by IoriAppInstaller.queue.collectAsState()
+        val list by IoriAppInstaller.list.collectAsState()
         // What is on the phone, read again when the page is back in front and when an install ends.
         var looked by remember { mutableStateOf(0) }
         OnResume {
@@ -81,6 +83,7 @@ object IoriPickApps {
         var ticked by remember { mutableStateOf(IoriApps.firstPick(apps, onPhone)) }
         var total by remember { mutableStateOf(0) }
         var askedToAllow by remember { mutableStateOf(false) }
+        var pressedGet by remember { mutableStateOf(false) }
 
         // Ticked and still missing: what GET would fetch. A failed one stays here for another try.
         val wanted = apps.filter { it.pkg in ticked && it.pkg !in onPhone }
@@ -129,6 +132,9 @@ object IoriPickApps {
                         text = stringResource(
                             when {
                                 askedToAllow && !running && !IoriAppInstaller.allowed(context) -> R.string.iori_pick_allow
+                                // No list to get them by (Home's own list is not one to install from).
+                                pressedGet && !running && (list is IoriAppInstaller.ListState.BuiltIn || list is IoriAppInstaller.ListState.Failed) ->
+                                    R.string.iori_pick_no_list
                                 else -> R.string.iori_pick_body
                             }
                         ),
@@ -199,6 +205,7 @@ object IoriPickApps {
                                     askedToAllow = true
                                     IoriAppInstaller.askToAllow(context)
                                 } else {
+                                    pressedGet = true
                                     total = wanted.size
                                     IoriAppInstaller.installAll(context, wanted.map { it.pkg })
                                 }

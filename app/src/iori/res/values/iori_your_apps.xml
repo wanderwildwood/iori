@@ -16,6 +16,8 @@
     <string name="iori_your_apps_list_unreadable">The list of apps on wanderthe.dev could not be read. Try again later.</string>
     <string name="iori_your_apps_from_copy">This is the list from last time. %1$s</string>
     <string name="iori_your_apps_empty">The list has no apps in it.</string>
+    <!-- No list from wanderthe.dev, fetched or kept: Home's own list, nothing to install from. %1$s is why (list_offline, list_missing or list_unreadable). -->
+    <string name="iori_your_apps_built_in">%1$s Until then, this is Home\'s own list, and nothing can be installed or updated.</string>
     <string name="iori_your_apps_allow_body">To install apps, Home needs Android\'s \"Install unknown apps\" for Home. Android asks for it once, on its own screen: turn on \"Allow from this source\", then come back here.</string>
     <string name="iori_your_apps_allow_button">Open that screen</string>
     <!-- What a row says while an install runs, and how it ended. -->
@@ -40,6 +42,7 @@
     <string name="iori_your_apps_why_conflict">it clashes with the app on the phone.</string>
     <string name="iori_your_apps_why_incompatible">it does not work on this phone.</string>
     <string name="iori_your_apps_why_storage">there is not enough room on the phone.</string>
+    <string name="iori_your_apps_why_no_list">the list of apps on wanderthe.dev could not be had just now, so nothing can be installed. Try again later.</string>
     <string name="iori_your_apps_why_not_listed">the list on wanderthe.dev could not be read, or does not have this app. Try again later.</string>
     <string name="iori_your_apps_why_android">Android did not install it.</string>
 </resources>

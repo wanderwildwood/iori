@@ -64,6 +64,7 @@ import com.github.gezimos.inkos.data.Prefs
 import com.github.gezimos.inkos.EinkHelper
 import com.github.gezimos.inkos.style.UiScaleMode
 import com.wanderwildwood.iori.ui.EInkDialog
+import com.wanderwildwood.iori.ui.HouseDialogs
 import com.wanderwildwood.iori.ui.houseTypography
 import com.wanderwildwood.iori.ui.monochrome
 import kotlinx.coroutines.delay
@@ -274,7 +275,7 @@ class IoriDialogs(private val activity: Activity, private val afterClose: () -> 
             viewModel.setAppDrawerGap((8 * s).toInt())
             viewModel.setTopWidgetMargin((32 * s).toInt())
             viewModel.setBottomWidgetMargin((32 * s).toInt())
-            activity.recreate()
+            HouseDialogs.recreate(activity)
         }
     }
 

@@ -68,7 +68,28 @@ object IoriAppInstaller {
         object Loading : ListState()
         /** The apps, and whether they are from the copy kept on the phone because the fetch failed. */
         data class Ready(val apps: List<Entry>, val fromCopy: Boolean, val problem: String?) : ListState()
+        /**
+         * No list from wanderthe.dev, fetched or kept: the apps Home itself knows ([IoriApps]),
+         * shown with what is on the phone. Nothing can be installed or updated from these: they
+         * carry no download address, size or checksum.
+         */
+        data class BuiltIn(val apps: List<IoriApps.App>, val why: String) : ListState()
+        /** No list at all, not even Home's own. */
         data class Failed(val why: String) : ListState()
+
+        companion object {
+            /**
+             * What the page shows once a fetch has ended: the list just [fetched]; else the copy
+             * [kept] from an earlier fetch, with [why] the fetch failed; else Home's own list
+             * [builtIn], with the same words. Null lists are ones there are not.
+             */
+            fun of(fetched: List<Entry>?, kept: List<Entry>?, builtIn: List<IoriApps.App>, why: String?): ListState = when {
+                fetched != null -> Ready(fetched, fromCopy = false, problem = null)
+                kept != null -> Ready(kept, fromCopy = true, problem = why)
+                builtIn.isNotEmpty() -> BuiltIn(builtIn, why.orEmpty())
+                else -> Failed(why.orEmpty())
+            }
+        }
     }
 
     enum class Step { IDLE, DOWNLOADING, CHECKING, INSTALLING, NEEDS_TAP, INSTALLED, FAILED }
@@ -115,13 +136,13 @@ object IoriAppInstaller {
                     // Reached, but no list handed over (404, 500, a page of the host's own) is not
                     // "no connection"; only a failure to connect or read is.
                     val why = app.getString(if (e is Unanswered) R.string.iori_your_apps_list_missing else R.string.iori_your_apps_list_offline)
-                    _list.value = if (kept != null) ListState.Ready(kept, fromCopy = true, problem = why) else ListState.Failed(why)
+                    _list.value = ListState.of(null, kept, IoriApps.apps(app), why)
                     return@launch
                 }
                 val parsed = IoriAppsManifest.parse(fresh)?.let { IoriAppsManifest.pinnedOnly(it, pins) }
                 if (parsed == null) {
                     val why = app.getString(R.string.iori_your_apps_list_unreadable)
-                    _list.value = if (kept != null) ListState.Ready(kept, fromCopy = true, problem = why) else ListState.Failed(why)
+                    _list.value = ListState.of(null, kept, IoriApps.apps(app), why)
                     return@launch
                 }
                 runCatching {
@@ -129,7 +150,7 @@ object IoriAppInstaller {
                     tmp.writeText(fresh)
                     tmp.renameTo(File(app.filesDir, CACHE_FILE))
                 }
-                _list.value = ListState.Ready(parsed, fromCopy = false, problem = null)
+                _list.value = ListState.of(parsed, kept, IoriApps.apps(app), null)
             } finally {
                 fetching.value = false
             }
@@ -255,7 +276,8 @@ object IoriAppInstaller {
     /**
      * Installs or updates the app [pkg] as the list on wanderthe.dev has it, reading the list
      * first when it is not in hand. An app the list does not have (or whose certificate is not
-     * the one Home pins) is not installed, and its job says so.
+     * the one Home pins) is not installed, and its job says so; so does one asked for when no
+     * list could be had at all (Home's own list is not one to install from).
      */
     fun install(context: Context, pkg: String) {
         val app = context.applicationContext
@@ -265,11 +287,19 @@ object IoriAppInstaller {
         // Reading the list counts as the start of the download.
         set(pkg, Job(Step.DOWNLOADING))
         scope.launch {
-            val entry = freshList(app)?.firstOrNull { it.pkg == pkg }
-            if (entry != null) begin(app, entry)
-            else set(pkg, Job(Step.FAILED, why = app.getString(R.string.iori_your_apps_why_not_listed), short = R.string.iori_apps_failed_not_listed))
+            val apps = freshList(app)
+            val entry = apps?.firstOrNull { it.pkg == pkg }
+            when {
+                entry != null -> begin(app, entry)
+                apps == null -> set(pkg, noList(app))
+                else -> set(pkg, Job(Step.FAILED, why = app.getString(R.string.iori_your_apps_why_not_listed), short = R.string.iori_apps_failed_not_listed))
+            }
         }
     }
+
+    /** The job of an app asked for when there is no list from wanderthe.dev to get it by. */
+    private fun noList(context: Context) =
+        Job(Step.FAILED, why = context.getString(R.string.iori_your_apps_why_no_list), short = R.string.iori_apps_failed_no_list)
 
     private fun begin(app: Context, entry: Entry) {
         if (!allowed(app)) {
@@ -340,8 +370,8 @@ object IoriAppInstaller {
     /**
      * Gets several apps one after the other through [install], so Android's "install this app?"
      * questions come one at a time. An app that fails is passed over and the rest go on, except
-     * when Home may not install apps at all: then the same answer waits for every other app, and
-     * the queue stops.
+     * when Home may not install apps at all, or there is no list from wanderthe.dev to get them
+     * by: then the queue stops, and with no list the apps waiting say so too.
      */
     fun installAll(context: Context, pkgs: List<String>) {
         val app = context.applicationContext
@@ -356,6 +386,10 @@ object IoriAppInstaller {
                     // install() has set the job before it returns (or left a running one alone).
                     install(app, pkg)
                     val end = jobs.first { all -> all[pkg]?.step.let { it == Step.INSTALLED || it == Step.FAILED || it == null || it == Step.IDLE } }[pkg]
+                    if (end?.step == Step.FAILED && end.short == R.string.iori_apps_failed_no_list) {
+                        _queue.value.filter { it != pkg }.forEach { set(it, end) }
+                        _queue.value = listOf(pkg)
+                    }
                     if (end?.step == Step.FAILED && !allowed(app)) _queue.value = listOf(pkg)
                     _queue.update { it - pkg }
                 }

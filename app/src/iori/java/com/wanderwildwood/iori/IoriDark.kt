@@ -27,6 +27,7 @@ import com.github.gezimos.inkos.R
 import com.github.gezimos.inkos.data.Constants
 import com.github.gezimos.inkos.data.Prefs
 import com.github.gezimos.inkos.ui.compose.SettingsComposable.SettingsHomeItem
+import com.wanderwildwood.iori.ui.HouseDialogs
 
 /**
  * Dark mode for the whole phone: one switch in Home's Settings.
@@ -154,7 +155,7 @@ object IoriDark {
         // Not in the middle of a first run: inkOS opens the first run again on every start while it
         // is unfinished, so a restart there would stack a second one under the first. The pages
         // keep the look they have, and Home has the system's from the home screen on.
-        if (!Prefs(activity).firstOpen) activity.recreate()
+        if (!Prefs(activity).firstOpen) HouseDialogs.recreate(activity)
     }
 
     fun on(context: Context): Boolean = Iori.prefs(context).getBoolean(KEY_ON, false)
@@ -193,7 +194,7 @@ object IoriDark {
         runCatching { context.contentResolver.notifyChange(uri(context), null) }
         setHomeTheme(if (dark) Constants.Theme.Dark else Constants.Theme.Light)
         AppCompatDelegate.setDefaultNightMode(if (dark) AppCompatDelegate.MODE_NIGHT_YES else AppCompatDelegate.MODE_NIGHT_NO)
-        (context as? Activity)?.recreate()
+        (context as? Activity)?.let { HouseDialogs.recreate(it) }
     }
 
     @Composable

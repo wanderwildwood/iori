@@ -35,6 +35,9 @@ only. Source: https://github.com/wanderwildwood/iori
   (`IoriDarkProvider`, two numbers: dark or not, and when the switch was last pressed) when it
   comes to the front (`IoriDark.kt`; the apps' side is `/opt/projects/shared-dark`). Home's own
   dialogs are drawn through an inverting filter while Home is dark (`ui/DarkWindow.kt`).
+  When the setting changes Home closes its own dialogs before it recreates the screen
+  (`ui/HouseDialogs.kt`): recreated under an open one (Your apps with a folder open), the
+  dialog went but accessibility kept its window, and TalkBack read nothing from Home.
   The switch is only on MuditaOS, which has no dark setting a person can reach (it keeps
   Android's dark-theme screen installed, so asking Settings for it cannot tell). MuditaOS is
   told by Mudita's Settings app (`com.mudita.settings`) on a system that is not LineageOS
@@ -285,6 +288,13 @@ Not hooks, but carried on top of v0.6:
   heading. A folder row says how many of its apps are on the phone ("3 of 5"), or in bold how
   many can be updated or are being got. In a folder each app has what it is, its version or
   "Not installed", how an install is going or why it failed, and Install / Update / Up to date.
+  With no list from the site, fetched or kept (a first open offline, or the site down), the page
+  shows Home's own list instead, in the same folders, each app with its version on the phone or
+  "Not installed" and no Install or Update (Home's list has no download address, size or
+  checksum), under a note that nothing can be installed or updated until the site's list comes,
+  and Try again (`IoriAppInstaller.ListState.of`: fetched, else kept, else Home's own). An app
+  asked for elsewhere then (first run's GET, the hand-off offer, the lines list) says "Cannot get
+  it now", and the first run's page says why.
   An app is downloaded to Home's cache and handed to Android's PackageInstaller only when its
   size, SHA-256, package and version code are the list's, it is signed with the list's
   certificate and no other, that certificate is the one Home pins for the app

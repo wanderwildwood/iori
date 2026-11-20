@@ -11,8 +11,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -39,11 +41,17 @@ fun EInkDialog(
     onDismiss: () -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    // Home's own: no dialog while its screen waits to be recreated (HouseDialogs).
+    if (HouseDialogs.closing(LocalContext.current)) return
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         val view = LocalView.current
+        DisposableEffect(Unit) {
+            HouseDialogs.open++
+            onDispose { HouseDialogs.open-- }
+        }
         DarkWindow()
         SideEffect {
             (view.parent as? DialogWindowProvider)?.window?.let { window ->
