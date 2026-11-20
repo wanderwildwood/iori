@@ -578,6 +578,13 @@ would set `release.yml` off six times once Actions is on.
 13. Upstream fixes: the two fix commits (all-day events by their date; honour
     `canShowBadge()`) can go to gezimos as issue patches, each on its own.
 
+### Release notes, v1.0.3
+
+> # Home 1.0.3
+>
+> - **KompaktOS:** an app's E-ink mode opens the Kompakt app, where KompaktOS keeps the modes, and the e-ink refresh gesture asks KompaktOS for a full refresh. On first start Home shows the real status bar and leaves the swipe down to the system's notification shade; a backup restored from MuditaOS keeps both.
+> - **Restricted settings:** on Android 13 and later, when Home was installed from a file, Home says how to let it read notifications or use Accessibility: App info, then ⋮, then Allow restricted settings.
+
 ### Release notes, v1.0.2
 
 > # Home 1.0.2
