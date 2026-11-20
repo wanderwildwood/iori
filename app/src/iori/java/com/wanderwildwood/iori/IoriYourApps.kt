@@ -247,8 +247,9 @@ object IoriYourApps {
     }
 
     /**
-     * One app: name, what it is (one line, so a folder shows several apps to a page), its version,
-     * how an install went, and its press on the right.
+     * One app: its name and its version (two short lines, so a folder shows several apps to a
+     * page; what each app is, cut to a line, said too little to keep), how an install went, and
+     * its press on the right.
      */
     @Composable
     private fun AppRow(entry: Entry, installed: IoriAppsManifest.Installed?, job: Job) {
@@ -261,9 +262,6 @@ object IoriYourApps {
         ) {
             Column(Modifier.weight(1f)) {
                 Text(entry.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                if (entry.summary.isNotEmpty()) {
-                    Text(entry.summary, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
                 // One short line: the folder already says which apps are core, and an update reads
                 // as "0.1.33 to 0.1.39". It may take a second line at a large font size, so the
                 // version itself is never cut off.
