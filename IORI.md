@@ -113,7 +113,7 @@ Upstream files change only at the lines below, each marked with `iori:` in a com
 else iori adds is in its own files: `app/iori.gradle`, `app/src/iori/`, `app/src/debug/`
 (debug's manifest overlay), and the new files of the carried commits. A run of changed lines is
 held between `iori: begin` and `iori: end` (written `6-15` below; both ends are markers, and every
-line between them counts as marked). The tree has **202** marker lines.
+line between them counts as marked). The tree has **203** marker lines.
 
 What Home adds to the merged manifest is the two `AndroidManifest.xml` blocks below (four
 permissions; two exported providers and a receiver) and, in debug builds only,
@@ -135,6 +135,7 @@ write the new line numbers into the table after a merge.
 | `app/src/main/AndroidManifest.xml` | 6-15 | four permissions: `INTERNET` and `REQUEST_INSTALL_PACKAGES` (Your apps fetches an app and hands it to Android; the Nextcloud sign-in), `SET_ALARM` (Default apps asks Android which clock app), `UPDATE_PACKAGES_WITHOUT_USER_ACTION` (Android 12+ updates an app Home installed with no question) |
 | `app/src/main/AndroidManifest.xml` | 173-191 | at the end of `<application>`: `IoriDarkProvider` (`${applicationId}.dark`, exported, read-only: the other apps' dark switch), `IoriAccountProvider` (`${applicationId}.accounts`, exported; it checks each caller's package and certificate itself: the phone's one Nextcloud account), `IoriInstallReceiver` (not exported: the installer's answers). If a merge drops this block the build still passes and the apps quietly lose dark mode and the account; the hook check above is what catches it |
 | `app/src/main/java/com/github/gezimos/common/CrashHandler.kt` | 30, 33, 34, 157 | 19 Nov audit: `logUserAction` keeps nothing, and the crash report has no "Recent User Actions" section. inkOS's callers log each app and shortcut opened from home (package, shortcut id, time), which went into the report emailed to the developer; the callers are left as they are |
+| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 191 | while the first run is up `onKeyDown` swallows every key, so a menu, Esc or Home key cannot leave it; Back is let through, else the first run's own `BackHandler` never ran (a page back; on page 1 of Run setup again, back to Settings) |
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 467 | `Iori.guardCrashes(this)`, right after onCreate puts CrashHandler back |
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 468 | `IoriDark.atStart(...)`, before onCreate reads the theme: where the system has a dark setting of its own, Home's theme is the system's |
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 517 | the first run is opened only when it is not already in the restored back stack (`IoriFirstRun.notShown`): a font, size or language change, or the process ended while away in Android's settings, put a second copy on top, and FINISH then landed on page 1 of the one underneath |

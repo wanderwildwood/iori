@@ -188,7 +188,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (isOnboarding()) return true
+        if (isOnboarding() && keyCode != KeyEvent.KEYCODE_BACK) return true // iori: Back goes through to the first run's own back (a page back; Run setup again back to Settings); menu, Esc and Home stay swallowed
         return when (keyCode) {
             KeyEvent.KEYCODE_MENU -> {
                 when (navController.currentDestination?.id) {
