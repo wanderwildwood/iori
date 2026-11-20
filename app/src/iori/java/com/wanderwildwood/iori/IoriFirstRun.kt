@@ -95,7 +95,7 @@ import kotlin.reflect.KProperty
  *
  *  1. Welcome: what Home is, what it sends, and the privacy tick.
  *  2. Setup: notification access, the home app, and where Settings is (with its tick).
- *  3. Ecosystem: the apps Home works with, to tick and get ([IoriPickApps]).
+ *  3. Your apps: the apps Home works with, to tick and get ([IoriPickApps]).
  *  4. Default apps: which app Android opens for alarms, pictures, maps and the like ([IoriDefaults]).
  *  5. Nextcloud: the one account the apps can share ([IoriNextcloudUi]); NEXT passes it by.
  *  6. Theme and home apps, last, so the apps just got can be put on the home screen.

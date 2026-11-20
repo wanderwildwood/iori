@@ -88,7 +88,7 @@
     <string name="iori_nc_title">Nextcloud account</string>
     <string name="iori_nc_row_out">Not signed in. Sign in once, for the apps that use it</string>
     <string name="iori_nc_row_in">%1$s on %2$s</string>
-    <string name="iori_nc_body">Sign in to your Nextcloud once, here. Your other Ecosystem apps can then use this account instead of asking for their own.</string>
+    <string name="iori_nc_body">Sign in to your Nextcloud once, here. The apps under Your apps that use Nextcloud can then use this account instead of asking for their own.</string>
     <string name="iori_nc_skip">No Nextcloud, or not now: press NEXT.</string>
     <string name="iori_nc_server">Server address</string>
     <string name="iori_nc_server_hint">cloud.example.org</string>
@@ -114,7 +114,7 @@
     <string name="iori_nc_no_app_password">The server would not make an app password for Home, so nothing was kept. Make one in Nextcloud on another device and type it here.</string>
     <string name="iori_nc_gave_up">The sign-in was not finished in twenty minutes. Press Sign in to start again.</string>
     <string name="iori_nc_signed_in">Signed in as %1$s on %2$s</string>
-    <string name="iori_nc_shared">Your Ecosystem apps can use this account. The password is locked on this phone and handed to them alone.</string>
+    <string name="iori_nc_shared">The apps under Your apps that use Nextcloud can use this account. The password is locked on this phone and handed to them alone.</string>
     <string name="iori_nc_sign_out">Sign out</string>
     <string name="iori_nc_sign_out_armed">Sign out — the apps using this account lose it too; tap again</string>
     <string name="iori_nc_unrevoked">Home could not reach your server to end its old sign-in. It tries again each time it starts. To end it now, remove the Home entry on the server: Settings, Security, Devices &amp; sessions.</string>
@@ -149,7 +149,7 @@
     <string name="iori_apps_failed_not_listed">Not in the list</string>
     <!-- First run: Pick your apps -->
     <string name="iori_pick_body">These apps are made to work together. Tick the ones you want and press GET. NEXT goes on without getting them. Android asks once for each. The rest can be got later in Settings, under Your apps.</string>
-    <string name="iori_first_ecosystem">ECOSYSTEM</string>
+    <string name="iori_first_ecosystem">YOUR APPS</string>
     <string name="iori_first_setup">SETUP</string>
     <string name="iori_first_defaults">DEFAULT APPS</string>
     <string name="iori_defaults_title">Default apps</string>
@@ -194,7 +194,7 @@
     <string name="iori_first_theme_body">Choose a color preset, or keep the look you have.</string>
     <string name="iori_first_home_apps_body">Pick the apps for your home screen and put them in order. The apps you just got are in the list.</string>
     <string name="iori_pick_allow">Allow Home to install apps on the screen that opened, come back, and press GET again.</string>
-    <!-- The button under the Ecosystem list; the count is how many ticked apps are not on the phone yet. -->
+    <!-- The button under the Your apps list; the count is how many ticked apps are not on the phone yet. -->
     <plurals name="iori_pick_get_count">
         <item quantity="one">GET %d APP</item>
         <item quantity="other">GET %d APPS</item>

@@ -272,7 +272,7 @@ object IoriDefaults {
         }
     }
 
-    /** The Default apps page of a first run ([IoriFirstRun]), after Ecosystem, drawn as that page is. */
+    /** The Default apps page of a first run ([IoriFirstRun]), after Your apps, drawn as that page is. */
     @Composable
     fun Page(pageLabel: String, isDark: Boolean, onBack: () -> Unit, onNext: () -> Unit) {
         val context = LocalContext.current

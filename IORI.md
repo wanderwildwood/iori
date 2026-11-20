@@ -52,7 +52,7 @@ only. Source: https://github.com/wanderwildwood/iori
   from an app password), sealed by a keystore key, in a file left out of backups
   (`IoriAccount.kt`). `IoriAccountProvider` (`content://<package>.accounts/nextcloud`: server,
   user, password, stamp, uid) hands it only to callers whose package AND signing certificate are
-  pinned in `IoriAccount.CALLERS` (every Ecosystem app that signs in to a Nextcloud, eleven; the test holds the list to
+  pinned in `IoriAccount.CALLERS` (every app of Your apps that signs in to a Nextcloud, eleven; the test holds the list to
   `iori_apps.json`), and a change notice goes out on sign-in and sign-out. `user` is the login
   name (basic auth); `uid` is the Nextcloud user id (`ocs.data.id` of `cloud/user`, asked once
   after sign-in, and filled in later for an account kept without one; until then it reads as
@@ -298,7 +298,7 @@ Not hooks, but carried on top of v0.6:
   Its only lines in upstream's files are the two manifest blocks in the ledger (the
   permissions, and `IoriInstallReceiver`);
   `IoriInstallReceiver` (now in `IoriAppInstaller.kt`) hands every answer to `IoriAppInstaller`.
-  The first run (`IoriFirstRun.kt`) has the same apps as its third page, Ecosystem, a page of
+  The first run (`IoriFirstRun.kt`) has the same apps as its third page, Your apps, a page of
   tick boxes (`IoriPickApps.kt`, from Home's own list, so nothing is asked of the network until
   GET), ahead of Theme and home apps so that what is got there can be put on the home screen:
   the core apps that are missing come ticked, GET (a button under the list, never in the place of
@@ -326,7 +326,7 @@ Not hooks, but carried on top of v0.6:
 - **README** (19 Nov): Home's own. Upstream's is kept, links fixed for its place, as
   `docs/README-inkOS.md`, so a merge that touches upstream's README conflicts only in
   `README.md`: take ours, and copy upstream's new one there.
-- **Default apps** (14 Nov, `IoriDefaults.kt`): a first-run page after Ecosystem (the first run
+- **Default apps** (14 Nov, `IoriDefaults.kt`): a first-run page after Your apps (the first run
   is five pages now) and a Settings row. One row for each kind of thing one of Home's apps is
   meant to open (calls and texts, which are roles, and filling in passwords; contacts, calendar, email, alarms and timers,
   camera, gallery, music, files, text files, map links, calculator; and, as notes only, opening

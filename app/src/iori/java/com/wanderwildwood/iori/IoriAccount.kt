@@ -74,7 +74,7 @@ object IoriAccount {
     /**
      * The apps the account is handed to, each with the SHA-256 of the certificate its releases
      * are signed with (lower-case hex): the same values as in `assets/iori_apps.json`, which
-     * `IoriAccountTest` holds this list to. Every Ecosystem app that signs in to a Nextcloud is
+     * `IoriAccountTest` holds this list to. Every app of Your apps that signs in to a Nextcloud is
      * pinned (the owner's choice, 11-18), whether or not its row "Use the phone's Nextcloud account" is built yet.
      */
     val CALLERS = mapOf(

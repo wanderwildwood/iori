@@ -49,7 +49,7 @@ import com.wanderwildwood.iori.ui.PagedColumn
 import com.wanderwildwood.iori.ui.monochrome
 
 /**
- * The Ecosystem page of a first run ([IoriFirstRun]): the apps Home is made to work with, under
+ * The Your apps page of a first run ([IoriFirstRun]): the apps Home is made to work with, under
  * their sections, the core set ticked, the rest not. The ticked ones are got one after the
  * other, through the same checked path as Your apps ([IoriAppInstaller]: the list on
  * wanderthe.dev, size, checksum, package, version and the pinned key); Android asks once for
