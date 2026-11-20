@@ -260,12 +260,10 @@ resolved by keeping it deleted, and a new upstream file of the same kind is chec
 | `app/src/main/res/drawable/{bamboo,blossom3,building,forrest,halfdots,halfdots_two,japan2,japan_left,leaf,liberty,nyc_left,sf_left,trees_left,urban}.png` | the fourteen picture wallpapers packed in the APK |
 | `app/src/main/res/play_store.png`, `play_store_features.png` | inkOS's store pictures |
 | `fastlane/` | inkOS's store listing: texts, screenshots, icon, changelogs (with the unmarked `101014.txt`) |
+| `Gemfile`, `Gemfile.lock` | fastlane's Ruby tooling, for the store listing above; unused without it (inkOS has not changed either since its first commit, so a merge is unlikely to meet them) |
 | `wallpapers/` | inkOS's wallpaper pictures, not packed in the APK |
 | `others/bmc-button.png` | inkOS's Buy Me a Coffee button picture |
 | `docs/img/**/*.png`, `*.jpg`, `*.mp4` | inkOS's website screenshots, mockups and videos; the website's HTML under `docs/` is kept and its pictures no longer load; `docs/README-inkOS.md` links to inkOS's repository for screenshots instead |
-
-`Gemfile` and `Gemfile.lock` (fastlane's Ruby tooling) are kept unchanged: they are not pictures,
-and removing them would conflict on every merge for no gain.
 
 Not hooks, but carried on top of v0.6:
 
