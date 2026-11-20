@@ -51,7 +51,9 @@ import com.wanderwildwood.iori.ui.monochrome
  * from Home's own list, [IoriApps]); each folder says how many of its apps are on the phone, or
  * how many can be updated or are being got. In a folder, each app with what it is, the version on
  * the phone or "Not installed", how an install is going, and Install, Update or Up to date.
- * The work is [IoriAppInstaller]'s; this is only the page.
+ * With no list from wanderthe.dev, fetched or kept, it shows Home's own list ([IoriApps]) in the
+ * same folders, each app with what is on the phone and no Install or Update: there is nothing
+ * to install from. The work is [IoriAppInstaller]'s; this is only the page.
  */
 object IoriYourApps {
 
@@ -78,13 +80,15 @@ object IoriYourApps {
         val sections = (list as? ListState.Ready)?.apps.orEmpty().let { apps ->
             IoriApps.sections(apps) { IoriApps.sectionOf(context, it.pkg, it.core) }
         }
+        val builtIn = (list as? ListState.BuiltIn)?.apps.orEmpty().let { IoriApps.sections(it) }
         val inFolder = sections.firstOrNull { it.first == open }
-        val back = { if (inFolder != null) open = null else onClose() }
+        val inBuiltInFolder = builtIn.firstOrNull { it.first == open }
+        val back = { if (inFolder != null || inBuiltInFolder != null) open = null else onClose() }
 
         MaterialTheme(colorScheme = monochrome, typography = houseTypography) {
             EInkDialog(onDismiss = back) {
                 Text(
-                    text = stringResource(inFolder?.first ?: R.string.iori_your_apps_title),
+                    text = stringResource(inFolder?.first ?: inBuiltInFolder?.first ?: R.string.iori_your_apps_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
@@ -141,7 +145,14 @@ object IoriYourApps {
                                     add("empty" to { Words(stringResource(R.string.iori_your_apps_empty)) })
                                 }
                                 sections.forEach { (head, inSection) ->
-                                    add("folder:$head" to { FolderRow(head, inSection, installed, jobs) { open = head } })
+                                    add("folder:$head" to {
+                                        val busy = inSection.count { e ->
+                                            val step = jobs[e.pkg]?.step
+                                            (step != null && step != Step.IDLE && step != Step.INSTALLED) ||
+                                                IoriAppsManifest.status(e, installed[e.pkg], Build.VERSION.SDK_INT) == Status.UPDATE
+                                        }
+                                        FolderRow(head, inSection.count { installed[it.pkg] != null }, inSection.size, busy) { open = head }
+                                    })
                                 }
                             }
                         }
@@ -153,10 +164,41 @@ object IoriYourApps {
                             FittedPages(rows, Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(max = room.coerceAtLeast(200.dp)))
                         }
                     }
+                    is ListState.BuiltIn -> {
+                        val installed = remember(now.apps, jobs.filterValues { it.step == Step.INSTALLED }.keys, looked) {
+                            now.apps.associate { it.pkg to IoriAppInstaller.installed(context, it.pkg) }
+                        }
+                        val rows = buildList<Pair<String, @Composable () -> Unit>> {
+                            if (inBuiltInFolder != null) {
+                                inBuiltInFolder.second.forEach { app ->
+                                    add(app.pkg to { KnownAppRow(app, installed[app.pkg], jobs[app.pkg] ?: Job()) })
+                                }
+                            } else {
+                                add("problem" to {
+                                    Column(Modifier.padding(bottom = 12.dp)) {
+                                        Words(stringResource(R.string.iori_your_apps_built_in, now.why))
+                                        Spacer(Modifier.height(8.dp))
+                                        Press(stringResource(R.string.iori_your_apps_try_again), Modifier.fillMaxWidth()) {
+                                            IoriAppInstaller.refresh(context)
+                                        }
+                                    }
+                                })
+                                builtIn.forEach { (head, inSection) ->
+                                    add("folder:$head" to {
+                                        FolderRow(head, inSection.count { installed[it.pkg] != null }, inSection.size, busy = 0) { open = head }
+                                    })
+                                }
+                            }
+                        }
+                        val room = LocalConfiguration.current.screenHeightDp.dp - 200.dp
+                        androidx.compose.runtime.key(open) {
+                            FittedPages(rows, Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(max = room.coerceAtLeast(200.dp)))
+                        }
+                    }
                 }
                 Spacer(Modifier.height(16.dp))
                 Text(
-                    text = stringResource(if (inFolder != null) R.string.iori_back else R.string.iori_close),
+                    text = stringResource(if (inFolder != null || inBuiltInFolder != null) R.string.iori_back else R.string.iori_close),
                     style = MaterialTheme.typography.titleSmall,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
@@ -175,21 +217,10 @@ object IoriYourApps {
      * or, in bold, how many can be updated or are being got right now.
      */
     @Composable
-    private fun FolderRow(
-        head: Int,
-        apps: List<Entry>,
-        installed: Map<String, IoriAppsManifest.Installed?>,
-        jobs: Map<String, Job>,
-        onOpen: () -> Unit,
-    ) {
+    private fun FolderRow(head: Int, onPhone: Int, total: Int, busy: Int, onOpen: () -> Unit) {
         val context = LocalContext.current
-        val busy = apps.count { e ->
-            val step = jobs[e.pkg]?.step
-            (step != null && step != Step.IDLE && step != Step.INSTALLED) ||
-                IoriAppsManifest.status(e, installed[e.pkg], Build.VERSION.SDK_INT) == Status.UPDATE
-        }
         val status = if (busy > 0) context.resources.getQuantityString(R.plurals.iori_apps_folder_updates, busy, busy)
-        else stringResource(R.string.iori_apps_folder_count, apps.count { installed[it.pkg] != null }, apps.size)
+        else stringResource(R.string.iori_apps_folder_count, onPhone, total)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -253,6 +284,27 @@ object IoriYourApps {
             )
             val canPress = !busy && (status == Status.NOT_INSTALLED || status == Status.UPDATE)
             Press(label, enabled = canPress) { IoriAppInstaller.install(context, entry) }
+        }
+    }
+
+    /**
+     * One app of Home's own list, shown when there is no list from wanderthe.dev: its name, and
+     * the version on the phone or "Not installed". No press: there is nothing to install from.
+     */
+    @Composable
+    private fun KnownAppRow(app: IoriApps.App, installed: IoriAppsManifest.Installed?, job: Job) {
+        Column(Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
+            Text(app.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+            val version = if (installed == null) stringResource(R.string.iori_your_apps_not_installed)
+            else stringResource(R.string.iori_your_apps_installed_version, installed.versionName ?: installed.versionCode.toString())
+            val line = buildList {
+                if (app.core) add(stringResource(R.string.iori_your_apps_core))
+                add(version)
+            }.joinToString(" · ")
+            Text(line, style = MaterialTheme.typography.labelSmall)
+            outcome(job)?.let {
+                Text(it, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            }
         }
     }
 

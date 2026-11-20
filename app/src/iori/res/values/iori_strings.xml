@@ -147,6 +147,7 @@
     <string name="iori_apps_failed_key">Not signed by its maker</string>
     <string name="iori_apps_failed_refused">Not installed. Try again</string>
     <string name="iori_apps_failed_not_listed">Not in the list</string>
+    <string name="iori_apps_failed_no_list">Cannot get it now</string>
     <!-- First run: Pick your apps -->
     <string name="iori_pick_body">These apps are made to work together. Tick the ones you want and press GET. NEXT goes on without getting them. Android asks once for each. The rest can be got later in Settings, under Your apps.</string>
     <string name="iori_first_ecosystem">YOUR APPS</string>
@@ -193,6 +194,7 @@
     <string name="iori_first_settings_toast">Tick the box to say you have read where Settings is</string>
     <string name="iori_first_theme_body">Choose a color preset, or keep the look you have.</string>
     <string name="iori_first_home_apps_body">Pick the apps for your home screen and put them in order. The apps you just got are in the list.</string>
+    <string name="iori_pick_no_list">Home could not get the list of apps from wanderthe.dev, so nothing can be got now. Press GET to try again, or NEXT to go on. The apps can be got later in Settings, under Your apps.</string>
     <string name="iori_pick_allow">Allow Home to install apps on the screen that opened, come back, and press GET again.</string>
     <!-- The button under the Your apps list; the count is how many ticked apps are not on the phone yet. -->
     <plurals name="iori_pick_get_count">
