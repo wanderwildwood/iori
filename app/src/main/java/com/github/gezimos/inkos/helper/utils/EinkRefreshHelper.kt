@@ -47,6 +47,7 @@ object EinkRefreshHelper {
         delayMs: Int = 100,
         useActivityRoot: Boolean = false
     ) {
+        if (com.wanderwildwood.iori.IoriKompaktOS.refresh(context)) return // iori: KompaktOS refreshes the panel itself
         Handler(Looper.getMainLooper()).post {
             val isDark = prefs.appTheme == Constants.Theme.Dark
             val overlayColor =

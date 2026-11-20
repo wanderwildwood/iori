@@ -263,6 +263,10 @@
     <string name="iori_show_window">Show the window</string>
     <!-- 11-19 MuditaOS 2.0: an app's own e-ink mode, from its long-press menu -->
     <string name="iori_eink_mode">E-ink mode</string>
+    <!-- Android 13+ keeps an app installed from a file out of notification access and Accessibility
+         until App info, then ⋮, then Allow restricted settings. Same words as the other apps. -->
+    <string name="iori_restricted_hint">Android blocks this for apps installed from a file. Open App info, tap ⋮, then Allow restricted settings, and try again.</string>
+    <string name="iori_restricted_app_info">App info</string>
     <string name="iori_eink_phone_default">The phone\'s default</string>
     <string name="iori_eink_auto">Auto</string>
     <string name="iori_eink_fast">Fast</string>

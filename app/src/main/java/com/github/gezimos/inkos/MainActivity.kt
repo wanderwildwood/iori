@@ -428,8 +428,9 @@ class MainActivity : AppCompatActivity() {
         } catch (_: Exception) {}
         migration = Migration(this)
         migration.migratePreferencesOnVersionUpdate(prefs)
+        com.wanderwildwood.iori.IoriKompaktOS.applyDefaultsOnce(this, prefs) // iori: KompaktOS: real status bar, swipe down left to the system's shade (once)
 
-        if (EinkHelper.isMuditaKompakt()) {
+        if (EinkHelper.isMuditaKompakt() && !com.wanderwildwood.iori.IoriKompaktOS.isKompaktOS(this)) { // iori: on KompaktOS its Kompakt app owns the e-ink modes
             einkHelper = EinkHelper(packageName)
             lifecycle.addObserver(einkHelper!!)
             if (prefs.einkHelperMode != EinkHelper.MEINK_MODE_DISABLED) {

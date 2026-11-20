@@ -116,7 +116,7 @@ Upstream files change only at the lines below, each marked with `iori:` in a com
 else iori adds is in its own files: `app/iori.gradle`, `app/src/iori/`, `app/src/debug/`
 (debug's manifest overlay), and the new files of the carried commits. A run of changed lines is
 held between `iori: begin` and `iori: end` (written `6-15` below; both ends are markers, and every
-line between them counts as marked). The tree has **203** marker lines.
+line between them counts as marked). The tree has **209** marker lines.
 
 What Home adds to the merged manifest is the two `AndroidManifest.xml` blocks below (four
 permissions; two exported providers and a receiver) and, in debug builds only,
@@ -137,13 +137,15 @@ write the new line numbers into the table after a merge.
 | `app/build.gradle.kts` | 186 | `apply(from = "iori.gradle")`: identity, iori sources and strings |
 | `app/src/main/AndroidManifest.xml` | 6-15 | four permissions: `INTERNET` and `REQUEST_INSTALL_PACKAGES` (Your apps fetches an app and hands it to Android; the Nextcloud sign-in), `SET_ALARM` (Default apps asks Android which clock app), `UPDATE_PACKAGES_WITHOUT_USER_ACTION` (Android 12+ updates an app Home installed with no question) |
 | `app/src/main/AndroidManifest.xml` | 173-191 | at the end of `<application>`: `IoriDarkProvider` (`${applicationId}.dark`, exported, read-only: the other apps' dark switch), `IoriAccountProvider` (`${applicationId}.accounts`, exported; it checks each caller's package and certificate itself: the phone's one Nextcloud account), `IoriInstallReceiver` (not exported: the installer's answers). If a merge drops this block the build still passes and the apps quietly lose dark mode and the account; the hook check above is what catches it |
+| `app/src/main/java/com/github/gezimos/common/ContextExtensions.kt` | 200 | before Accessibility opens: where Android 13+ blocks an app installed from a file, a toast says how to allow restricted settings (`IoriKompaktOS.restrictedBlocked`) |
 | `app/src/main/java/com/github/gezimos/common/CrashHandler.kt` | 30, 33, 34, 157 | 19 Nov audit: `logUserAction` keeps nothing, and the crash report has no "Recent User Actions" section. inkOS's callers log each app and shortcut opened from home (package, shortcut id, time), which went into the report emailed to the developer; the callers are left as they are |
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 191 | while the first run is up `onKeyDown` swallows every key, so a menu, Esc or Home key cannot leave it; Back is let through, else the first run's own `BackHandler` never ran (a page back; on page 1 of Run setup again, back to Settings) |
-| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 467 | `Iori.guardCrashes(this)`, right after onCreate puts CrashHandler back |
-| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 468 | `IoriDark.atStart(...)`, before onCreate reads the theme: where the system has a dark setting of its own, Home's theme is the system's |
-| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 517 | the first run is opened only when it is not already in the restored back stack (`IoriFirstRun.notShown`): a font, size or language change, or the process ended while away in Android's settings, put a second copy on top, and FINISH then landed on page 1 of the one underneath |
-| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 518 | on a first run, inkOS's e-ink Light theme is not set where the system has a dark setting (`IoriDark.systemHasDarkSetting`): Home took the system's at line 468 |
-| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 644 | `IoriDark.systemChanged(...)` in `onConfigurationChanged`: the system's dark setting changed while Home was up, and Home turns with it |
+| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 431, 433 | KompaktOS (`IoriKompaktOS`): once per install the real status bar on and the swipe down left to the system shade; inkOS's meink helper not started there, as its Kompakt app owns the e-ink modes |
+| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 468 | `Iori.guardCrashes(this)`, right after onCreate puts CrashHandler back |
+| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 469 | `IoriDark.atStart(...)`, before onCreate reads the theme: where the system has a dark setting of its own, Home's theme is the system's |
+| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 518 | the first run is opened only when it is not already in the restored back stack (`IoriFirstRun.notShown`): a font, size or language change, or the process ended while away in Android's settings, put a second copy on top, and FINISH then landed on page 1 of the one underneath |
+| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 519 | on a first run, inkOS's e-ink Light theme is not set where the system has a dark setting (`IoriDark.systemHasDarkSetting`): Home took the system's at line 468 |
+| `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 645 | `IoriDark.systemChanged(...)` in `onConfigurationChanged`: the system's dark setting changed while Home was up, and Home turns with it |
 | `app/src/main/java/com/github/gezimos/inkos/data/Constants.kt` | 377, 408, 424, 452 | 19 Nov: no Hoog font. The `FontFamily.Hoog` entry and its three `when` branches are each replaced by a marker comment; a stored `Hoog` is made Public Sans at each start by `IoriRemoved.migrate`, called from `Iori.guardCrashes` |
 | `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt` | 8 | migrations run on `UPSTREAM_VERSION_CODE`, so upstream's thresholds still fire; the write-back at the end of the same function stores that value |
 | `app/src/main/java/com/github/gezimos/inkos/data/Migration.kt` | 152 | migrated internal slots point at `BuildConfig.APPLICATION_ID`, not `app.inkos` |
@@ -156,6 +158,7 @@ write the new line numbers into the table after a merge.
 | `app/src/main/java/com/github/gezimos/inkos/helper/SearchHelper.kt` | 585 | a contact opens in Contacts (enishi) first, inkOS's chooser if that fails |
 | `app/src/main/java/com/github/gezimos/inkos/helper/WallpaperUtility.kt` | 27 | 19 Nov: the fourteen picture wallpapers are gone from `PRESET_WALLPAPERS`; one marker comment stands for the fourteen lines. White, Black and the generated patterns stay |
 | `app/src/main/java/com/github/gezimos/inkos/helper/utils/BrightnessHelper.kt` | 17 | the brightness-gesture toast, written in code, through `IoriNames.named` |
+| `app/src/main/java/com/github/gezimos/inkos/helper/utils/EinkRefreshHelper.kt` | 50 | the e-ink refresh gesture asks KompaktOS for its own full refresh (broadcast `com.kompakt.service.action.REFRESH`); elsewhere inkOS's overlay flash as before |
 | `app/src/main/java/com/github/gezimos/inkos/style/SettingsTheme.kt` | 94 | the house side margin on Settings pages (`IoriSettingsLook.ROW_SIDE`) |
 | `app/src/main/java/com/github/gezimos/inkos/ui/RecentsFragment.kt` | 671, 672 | Home is left out of its own Recents (671 only gains the `||` for 672) |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 156, 169, 464 | the Settings restructure: a route `IoriHomeScreen`, its title, and its page, which is inkOS's own `SettingsHomeContent` |
@@ -166,6 +169,7 @@ write the new line numbers into the table after a merge.
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 481, 505, 513, 556 | on the Home route, `SettingsHomeContent` returns `IoriSettings.Top(...)` at its first line (481: Phone-wide, Apps, Home, Setup and about); on the Home screen sub-page `if (false)` hides Look & feel, Gestures and Advanced, which are rows of the top page |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 572 | `if (false)` before inkOS's own About row; its page (gezimos's credits and links, untouched) opens from a row of About Home |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 580 | `IoriSettings.Foot(...)`: Folders and Home lines close the Home screen sub-page |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 669 | the e-ink mode row is not shown on KompaktOS (its Kompakt app owns the modes) |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 679, 903, 917, 937, 965, 975, 987, 993, 1147, 1346, 1359, 1657, 1677, 2084 | rows that cycled through their choices in place open a house list (`iori.einkMode`, `iori.choose`): e-ink mode, the alignments, clock format, clock style, date format, notification count, sort order, icon shape, button corners, app name type; each writes what the cycle wrote |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 772, 773 | not being the default launcher is said in words (`iori_not_default`), not with a star |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 777 | `if (false)` before inkOS's Onboarding row: Run setup again on the top page does it |
@@ -177,11 +181,12 @@ write the new line numbers into the table after a merge.
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 1575 | `if (false)` before inkOS's Theme mode row in Look & feel: the one dark switch is Dark mode at the top of Settings |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 1868, 1878, 1890, 1902, 1927, 1946, 1958 | no gesture-number marks on the Gestures rows |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 1940 | no "Read more" on the gesture-vs-page row; the row opens the explanation |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 2010, 2027, 2117, 2381 | rows and headings that repeated each other are named apart (Fonts › One font everywhere; Letters window › Window title, Show the window) |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 2010, 2027, 2117, 2382 | rows and headings that repeated each other are named apart (Fonts › One font everywhere; Letters window › Window title, Show the window) |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 2014 | "Reset all" at the house floor size |
 | `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 2121, 2151, 2152 | fonts by the font list's own name, on their own line, not cut at 12 |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 2354, 2372, 2388, 2403 | allowlists read "All apps" or "12 apps" (inkOS lets every app through while a list is empty), the character limit "20 characters" |
-| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 2386, 2387, 2389 | Clear when app opens and the Letters allowlist are hidden while the Letters window is off |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 2303 | before notification access opens, while it is off: the restricted-settings toast, as in ContextExtensions |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 2355, 2373, 2389, 2404 | allowlists read "All apps" or "12 apps" (inkOS lets every app through while a list is empty), the character limit "20 characters" |
+| `app/src/main/java/com/github/gezimos/inkos/ui/SettingsFragment.kt` | 2387, 2388, 2390 | Clear when app opens and the Letters allowlist are hidden while the Letters window is off |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/AppsUI.kt` | 36, 1427, 1461 | 11-19 MuditaOS 2.0: the app drawer's long-press menu gains "E-ink mode" above App info, only where `IoriEinkModes` can read the phone's per-app modes; a pick writes the same table Mudita's own E-ink Modes screen uses |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/GestureHelper.kt` | 270 | a press on the clock with no app picked goes to Time, or to the offer to get it (`IoriHandOff.clock`) |
 | `app/src/main/java/com/github/gezimos/inkos/ui/compose/GestureHelper.kt` | 291 | the same for the date and Datebook (`IoriHandOff.date`) |

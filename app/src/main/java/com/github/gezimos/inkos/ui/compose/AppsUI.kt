@@ -1424,7 +1424,7 @@ fun AppContextMenuSheet(
         )
     }
 
-    val einkOffered = remember(app.activityPackage) { menuItemsEnabled[4] && com.wanderwildwood.iori.IoriEinkModes.offered(app.activityPackage) } // iori: only where the phone keeps per-app modes
+    val einkOffered = remember(app.activityPackage) { menuItemsEnabled[4] && com.wanderwildwood.iori.IoriEinkModes.offered(ctx, app.activityPackage) } // iori: only where the phone keeps per-app modes (on KompaktOS the row opens its Kompakt app)
     val deleteOrUnpinIcon = if (appTypeFlags.isPinnedShortcut || appTypeFlags.isAppShortcut)
         Icons.Rounded.PushPin else Icons.Rounded.Delete
     val displayName = if (app.customLabel.isNotEmpty()) app.customLabel else app.label

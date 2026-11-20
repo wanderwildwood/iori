@@ -16,9 +16,10 @@ import com.github.gezimos.inkos.helper.device.DeviceHelper
  * E-ink Modes screen reads and writes. A mode set here stays with the app until it is set
  * back to the phone's default, here or there.
  *
- * Only on MuditaOS: KompaktOS has no meink service (its modes live in its Kompakt app) and plain
- * Android has none, and MuditaOS before 2.0 has no per-app calls. Wherever the read fails, the
- * menu row is simply not there.
+ * On MuditaOS 2.0 the row sets the mode here. KompaktOS has no meink service: its modes live in
+ * its Kompakt app, which takes no mode from another app, so there the row opens the Kompakt app.
+ * Plain Android has neither, and MuditaOS before 2.0 has no per-app calls: wherever the read
+ * fails and there is no KompaktOS, the menu row is simply not there.
  */
 object IoriEinkModes {
     private const val TAG = "IoriEinkModes"
@@ -99,10 +100,15 @@ object IoriEinkModes {
     }
 
     /** Whether the menu offers the row: per-app modes exist on this phone. */
-    fun offered(pkg: String): Boolean = pkg.isNotEmpty() && get(pkg) != null
+    fun offered(context: Context, pkg: String): Boolean =
+        pkg.isNotEmpty() && (IoriKompaktOS.isKompaktOS(context) || get(pkg) != null)
 
     /** The list of modes for [pkg], its own one ticked; a pick is written at once. */
     fun choose(context: Context, pkg: String, title: String) {
+        if (IoriKompaktOS.isKompaktOS(context)) {
+            IoriKompaktOS.openKompaktApp(context)
+            return
+        }
         val activity = context.activity() ?: return
         val current = get(pkg) ?: return
         val dialogs = IoriDialogs(activity) {}

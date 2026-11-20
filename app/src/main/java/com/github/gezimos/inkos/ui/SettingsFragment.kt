@@ -666,7 +666,7 @@ class SettingsFragment : Fragment() {
     private fun ExtrasContent(fontSize: TextUnit) {
         val titleFontSize = if (fontSize.isSpecified) (fontSize.value * 1.5).sp else fontSize
         val uiState by viewModel.homeUiState.collectAsState()
-        val isMuditaDevice = remember { EinkHelper.isMuditaKompakt() }
+        val isMuditaDevice = remember { EinkHelper.isMuditaKompakt() && !com.wanderwildwood.iori.IoriKompaktOS.isKompaktOS(requireContext()) } // iori: on KompaktOS its Kompakt app owns the e-ink modes
         Column(modifier = Modifier.fillMaxSize()) {
             if (isMuditaDevice) {
                 SettingsTitle(text = stringResource(R.string.eink_auto_mode), fontSize = titleFontSize)
@@ -2300,6 +2300,7 @@ class SettingsFragment : Fragment() {
         }
 
         fun openNotificationListenerSettings() {
+            if (!isNotificationListenerEnabled(context) && com.wanderwildwood.iori.IoriKompaktOS.restrictedBlocked(context)) android.widget.Toast.makeText(context, R.string.iori_restricted_hint, android.widget.Toast.LENGTH_LONG).show() // iori: Android 13+ blocks this for an app installed from a file
             val intent = Intent(android.provider.Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
             try { context.startActivity(intent) }
             catch (_: Exception) {

@@ -417,6 +417,14 @@ object IoriFirstRun {
                                         Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                     )
                                 }
+                                if (!hasAccess && IoriKompaktOS.restrictedBlocked(context)) {
+                                    Spacer(Modifier.height(8.dp.s()))
+                                    Body(R.string.iori_restricted_hint)
+                                    Spacer(Modifier.height(8.dp.s()))
+                                    Button(R.string.iori_restricted_app_info) {
+                                        context.startActivity(IoriKompaktOS.appInfo(context))
+                                    }
+                                }
                                 Spacer(Modifier.height(16.dp.s()))
                                 Body(R.string.iori_first_default_body)
                                 Spacer(Modifier.height(8.dp.s()))

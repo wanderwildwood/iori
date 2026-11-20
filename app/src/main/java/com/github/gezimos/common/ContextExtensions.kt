@@ -197,6 +197,7 @@ fun Context.isBiometricEnabled(): Boolean {
 
 
 fun Context.openAccessibilitySettings() {
+    if (com.wanderwildwood.iori.IoriKompaktOS.restrictedBlocked(this)) android.widget.Toast.makeText(this, com.github.gezimos.inkos.R.string.iori_restricted_hint, android.widget.Toast.LENGTH_LONG).show() // iori: Android 13+ blocks this for an app installed from a file
     val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
     val cs = ComponentName(this.packageName, ActionService::class.java.name).flattenToString()
     val bundle = Bundle()
