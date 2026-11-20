@@ -572,6 +572,12 @@ would set `release.yml` off six times once Actions is on.
 13. Upstream fixes: the two fix commits (all-day events by their date; honour
     `canShowBadge()`) can go to gezimos as issue patches, each on its own.
 
+### Release notes, v1.0.2
+
+> # Home 1.0.2
+>
+> - **Your apps:** each app in a folder is now just its name and its version, so a page holds about seven apps on the Kompakt. The one-line description, cut short, said too little to keep.
+
 ### Release notes, v1.0.1
 
 > # Home 1.0.1
