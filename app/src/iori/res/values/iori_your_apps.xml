@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- "Your apps" (IoriYourApps.kt): the house's apps from the list on wanderthe.dev. -->
-    <string name="iori_your_apps_core">✓ Core app</string>
     <string name="iori_your_apps_not_installed">Not installed</string>
     <string name="iori_your_apps_installed_version">Installed: %1$s</string>
     <string name="iori_your_apps_new_version">New: %1$s</string>
+    <!-- An update on one line in a folder row: the version on the phone, then the one to get ("to": Home's font has no arrow). -->
+    <string name="iori_your_apps_update_versions">%1$s to %2$s</string>
     <string name="iori_your_apps_install">Install</string>
     <string name="iori_your_apps_update">Update</string>
     <string name="iori_your_apps_up_to_date">Up to date</string>

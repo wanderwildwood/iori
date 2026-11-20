@@ -246,7 +246,10 @@ object IoriYourApps {
         }
     }
 
-    /** One app: name, what it is, its version, how an install went, and its press on the right. */
+    /**
+     * One app: name, what it is (one line, so a folder shows several apps to a page), its version,
+     * how an install went, and its press on the right.
+     */
     @Composable
     private fun AppRow(entry: Entry, installed: IoriAppsManifest.Installed?, job: Job) {
         val context = LocalContext.current
@@ -254,21 +257,23 @@ object IoriYourApps {
         val busy = job.step == Step.DOWNLOADING || job.step == Step.CHECKING || job.step == Step.INSTALLING
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
         ) {
             Column(Modifier.weight(1f)) {
-                Text(entry.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                Text(entry.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (entry.summary.isNotEmpty()) {
-                    Text(entry.summary, style = MaterialTheme.typography.bodySmall)
+                    Text(entry.summary, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                val version = if (installed == null) stringResource(R.string.iori_your_apps_not_installed)
-                else stringResource(R.string.iori_your_apps_installed_version, installed.versionName ?: installed.versionCode.toString())
-                val line = buildList {
-                    if (entry.core) add(stringResource(R.string.iori_your_apps_core))
-                    add(version)
-                    if (status == Status.UPDATE) add(stringResource(R.string.iori_your_apps_new_version, entry.versionName))
-                }.joinToString(" · ")
-                Text(line, style = MaterialTheme.typography.labelSmall)
+                // One short line: the folder already says which apps are core, and an update reads
+                // as "0.1.33 to 0.1.39". It may take a second line at a large font size, so the
+                // version itself is never cut off.
+                val have = installed?.let { it.versionName ?: it.versionCode.toString() }
+                val line = when {
+                    have == null -> stringResource(R.string.iori_your_apps_not_installed)
+                    status == Status.UPDATE -> stringResource(R.string.iori_your_apps_update_versions, have, entry.versionName)
+                    else -> stringResource(R.string.iori_your_apps_installed_version, have)
+                }
+                Text(line, style = MaterialTheme.typography.labelSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 outcome(job)?.let {
                     Text(it, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                 }
@@ -293,15 +298,11 @@ object IoriYourApps {
      */
     @Composable
     private fun KnownAppRow(app: IoriApps.App, installed: IoriAppsManifest.Installed?, job: Job) {
-        Column(Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
-            Text(app.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
+            Text(app.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             val version = if (installed == null) stringResource(R.string.iori_your_apps_not_installed)
             else stringResource(R.string.iori_your_apps_installed_version, installed.versionName ?: installed.versionCode.toString())
-            val line = buildList {
-                if (app.core) add(stringResource(R.string.iori_your_apps_core))
-                add(version)
-            }.joinToString(" · ")
-            Text(line, style = MaterialTheme.typography.labelSmall)
+            Text(version, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
             outcome(job)?.let {
                 Text(it, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
             }
