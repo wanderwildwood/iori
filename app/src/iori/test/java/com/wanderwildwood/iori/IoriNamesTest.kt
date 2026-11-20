@@ -10,7 +10,11 @@ class IoriNamesTest {
         assertEquals("Medicine", IoriNames.shown("com.wanderwildwood.fukuyaku", null))
         assertEquals("Wallet", IoriNames.shown("com.wanderwildwood.satsuire", "Wallet"))
         assertEquals("Field Kit", IoriNames.shown("com.wanderwildwood.zatsuno", null))
-        assertEquals("Calendar", IoriNames.shown("com.wanderwildwood.koyomi.debug", null))
+        assertEquals("Datebook", IoriNames.shown("com.wanderwildwood.koyomi.debug", null))
+        assertEquals("Audio Reader", IoriNames.shown("com.wanderwildwood.mimidoku", null))
+        assertEquals("Memo", IoriNames.shown("com.wanderwildwood.oboegaki", null))
+        assertEquals("Mailbox", IoriNames.shown("com.wanderwildwood.tayori", null))
+        assertEquals("Time", IoriNames.shown("com.wanderwildwood.tokei", null))
     }
 
     @Test
