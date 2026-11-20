@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Home goes online for two things only: the list of apps on wanderthe.dev with their downloads
+    from GitHub, and the Nextcloud you sign in to. All of it is https: the Nextcloud sign-in takes
+    https addresses only. So plain http is refused for every address, and only the phone's own
+    certificate authorities are trusted.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

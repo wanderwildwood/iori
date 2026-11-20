@@ -116,7 +116,7 @@ Upstream files change only at the lines below, each marked with `iori:` in a com
 else iori adds is in its own files: `app/iori.gradle`, `app/src/iori/`, `app/src/debug/`
 (debug's manifest overlay), and the new files of the carried commits. A run of changed lines is
 held between `iori: begin` and `iori: end` (written `6-15` below; both ends are markers, and every
-line between them counts as marked). The tree has **210** marker lines.
+line between them counts as marked). The tree has **213** marker lines.
 
 What Home adds to the merged manifest is the two `AndroidManifest.xml` blocks below (four
 permissions; two exported providers and a receiver) and, in debug builds only,
@@ -134,9 +134,11 @@ write the new line numbers into the table after a merge.
 | File | Lines | Purpose |
 |---|---|---|
 | `app/build.gradle.kts` | 8 | the AboutLibraries plugin applied: it writes `res/raw/aboutlibraries.json`, the list behind About Home's Licenses drawer; set up in `app/iori.gradle` |
-| `app/build.gradle.kts` | 186 | `apply(from = "iori.gradle")`: identity, iori sources and strings |
+| `app/build.gradle.kts` | 59 | release APKs carry arm64-v8a only (`ndk.abiFilters`), the Kompakt's processor; debug builds keep the emulator's |
+| `app/build.gradle.kts` | 187 | `apply(from = "iori.gradle")`: identity, iori sources and strings |
 | `app/src/main/AndroidManifest.xml` | 6-15 | four permissions: `INTERNET` and `REQUEST_INSTALL_PACKAGES` (Your apps fetches an app and hands it to Android; the Nextcloud sign-in), `SET_ALARM` (Default apps asks Android which clock app), `UPDATE_PACKAGES_WITHOUT_USER_ACTION` (Android 12+ updates an app Home installed with no question) |
-| `app/src/main/AndroidManifest.xml` | 173-191 | at the end of `<application>`: `IoriDarkProvider` (`${applicationId}.dark`, exported, read-only: the other apps' dark switch), `IoriAccountProvider` (`${applicationId}.accounts`, exported; it checks each caller's package and certificate itself: the phone's one Nextcloud account), `IoriInstallReceiver` (not exported: the installer's answers). If a merge drops this block the build still passes and the apps quietly lose dark mode and the account; the hook check above is what catches it |
+| `app/src/main/AndroidManifest.xml` | 50-66 | the `<application>` tag: `allowBackup="false"` (Android 11 and older ran a backup despite the rules taking nothing) and `networkSecurityConfig`, https only (`src/iori/res/xml/network_security_config.xml`; debug builds swap in a cleartext one from `src/debug`) |
+| `app/src/main/AndroidManifest.xml` | 177-195 | at the end of `<application>`: `IoriDarkProvider` (`${applicationId}.dark`, exported, read-only: the other apps' dark switch), `IoriAccountProvider` (`${applicationId}.accounts`, exported; it checks each caller's package and certificate itself: the phone's one Nextcloud account), `IoriInstallReceiver` (not exported: the installer's answers). If a merge drops this block the build still passes and the apps quietly lose dark mode and the account; the hook check above is what catches it |
 | `app/src/main/java/com/github/gezimos/common/ContextExtensions.kt` | 200 | before Accessibility opens: where Android 13+ blocks an app installed from a file, a toast says how to allow restricted settings (`IoriKompaktOS.restrictedBlocked`) |
 | `app/src/main/java/com/github/gezimos/common/CrashHandler.kt` | 30, 33, 34, 157 | 19 Nov audit: `logUserAction` keeps nothing, and the crash report has no "Recent User Actions" section. inkOS's callers log each app and shortcut opened from home (package, shortcut id, time), which went into the report emailed to the developer; the callers are left as they are |
 | `app/src/main/java/com/github/gezimos/inkos/MainActivity.kt` | 191 | while the first run is up `onKeyDown` swallows every key, so a menu, Esc or Home key cannot leave it; Back is let through, else the first run's own `BackHandler` never ran (a page back; on page 1 of Run setup again, back to Settings) |

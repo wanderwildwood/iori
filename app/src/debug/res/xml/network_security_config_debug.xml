@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Debug builds only (see AndroidManifest.xml beside this folder): plain http is let through so
+    the Nextcloud sign-in can be tried against a stand-in server on the build box. A release uses
+    network_security_config.xml, which refuses it.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

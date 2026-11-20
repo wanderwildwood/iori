@@ -56,6 +56,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             ndk.debugSymbolLevel = "FULL"
+            ndk.abiFilters += "arm64-v8a" // iori: release APKs carry arm64-v8a only, the Kompakt's processor; debug keeps the emulator's
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
