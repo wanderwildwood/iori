@@ -35,6 +35,9 @@ only. Source: https://github.com/wanderwildwood/iori
   (`IoriDarkProvider`, two numbers: dark or not, and when the switch was last pressed) when it
   comes to the front (`IoriDark.kt`; the apps' side is `/opt/projects/shared-dark`). Home's own
   dialogs are drawn through an inverting filter while Home is dark (`ui/DarkWindow.kt`).
+  When the setting changes Home closes its own dialogs before it recreates the screen
+  (`ui/HouseDialogs.kt`): recreated under an open one (Your apps with a folder open), the
+  dialog went but accessibility kept its window, and TalkBack read nothing from Home.
   The switch is only on MuditaOS, which has no dark setting a person can reach (it keeps
   Android's dark-theme screen installed, so asking Settings for it cannot tell). MuditaOS is
   told by Mudita's Settings app (`com.mudita.settings`) on a system that is not LineageOS
