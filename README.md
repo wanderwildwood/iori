@@ -16,7 +16,8 @@ plain inkOS, go to [gezimos's repository](https://github.com/gezimos/inkos) or
 
 | | |
 |---|---|
-| ![Home, with lines from Glance under the apps](screenshots/1-home.png) | ![Home lines: each source and what it is doing](screenshots/2-home-lines.png) |
+| ![Home: the clock, lines from Datebook, Sky and Memo, home apps with their latest message, and the music controls](screenshots/1-home.png) | ![Home lines: each app that can send a line, and whether it is on](screenshots/2-home-lines.png) |
+| ![Settings: dark mode, the Nextcloud account, default apps, Your apps and the home screen](screenshots/3-settings.png) | ![Your apps: the family of apps by section, how many of each are installed](screenshots/4-your-apps.png) |
 
 ## Which phones
 
