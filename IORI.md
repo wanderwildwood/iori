@@ -580,6 +580,12 @@ would set `release.yml` off six times once Actions is on.
 13. Upstream fixes: the two fix commits (all-day events by their date; honour
     `canShowBadge()`) can go to gezimos as issue patches, each on its own.
 
+### Release notes, v1.0.4
+
+> # Home 1.0.4
+>
+> - **Lock-screen music:** on MuditaOS 2.0 and KompaktOS the phone's own lock screen shows a player for any app, so Home's music strip stands aside there and only one player shows. On MuditaOS 1.x it works as before.
+
 ### Release notes, v1.0.3
 
 > # Home 1.0.3
