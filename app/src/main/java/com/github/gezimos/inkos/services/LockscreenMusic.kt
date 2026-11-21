@@ -150,7 +150,9 @@ class LockscreenMusic(private val service: AccessibilityService) :
         val keyguard = service.getSystemService(KeyguardManager::class.java)
         val power = service.getSystemService(PowerManager::class.java)
         val info = playing.value
-        val show = keyguard.isKeyguardLocked &&
+        // The phone's own player where it has one for every app (MuditaOS 2.0, KompaktOS).
+        val show = !com.wanderwildwood.iori.IoriSystemLockPlayer.present() &&
+            keyguard.isKeyguardLocked &&
             power.isInteractive &&
             info != null &&
             info.packageName != MUDITA_PLAYER &&
