@@ -45,8 +45,9 @@ replacing it, and either one can be the home app.
   is unread. They come from [Glance](https://github.com/wanderwildwood/hitome) 0.1.24 or later
   and follow the choices made there. A press opens the app the line came from. A long press
   lists each source and what it is doing. The lines can sit at the bottom or at the top.
-- **Music on the lock screen** for any player, above the padlock. The Kompakt's own widget
-  shows only Mudita's player.
+- **Music on the lock screen** for any player, above the padlock, on MuditaOS 1.x, where the
+  Kompakt's own widget shows only Mudita's player. On MuditaOS 2.0 and KompaktOS the phone's own
+  lock screen shows a player for any app, so Home's strip stands aside there.
 - **Dark mode for the whole family.** On MuditaOS, Settings → Dark mode turns Home dark, and
   the other apps of the family follow it. On KompaktOS and other phones, Home follows the
   phone's own dark setting.
